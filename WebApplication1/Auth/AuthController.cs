@@ -11,13 +11,13 @@ namespace WebApplication1.Auth;
 public class AuthController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
-    private readonly UserDBContext _userDBContext;
+    private readonly DBContext _dbContext;
     private readonly IAuthenticationService _authenticationService;
     
-    public AuthController(UserManager<User> userManager, UserDBContext userDBContext, IAuthenticationService authenticationService)
+    public AuthController(UserManager<User> userManager, DBContext dbContext, IAuthenticationService authenticationService)
     {
         _userManager = userManager;
-        _userDBContext = userDBContext;
+        _dbContext = dbContext;
         _authenticationService = authenticationService;
     }
     
