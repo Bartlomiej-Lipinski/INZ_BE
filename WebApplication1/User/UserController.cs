@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace WebApplication1.Models;
 
@@ -6,5 +7,5 @@ namespace WebApplication1.Models;
 [Route("api/[controller]")]
 public class UserController(IUserService userService) : ControllerBase
 {
-    
+   
 }
