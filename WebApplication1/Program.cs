@@ -14,7 +14,7 @@ builder.Services.AddAuthorization();
 // builder.Services.AddIdentityApiEndpoints<User>().AddEntityFrameworkStores<DBContext>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<DBContext>();
+builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
 builder.Services.AddAuthentication(opt =>
 {
     opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
