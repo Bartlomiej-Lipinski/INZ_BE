@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using WebApplication1.Models;
 
 namespace WebApplication1.GroupUser;
 

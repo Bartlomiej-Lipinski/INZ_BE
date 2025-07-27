@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Context;
-using WebApplication1.User;
 
 namespace WebApplication1.Auth;
 
@@ -13,10 +12,11 @@ namespace WebApplication1.Auth;
 [Route("api/[controller]")]
 public class AuthController(
     UserManager<User.User> userManager,
-    DBContext dbContext,
+    AppDbContext dbContext,
     IAuthService authorizationService)
     : ControllerBase
 {
+
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)

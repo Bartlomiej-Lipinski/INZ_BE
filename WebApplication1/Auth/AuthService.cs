@@ -11,10 +11,10 @@ namespace WebApplication1.Auth;
 public class AuthService : IAuthService
 {
     private IConfiguration _configuration { get; }
-    private DBContext _context { get; }
     private IEmailService _emailService { get;  }
+    private AppDbContext _context { get; }
     
-    public AuthService(IConfiguration configuration,DBContext context)
+    public AuthService(IConfiguration configuration, AppDbContext context)
     {
         _configuration = configuration;
         _context = context;

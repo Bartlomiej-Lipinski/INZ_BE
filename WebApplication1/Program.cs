@@ -62,7 +62,7 @@ builder.Services.AddAuthentication(opt =>
         ClockSkew = TimeSpan.Zero
     };
 });
-// builder.Services.AddOpenApi();
+// builder.Services.AddOpenApi(); 
 var app = builder.Build();
 app.MapIdentityApi<User>();
 app.MapSwagger().RequireAuthorization();
