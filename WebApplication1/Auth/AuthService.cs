@@ -48,30 +48,31 @@ public class AuthService : IAuthService
     public async Task GeneratePasswordResetTokenAsync(string email)
     {
         var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
-
+        
         if (user == null)
-        {
             return;
-        }
         
         var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
         var tokenHash = BCrypt.Net.BCrypt.HashPassword(rawToken);
         var expiresAt = DateTime.UtcNow.AddHours(1);
-
+        
         var token = new PasswordResetToken
         {
             Id = Guid.NewGuid(),
             UserId = Guid.Parse(user.Id),
             TokenHash = tokenHash,
-            ExpiresAt = expiresAt
+            ExpiresAt = expiresAt,
+            Used = false
         };
-
+        
         await _context.PasswordResetTokens.AddAsync(token);
         await _context.SaveChangesAsync();
 
-        var resetLink = $"https://app/reset-password?token={Uri.EscapeDataString(rawToken)}"; // ustawic na faktyczny url frontendu
-        var emailBody = $"Click the link to reset your password: {resetLink}";
-
-        await _emailService.SendAsync(user.Email, "Password Reset", emailBody);
+        //zmienic na faktyczny url frontendu
+        var resetLink = $"https://app/reset-password?token={Uri.EscapeDataString(rawToken)}";
+        var emailBody = $"Kliknij w link, aby zresetować hasło: {resetLink}";
+        
+        await _emailService.SendAsync(user.Email!, "Reset hasła", emailBody);
+        
     }
 }

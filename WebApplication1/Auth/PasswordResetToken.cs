@@ -5,18 +5,18 @@ namespace WebApplication1.Auth;
 public class PasswordResetToken
 {
     [Key]
-    public Guid Id { get; set; }
+    public Guid Id { get; init; }
 
     [Required]
-    public Guid UserId { get; set; }
+    public Guid UserId { get; init; }
 
     [Required]
-    public string TokenHash { get; set; } = null!;
+    public string TokenHash { get; init; } = null!;
 
     [Required]
-    public DateTime ExpiresAt { get; set; }
+    public DateTime ExpiresAt { get; init; }
 
-    public bool IsUsed { get; set; } = false;
+    public bool Used { get; set; } = false;
 
-    public User.User User { get; set; } = null!;
+    public User.User User { get; init; } = null!;
 }
