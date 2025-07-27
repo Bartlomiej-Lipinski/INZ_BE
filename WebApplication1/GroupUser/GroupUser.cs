@@ -5,13 +5,15 @@ namespace WebApplication1.GroupUser;
 
 public class GroupUser
 {
-    [Key]
-    [ForeignKey("Group")]
+    [Key, Column(Order = 0)]
     public Guid GroupId { get; set; }
-    [Key]
-    [ForeignKey("User")]
+
+    [Key, Column(Order = 1)]
     public Guid UserId { get; set; }
-    [Column("admin")]
+
     [Required]
     public bool IsAdmin { get; set; }
+    
+    public Group.Group Group { get; set; } = null!;
+    public User.User User { get; set; } = null!;
 }
