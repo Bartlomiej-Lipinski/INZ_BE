@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebApplication1.Data;
+using WebApplication1.Context;
 using WebApplication1.Models;
 
 namespace WebApplication1.Auth;
@@ -14,10 +14,10 @@ namespace WebApplication1.Auth;
 public class AuthController : ControllerBase
 {
     private readonly UserManager<User> _userManager;
-    private readonly DBContext _dbContext;
+    private readonly AppDbContext _dbContext;
     private readonly IAuthService _authorizationService;
 
-    public AuthController(UserManager<User> userManager, DBContext dbContext,
+    public AuthController(UserManager<User> userManager, AppDbContext dbContext,
         IAuthService authorizationService)
     {
         _userManager = userManager;

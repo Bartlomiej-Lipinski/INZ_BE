@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using WebApplication1.Data;
+using WebApplication1.Context;
 using WebApplication1.Models;
 
 namespace WebApplication1.Auth;
@@ -10,9 +10,9 @@ namespace WebApplication1.Auth;
 public class AuthService : IAuthService
 {
     private IConfiguration _configuration { get; }
-    private DBContext _context { get; }
+    private AppDbContext _context { get; }
     
-    public AuthService(IConfiguration configuration,DBContext context)
+    public AuthService(IConfiguration configuration, AppDbContext context)
     {
         _configuration = configuration;
         _context = context;
