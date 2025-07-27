@@ -3,39 +3,31 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebApplication1.Data;
-using WebApplication1.Models;
+using WebApplication1.Context;
+using WebApplication1.User;
 
 namespace WebApplication1.Auth;
 
 // zmienić rodzaj zwracanych danych żeby nie było zwracanego tokena i refresh tokena w odpowiedzi
 [Controller]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(
+    UserManager<User.User> userManager,
+    DBContext dbContext,
+    IAuthService authorizationService)
+    : ControllerBase
 {
-    private readonly UserManager<User> _userManager;
-    private readonly DBContext _dbContext;
-    private readonly IAuthService _authorizationService;
-
-    public AuthController(UserManager<User> userManager, DBContext dbContext,
-        IAuthService authorizationService)
-    {
-        _userManager = userManager;
-        _dbContext = dbContext;
-        _authorizationService = authorizationService;
-    }
-
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        var user = await _userManager.FindByNameAsync(request.Email);
-        if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
+        var user = await userManager.FindByNameAsync(request.Email);
+        if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
         {
             return Unauthorized(new { Message = "Invalid username or password." });
         }
 
-        var (token, refreshToken) = await _authorizationService.GenerateTokensAsync(user);
+        var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
         
         Response.Cookies.Append("access token", token, new CookieOptions
             {
@@ -58,36 +50,38 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
-        var user = new User
+        var user = new User.User
         {
             Email = request.Email,
             PasswordHash = request.Password,
         };
 
-        var result = await _userManager.CreateAsync(user, request.Password);
+        var result = await userManager.CreateAsync(user, request.Password);
         return result.Succeeded ? Ok() : BadRequest(result.Errors);
     }
+    
     [Authorize("RefreshTokenPolicy")]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(RefreshRequest request,CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var token = await _dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken: cancellationToken);
+        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken: cancellationToken);
         if (token is null || token.ExpiresAt < DateTime.UtcNow)
         {
             return Unauthorized();
         }
-        var user = await _userManager.FindByIdAsync(token.UserId);
+        var user = await userManager.FindByIdAsync(token.UserId);
         if (user is null)
         {
             return Unauthorized();
         }
         token.IsRevoked = true;
-        _dbContext.RefreshTokens.Update(token);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        var(newJwt, newRefreshToken) = await _authorizationService.GenerateTokensAsync(user);
+        dbContext.RefreshTokens.Update(token);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        var(newJwt, newRefreshToken) = await authorizationService.GenerateTokensAsync(user);
         return Ok(new{token = newJwt, refreshToken = newRefreshToken});
     }
+    
     [HttpGet("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
@@ -99,15 +93,15 @@ public class AuthController : ControllerBase
             return BadRequest("No tokens found.");
         }
 
-        var token = await _dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == refreshToken, cancellationToken: cancellationToken);
+        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == refreshToken, cancellationToken: cancellationToken);
         if (token is null)
         {
             return BadRequest("Invalid refresh token.");
         }
 
         token.IsRevoked = true;
-        _dbContext.RefreshTokens.Update(token);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        dbContext.RefreshTokens.Update(token);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         Response.Cookies.Delete("access token");
         Response.Cookies.Delete("refresh token");
@@ -120,5 +114,12 @@ public class AuthController : ControllerBase
     public IActionResult Secret()
     {
         return Ok("This is a secret message only for authenticated users.");
+    }
+    
+    [HttpPost("password-reset-request")]
+    public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto dto)
+    {
+        await authorizationService.GeneratePasswordResetTokenAsync(dto.Email);
+        return Ok(new { message = "If the email exists, a reset link has been sent." });
     }
 }

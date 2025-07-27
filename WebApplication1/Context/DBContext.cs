@@ -1,15 +1,14 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Auth;
-using WebApplication1.Models;
 
-namespace WebApplication1.Data;
+namespace WebApplication1.Context;
 
-public class DBContext : IdentityDbContext<User>
+public class DBContext : IdentityDbContext<User.User>
 {
     public DBContext(DbContextOptions<DBContext> options) : base(options)
     {}
 
     public DbSet<RefreshToken> RefreshTokens;
-
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
 }
