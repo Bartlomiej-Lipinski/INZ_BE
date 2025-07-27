@@ -17,5 +17,5 @@ public class User : Microsoft.AspNetCore.Identity.IdentityUser
     public string? Description { get; set; }
     public string? Photo { get; set; }
     
-    
+    public ICollection<GroupUser.GroupUser> GroupUsers { get; set; } = new List<GroupUser.GroupUser>();
 }
