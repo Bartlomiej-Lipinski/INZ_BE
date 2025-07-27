@@ -1,4 +1,6 @@
-﻿namespace WebApplication1.Models;
+﻿using WebApplication1.User;
+
+namespace WebApplication1.Models;
 
 public class UserService : IUserService
 {

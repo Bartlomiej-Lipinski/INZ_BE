@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using WebApplication1.Models;
 
 namespace WebApplication1.GroupUser;
 
@@ -16,5 +15,5 @@ public class GroupUser
     public bool IsAdmin { get; set; }
     
     public Group.Group Group { get; set; } = null!;
-    public User User { get; set; } = null!;
+    public User.User User { get; set; } = null!;
 }

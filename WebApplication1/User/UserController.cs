@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace WebApplication1.Models;
+namespace WebApplication1.User;
 
 [ApiController]
 [Route("api/[controller]")]
