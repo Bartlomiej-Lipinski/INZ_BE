@@ -46,7 +46,7 @@ public class AuthController(
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddDays(2)
             });
-        return Ok(new{token, refreshToken = refreshToken});
+        return Ok(user.Id);
     }
 
     [AllowAnonymous]
@@ -67,7 +67,6 @@ public class AuthController(
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(RefreshRequest request,CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
         var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken: cancellationToken);
         if (token is null || token.ExpiresAt < DateTime.UtcNow)
         {
@@ -82,7 +81,7 @@ public class AuthController(
         dbContext.RefreshTokens.Update(token);
         await dbContext.SaveChangesAsync(cancellationToken);
         var(newJwt, newRefreshToken) = await authorizationService.GenerateTokensAsync(user);
-        return Ok(new{token = newJwt, refreshToken = newRefreshToken});
+        return Ok(user.Id);
     }
     
     [HttpGet("logout")]
@@ -120,6 +119,7 @@ public class AuthController(
     }
     
     [HttpPost("password-reset-request")]
+    [AllowAnonymous]
     public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto dto)
     {
         await authorizationService.GeneratePasswordResetTokenAsync(dto.Email);
