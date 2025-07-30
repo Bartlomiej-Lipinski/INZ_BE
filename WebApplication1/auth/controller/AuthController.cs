@@ -7,6 +7,7 @@ using WebApplication1.auth.dto;
 using WebApplication1.auth.service;
 using WebApplication1.context;
 using WebApplication1.user;
+using WebApplication1.user.dto;
 
 namespace WebApplication1.auth.controller;
 
@@ -51,14 +52,28 @@ public class AuthController(
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest request)
+    public async Task<IActionResult> Register(UserRequestDto request)
     {
         var user = new User
         {
+            Name = request.Name,
+            Surname = request.Surname,
             Email = request.Email,
-            PasswordHash = request.Password,
+            BirthDate = request.BirthDate,
         };
-
+        if (request.Password is null || request.Password.Length < 6)
+        {
+            return BadRequest("Password must be at least 6 characters long.");
+        }
+        var emailExists = await dbContext.Users.AnyAsync(u => u.Email == user.Email);
+        if (emailExists)
+        {
+            throw new ArgumentException("Email already exists.");
+        }
+        if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Surname) || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+        {
+            throw new ArgumentException("All fields are required.");
+        }
         var result = await userManager.CreateAsync(user, request.Password);
         return result.Succeeded ? Ok() : BadRequest(result.Errors);
     }
