@@ -5,7 +5,6 @@ namespace WebApplication1.user.service;
 public interface IUserService 
 {
     Task<bool> ValidateUserAsync(string userName, string password);
-    Task<UserRequestDto> CreateUserAsync(UserRequestDto request);
     Task<UserResponseDto> GetUserAsync(string userName);
     Task<bool> DeleteUserAsync(string userName);
 }

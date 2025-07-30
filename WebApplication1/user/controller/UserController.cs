@@ -8,22 +8,6 @@ namespace WebApplication1.user.controller;
 [Route("api/[controller]")]
 public class UserController(IUserService userService) : ControllerBase
 {
-    [HttpPost("create")]
-    public async Task<IActionResult> CreateUserAsync([FromBody] UserRequestDto request)
-    {
-        if (request == null)
-        {
-            return BadRequest("Request cannot be null.");
-        }
-
-        var result = await userService.CreateUserAsync(request);
-        if (result == null)
-        {
-            return BadRequest("Failed to create user.");
-        }
-
-        return Ok(result);
-    }
 
     [HttpGet("get/{user}")]
     public async Task<IActionResult> GetUserAsync(string user)
