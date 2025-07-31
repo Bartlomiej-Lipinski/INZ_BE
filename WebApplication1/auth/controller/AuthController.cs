@@ -68,7 +68,8 @@ public class AuthController(
     public async Task<IActionResult> Refresh(RefreshRequest request,CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken: cancellationToken);
+        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t =>
+            t.Token == request.RefreshToken, cancellationToken: cancellationToken);
         if (token is null || token.ExpiresAt < DateTime.UtcNow)
         {
             return Unauthorized();
@@ -96,7 +97,8 @@ public class AuthController(
             return BadRequest("No tokens found.");
         }
 
-        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == refreshToken, cancellationToken: cancellationToken);
+        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t =>
+            t.Token == refreshToken, cancellationToken: cancellationToken);
         if (token is null)
         {
             return BadRequest("Invalid refresh token.");

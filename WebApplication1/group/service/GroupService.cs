@@ -26,7 +26,6 @@ public class GroupService(AppDbContext context) : IGroupService
         };
 
         await context.GroupUsers.AddAsync(groupUser);
-
         await context.SaveChangesAsync();
 
         return group.Id;
@@ -51,6 +50,5 @@ public class GroupService(AppDbContext context) : IGroupService
     private static string GenerateUniqueCode()
     {
         return Guid.NewGuid().ToString()[..8].ToUpper();
-
     }
 }
