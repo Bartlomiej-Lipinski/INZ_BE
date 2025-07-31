@@ -69,11 +69,13 @@ public class AuthService(IConfiguration configuration, AppDbContext context, IEm
     
     public async Task<bool> ResetPasswordAsync(string token, string newPassword)
     {
-        var tokenRecord = await context.PasswordResetTokens
+        var tokens = await context.PasswordResetTokens
             .Include(t => t.User)
-            .FirstOrDefaultAsync(t => !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
+            .Where(t => !t.IsUsed && t.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync();
 
-        if (tokenRecord == null || !BCrypt.Net.BCrypt.Verify(token, tokenRecord.TokenHash))
+        var tokenRecord = tokens.FirstOrDefault(t => BCrypt.Net.BCrypt.Verify(token, t.TokenHash));
+        if (tokenRecord == null)
             return false;
 
         var user = tokenRecord.User;

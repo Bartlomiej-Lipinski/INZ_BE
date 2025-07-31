@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using WebApplication1.auth.service;
 using WebApplication1.context;
+using WebApplication1.group_user.service;
+using WebApplication1.group.service;
 using WebApplication1.user;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +16,8 @@ builder.Services.AddAuthorization();
 // builder.Services.AddIdentityApiEndpoints<User>().AddEntityFrameworkStores<DBContext>();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
 builder.Services.AddAuthentication(opt =>
 {

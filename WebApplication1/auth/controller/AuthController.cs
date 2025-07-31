@@ -119,7 +119,7 @@ public class AuthController(
         return Ok("This is a secret message only for authenticated users.");
     }
     
-    [HttpPost("password-reset-request")]
+    [HttpPost("reset-password-request")]
     public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto dto)
     {
         await authorizationService.GeneratePasswordResetTokenAsync(dto.Email);
