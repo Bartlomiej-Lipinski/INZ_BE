@@ -1,4 +1,5 @@
-﻿using WebApplication1.context;
+﻿using Microsoft.EntityFrameworkCore;
+using WebApplication1.context;
 using WebApplication1.user.dto;
 
 namespace WebApplication1.user.service;
@@ -20,5 +21,19 @@ public class UserService(AppDbContext context) : IUserService
     public Task<bool> DeleteUserAsync(string userName)
     {
         throw new NotImplementedException();
+    }
+
+    public Task<List<UserResponseDto>> GetAllUsersAsync()
+    {
+        var users = context.Users.Select(u => new UserResponseDto
+        {
+            Id = u.Id,
+            UserName = u.UserName,
+            Email = u.Email,
+            Name = u.Name,
+            Surname = u.Surname
+        }).ToListAsync();
+
+        return users;
     }
 }

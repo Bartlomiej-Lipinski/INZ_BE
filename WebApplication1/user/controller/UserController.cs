@@ -25,4 +25,15 @@ public class UserController(IUserService userService) : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpGet("get-all")]
+    public async Task<IActionResult> GetAllUsersAsync()
+    {
+        var result = await userService.GetAllUsersAsync();
+        if (result == null || !result.Any())
+        {
+            return NotFound("No users found.");
+        }
+        return Ok(result);
+    }
 }

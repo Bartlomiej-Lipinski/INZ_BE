@@ -7,4 +7,6 @@ public interface IUserService
     Task<bool> ValidateUserAsync(string userName, string password);
     Task<UserResponseDto> GetUserAsync(string userName);
     Task<bool> DeleteUserAsync(string userName);
+    
+    Task<List<UserResponseDto>> GetAllUsersAsync();
 }
