@@ -6,11 +6,11 @@ namespace WebApplication1.group.service;
 
 public class GroupService(AppDbContext context) : IGroupService
 {
-    public async Task<Guid> CreateGroupAsync(Guid userId, GroupRequestDto requestDto)
+    public async Task<string> CreateGroupAsync(string userId, GroupRequestDto requestDto)
     {
         var group = new Group
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.NewGuid().ToString(),
             Name = requestDto.Name,
             Color = requestDto.Color,
             Code = GenerateUniqueCode()
@@ -32,7 +32,7 @@ public class GroupService(AppDbContext context) : IGroupService
         return group.Id;
     }
 
-    public async Task<GroupResponseDto?> GetGroupByIdAsync(Guid id)
+    public async Task<GroupResponseDto?> GetGroupByIdAsync(string id)
     {
         var group = await context.Groups.FindAsync(id);
 

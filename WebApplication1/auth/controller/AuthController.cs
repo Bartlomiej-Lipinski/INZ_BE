@@ -25,22 +25,27 @@ public class AuthController(
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        var user = await userManager.FindByNameAsync(request.Email);
-        if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
+        var user = await userManager.FindByEmailAsync(request.Email);
+        
+        if (user == null )
         {
             return Unauthorized(new { Message = "Invalid username or password." });
+        }
+        if (!await userManager.CheckPasswordAsync(user, request.Password))
+        {
+            return Unauthorized(new { Message = "Invalid username or password. 1" });
         }
 
         var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
         
-        Response.Cookies.Append("access token", token, new CookieOptions
+        Response.Cookies.Append("access_token", token, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddMinutes(15)
             });
-        Response.Cookies.Append("refresh token", refreshToken, new CookieOptions
+        Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -57,6 +62,7 @@ public class AuthController(
         var user = new User
         {
             Name = request.Name,
+            UserName = request.UserName,
             Surname = request.Surname,
             Email = request.Email,
             BirthDate = request.BirthDate,
@@ -102,8 +108,8 @@ public class AuthController(
     [HttpGet("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        var accessToken = Request.Cookies["access token"];
-        var refreshToken = Request.Cookies["refresh token"];
+        var accessToken = Request.Cookies["access_token"];
+        var refreshToken = Request.Cookies["refresh_token"];
         
         if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
         {
@@ -120,8 +126,8 @@ public class AuthController(
         dbContext.RefreshTokens.Update(token);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        Response.Cookies.Delete("access token");
-        Response.Cookies.Delete("refresh token");
+        Response.Cookies.Delete("access_token");
+        Response.Cookies.Delete("refresh_token");
 
         return Ok("Logged out successfully.");
     }

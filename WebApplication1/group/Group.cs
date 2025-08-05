@@ -7,8 +7,8 @@ namespace WebApplication1.group;
 [Index(nameof(Code), IsUnique = true)]
 public class Group
 {
-    [Key]
-    public Guid Id { get; set; }
+    [Key] 
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 
     [Required]
     public string Name { get; set; } = null!;
