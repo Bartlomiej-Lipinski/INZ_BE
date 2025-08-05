@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using WebApplication1.auth.service;
 using WebApplication1.context;
 using WebApplication1.user;
+using WebApplication1.user.service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, FakeEmailService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
 builder.Services.AddAuthentication(opt =>
 {
@@ -68,13 +70,15 @@ builder.Services.AddAuthentication(opt =>
 });
 builder.Services.AddOpenApi(); 
 var app = builder.Build();
-app.MapIdentityApi<User>();
-app.MapSwagger().RequireAuthorization();
+// app.MapIdentityApi<User>();
+app.MapSwagger();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseHttpsRedirection();
 app.Run();
