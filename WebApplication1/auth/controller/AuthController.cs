@@ -7,6 +7,7 @@ using WebApplication1.auth.dto;
 using WebApplication1.auth.service;
 using WebApplication1.context;
 using WebApplication1.user;
+using WebApplication1.user.dto;
 
 namespace WebApplication1.auth.controller;
 
@@ -24,41 +25,61 @@ public class AuthController(
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginRequest request)
     {
-        var user = await userManager.FindByNameAsync(request.Email);
-        if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
+        var user = await userManager.FindByEmailAsync(request.Email);
+        
+        if (user == null )
         {
             return Unauthorized(new { Message = "Invalid username or password." });
+        }
+        if (!await userManager.CheckPasswordAsync(user, request.Password))
+        {
+            return Unauthorized(new { Message = "Invalid username or password. 1" });
         }
 
         var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
         
-        Response.Cookies.Append("access token", token, new CookieOptions
+        Response.Cookies.Append("access_token", token, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddMinutes(15)
             });
-        Response.Cookies.Append("refresh token", refreshToken, new CookieOptions
+        Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
                 SameSite = SameSiteMode.Strict,
                 Expires = DateTime.UtcNow.AddDays(2)
             });
-        return Ok(new{token, refreshToken = refreshToken});
+        return Ok(user.Id);
     }
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register(RegisterRequest request)
+    public async Task<IActionResult> Register(UserRequestDto request)
     {
         var user = new User
         {
+            Name = request.Name,
+            UserName = request.UserName,
+            Surname = request.Surname,
             Email = request.Email,
-            PasswordHash = request.Password,
+            BirthDate = request.BirthDate,
         };
-
+        if (request.Password is null || request.Password.Length < 6)
+        {
+            return BadRequest("Password must be at least 6 characters long.");
+        }
+        var emailExists = await dbContext.Users.AnyAsync(u => u.Email == user.Email);
+        if (emailExists)
+        {
+            throw new ArgumentException("Email already exists.");
+        }
+        if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Surname) || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+        {
+            throw new ArgumentException("All fields are required.");
+        }
         var result = await userManager.CreateAsync(user, request.Password);
         return result.Succeeded ? Ok() : BadRequest(result.Errors);
     }
@@ -67,9 +88,8 @@ public class AuthController(
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(RefreshRequest request,CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
-        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t =>
-            t.Token == request.RefreshToken, cancellationToken: cancellationToken);
+        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken: cancellationToken);
+
         if (token is null || token.ExpiresAt < DateTime.UtcNow)
         {
             return Unauthorized();
@@ -83,14 +103,14 @@ public class AuthController(
         dbContext.RefreshTokens.Update(token);
         await dbContext.SaveChangesAsync(cancellationToken);
         var(newJwt, newRefreshToken) = await authorizationService.GenerateTokensAsync(user);
-        return Ok(new{token = newJwt, refreshToken = newRefreshToken});
+        return Ok(user.Id);
     }
     
     [HttpGet("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        var accessToken = Request.Cookies["access token"];
-        var refreshToken = Request.Cookies["refresh token"];
+        var accessToken = Request.Cookies["access_token"];
+        var refreshToken = Request.Cookies["refresh_token"];
         
         if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
         {
@@ -108,8 +128,8 @@ public class AuthController(
         dbContext.RefreshTokens.Update(token);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        Response.Cookies.Delete("access token");
-        Response.Cookies.Delete("refresh token");
+        Response.Cookies.Delete("access_token");
+        Response.Cookies.Delete("refresh_token");
 
         return Ok("Logged out successfully.");
     }
@@ -121,7 +141,8 @@ public class AuthController(
         return Ok("This is a secret message only for authenticated users.");
     }
     
-    [HttpPost("reset-password-request")]
+    [HttpPost("password-reset-request")]
+    [AllowAnonymous]
     public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestDto dto)
     {
         await authorizationService.GeneratePasswordResetTokenAsync(dto.Email);

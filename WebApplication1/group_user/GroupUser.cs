@@ -7,11 +7,14 @@ namespace WebApplication1.group_user;
 
 public class GroupUser
 {
-    [Key, Column(Order = 0)]
-    public Guid GroupId { get; set; }
+    [Key]
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    [ForeignKey(nameof(Group)), Column(Order = 0)] 
+    public string GroupId { get; set; } = Guid.NewGuid().ToString();
 
-    [Key, Column(Order = 1)]
-    public Guid UserId { get; set; }
+    [ForeignKey(nameof(User)), Column(Order = 1)]
+
+    public string UserId { get; set; } = Guid.NewGuid().ToString();
 
     [Required]
     public bool IsAdmin { get; set; }

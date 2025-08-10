@@ -1,16 +1,20 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WebApplication1.auth.service;
 using WebApplication1.context;
 using WebApplication1.group_user.service;
 using WebApplication1.group.service;
 using WebApplication1.user;
+using WebApplication1.user.service;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddSwaggerGen();
 builder.Services.AddAuthorization();
 // builder.Services.AddIdentityApiEndpoints<User>().AddEntityFrameworkStores<DBContext>();
@@ -18,6 +22,7 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, SendGridEmailService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
 builder.Services.AddAuthentication(opt =>
 {
@@ -66,15 +71,17 @@ builder.Services.AddAuthentication(opt =>
         ClockSkew = TimeSpan.Zero
     };
 });
-// builder.Services.AddOpenApi(); 
+builder.Services.AddOpenApi(); 
 var app = builder.Build();
-app.MapIdentityApi<User>();
-app.MapSwagger().RequireAuthorization();
+// app.MapIdentityApi<User>();
+app.MapSwagger();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseHttpsRedirection();
 app.Run();

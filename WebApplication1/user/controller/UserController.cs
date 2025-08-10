@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WebApplication1.user.dto;
 using WebApplication1.user.service;
 
 namespace WebApplication1.user.controller;
@@ -7,5 +8,32 @@ namespace WebApplication1.user.controller;
 [Route("api/[controller]")]
 public class UserController(IUserService userService) : ControllerBase
 {
-   
+
+    [HttpGet("get/{user}")]
+    public async Task<IActionResult> GetUserAsync(string user)
+    {
+        if (string.IsNullOrEmpty(user))
+        {
+            return BadRequest("User name cannot be null or empty.");
+        }
+
+        var result = await userService.GetUserAsync(user);
+        if (result == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        return Ok(result);
+    }
+
+    [HttpGet("get-all")]
+    public async Task<IActionResult> GetAllUsersAsync()
+    {
+        var result = await userService.GetAllUsersAsync();
+        if (result == null || !result.Any())
+        {
+            return NotFound("No users found.");
+        }
+        return Ok(result);
+    }
 }

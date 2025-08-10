@@ -23,8 +23,8 @@ public class GroupController(IGroupService groupService) : ControllerBase
             return Unauthorized();
         }
 
-        var newGroupId = await groupService.CreateGroupAsync(userGuid, requestDto);
-        if (newGroupId == Guid.Empty)
+        var newGroupId = await groupService.CreateGroupAsync(userGuid.ToString(), requestDto);
+        if (newGroupId == string.Empty)
         {
             return BadRequest("Failed to create group.");
         }
@@ -34,7 +34,7 @@ public class GroupController(IGroupService groupService) : ControllerBase
     }
     
     [HttpGet("{id}")]
-    public async Task<ActionResult<GroupResponseDto?>> GetGroupById(Guid id)
+    public async Task<ActionResult<GroupResponseDto?>> GetGroupById(string id)
     {
         var group = await groupService.GetGroupByIdAsync(id);
         if (group == null)
