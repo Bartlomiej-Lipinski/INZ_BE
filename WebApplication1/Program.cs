@@ -60,12 +60,12 @@ builder.Services.AddAuthentication(opt =>
 
             return Task.CompletedTask;
         },
-        OnTokenValidated = context =>
+        OnTokenValidated = _ =>
         {
             Console.WriteLine("OnTokenValidated");
             return Task.CompletedTask;
         },
-        OnAuthenticationFailed = context =>
+        OnAuthenticationFailed = _ =>
         {
             Console.WriteLine("OnAuthenticationFailed");
             return Task.CompletedTask;
