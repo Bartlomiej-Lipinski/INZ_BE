@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApplication1.Features.Auth;
+using WebApplication1.Infrastructure.Configuration;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Endpoints;
@@ -39,6 +40,17 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+var emailSettings = builder.Configuration.GetSection("SendGrid").Get<EmailSettings>();
+if (string.IsNullOrEmpty(emailSettings?.ApiKey))
+    throw new InvalidOperationException("SendGrid:ApiKey configuration is missing.");
+
+if (string.IsNullOrEmpty(emailSettings.SenderEmail))
+    throw new InvalidOperationException("SendGrid:SenderEmail configuration is missing.");
+
+if (string.IsNullOrEmpty(emailSettings.SenderName))
+    throw new InvalidOperationException("SendGrid:SenderName configuration is missing.");
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SendGrid"));
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddEndpoints();
