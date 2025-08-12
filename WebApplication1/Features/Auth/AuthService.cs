@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WebApplication1.Infrastructure.Data.Context;
@@ -46,49 +47,63 @@ public class AuthService(IConfiguration configuration, AppDbContext context, IEm
     public async Task GeneratePasswordResetTokenAsync(string email)
     {
         var user = await context.Users.SingleOrDefaultAsync(u => u.Email == email);
-        
         if (user == null)
-            return;
-        
-        var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        var tokenHash = BCrypt.Net.BCrypt.HashPassword(rawToken);
-        var expiresAt = DateTime.UtcNow.AddHours(1);
-        
-        var token = new PasswordResetToken
         {
-            Id = Guid.NewGuid(),
-            UserId = Guid.Parse(user.Id),
+            return;
+        }
+        
+        var tokenId = Guid.NewGuid();
+        var randomBytes = RandomNumberGenerator.GetBytes(32);
+        var randomPart = Convert.ToBase64String(randomBytes);
+        var rawToken = $"{tokenId}:{randomPart}";
+        
+        var tokenHash = ComputeSha256Base64(rawToken);
+        var expiresAt = DateTime.UtcNow.AddHours(1);
+
+        var tokenEntity = new PasswordResetToken
+        {
+            Id = tokenId,
             TokenHash = tokenHash,
+            UserId = user.Id,
             ExpiresAt = expiresAt,
             IsUsed = false
         };
-        
-        await context.PasswordResetTokens.AddAsync(token);
-        await context.SaveChangesAsync();
 
-        //zmienic na faktyczny url frontendu
-        var resetLink = $"https://app/reset-password?token={Uri.EscapeDataString(rawToken)}";
-        var emailBody = $"Kliknij w link, aby zresetować hasło: {resetLink}";
+        await context.PasswordResetTokens.AddAsync(tokenEntity);
+        await context.SaveChangesAsync();
         
+        var resetLink = $"/reset-password?token={Uri.EscapeDataString(rawToken)}"; //TODO add frontend base url
+        var emailBody = $"Kliknij w link, aby zresetować hasło:\n\n{resetLink}\n\nLink wygasa za 1 godzinę.";
         await emailService.SendAsync(user.Email!, "Reset hasła", emailBody);
     }
     
-    public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+    public async Task<bool> ResetPasswordAsync(string rawToken, string newPassword)
     {
-        var tokens = await context.PasswordResetTokens
+        if (string.IsNullOrWhiteSpace(rawToken)) return false;
+        
+        var tokenHash = ComputeSha256Base64(rawToken);
+        
+        var tokenRecord = await context.PasswordResetTokens
             .Include(t => t.User)
-            .Where(t => !t.IsUsed && t.ExpiresAt > DateTime.UtcNow)
-            .ToListAsync();
+            .FirstOrDefaultAsync(
+                t => t.TokenHash == tokenHash && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
 
-        var tokenRecord = tokens.FirstOrDefault(t => BCrypt.Net.BCrypt.Verify(token, t.TokenHash));
-        if (tokenRecord == null)
+        var user = tokenRecord?.User;
+        if (user == null)
             return false;
+        
+        var passwordHasher = new PasswordHasher<User>();
+        user.PasswordHash = passwordHasher.HashPassword(user, newPassword);
 
-        var user = tokenRecord.User;
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-        tokenRecord.IsUsed = true;
-
+        if (tokenRecord != null) tokenRecord.IsUsed = true;
         await context.SaveChangesAsync();
         return true;
+    }
+
+    private static string ComputeSha256Base64(string input)
+    {
+        var bytes = Encoding.UTF8.GetBytes(input);
+        var hash = SHA256.HashData(bytes);
+        return Convert.ToBase64String(hash);
     }
 }

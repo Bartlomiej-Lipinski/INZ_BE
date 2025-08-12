@@ -10,9 +10,9 @@ public interface IEmailService
 
 public class SendGridEmailService(IConfiguration configuration) : IEmailService
 {
-    private readonly string _apiKey = configuration["SendGrid:ApiKey"]!;
-    private readonly string _senderEmail = configuration["SendGrid:SenderEmail"]!;
-    private readonly string _senderName = configuration["SendGrid:SenderName"]!;
+    private readonly string? _apiKey = configuration["SendGrid:ApiKey"];
+    private readonly string? _senderEmail = configuration["SendGrid:SenderEmail"];
+    private readonly string? _senderName = configuration["SendGrid:SenderName"];
 
     public async Task SendAsync(string to, string subject, string body)
     {

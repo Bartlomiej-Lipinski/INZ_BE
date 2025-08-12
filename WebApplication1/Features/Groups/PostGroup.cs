@@ -29,7 +29,7 @@ public class PostGroup : IEndpoint
     {
         if (requestDto == null || string.IsNullOrWhiteSpace(requestDto.Name) || string.IsNullOrWhiteSpace(requestDto.Color))
         {
-            return Results.BadRequest(new { message = "Name and Color are required" });
+            return Results.BadRequest(ApiResponse<string>.Fail("Name and Color are required"));
         }
 
         var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
