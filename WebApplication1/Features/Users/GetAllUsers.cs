@@ -19,7 +19,7 @@ public class GetAllUsers : IEndpoint
             .WithOpenApi();
     }
 
-    public static async Task<IResult> Handle(
+    private static async Task<IResult> Handle(
         AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
@@ -39,15 +39,12 @@ public class GetAllUsers : IEndpoint
             })
             .ToListAsync(cancellationToken);
 
-        if (users.Count == 0)
-        {
-            return Results.NotFound(ApiResponse<string>.Fail("No users found."));
-        }
-
-        return Results.Ok(ApiResponse<List<UserResponseDto>>.Ok(users));
+        return users.Count == 0
+            ? Results.NotFound(ApiResponse<string>.Fail("No users found."))
+            : Results.Ok(ApiResponse<List<UserResponseDto>>.Ok(users));
     }
 
-    public class UserResponseDto
+    private class UserResponseDto
     {
         public string Id { get; set; } = null!;
         public string Email { get; set; } = null!;
