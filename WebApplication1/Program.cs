@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using WebApplication1.Extensions;
 using WebApplication1.Features.Auth;
 using WebApplication1.Infrastructure.Configuration;
 using WebApplication1.Infrastructure.Data.Context;
@@ -12,6 +13,7 @@ using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddLoginSecurity();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddScoped<IAuthService, AuthService>();

@@ -15,43 +15,92 @@ namespace WebApplication1.Features.Auth;
 public class AuthController(
     UserManager<User> userManager,
     AppDbContext dbContext,
-    IAuthService authorizationService)
+    IAuthService authorizationService,
+    ILoginAttemptService loginAttemptService,
+    ICaptchaService captchaService,
+    Logger<AuthController> logger)
     : ControllerBase
 {
 
     [AllowAnonymous]
-    [HttpPost("login")]
-    public async Task<IActionResult> Login(LoginRequest request)
-    {
-        var user = await userManager.FindByEmailAsync(request.Email);
-        
-        if (user == null )
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] ExtendedLoginRequest request)
         {
-            return Unauthorized(new { Message = "Invalid username or password." });
-        }
-        if (!await userManager.CheckPasswordAsync(user, request.Password))
-        {
-            return Unauthorized(new { Message = "Invalid username or password. 1" });
-        }
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
-        var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
-        
-        Response.Cookies.Append("access_token", token, new CookieOptions
+            var userIp = GetUserIpAddress();
+            
+            try
             {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddMinutes(15)
-            });
-        Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+                var requiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
+                
+                if (requiresCaptcha)
+                {
+                    if (string.IsNullOrEmpty(request.CaptchaToken))
+                    {
+                        return BadRequest(new { 
+                            error = "CAPTCHA_REQUIRED", 
+                            message = "CAPTCHA verification required due to multiple failed login attempts",
+                            requiresCaptcha = true
+                        });
+                    }
+
+                    var isCaptchaValid = await captchaService.ValidateCaptchaAsync(request.CaptchaToken, userIp);
+                    if (!isCaptchaValid)
+                    {
+                        await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
+                        return StatusCode(403, new { 
+                            error = "CAPTCHA_INVALID", 
+                            message = "Invalid CAPTCHA verification",
+                            requiresCaptcha = true
+                        });
+                    }
+                }
+                
+                var user = await userManager.FindByEmailAsync(request.Email);
+                if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
+                {
+                    await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
+                    var newRequiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
+                    
+                    return Unauthorized(new { 
+                        Message = "Invalid username or password.",
+                        requiresCaptcha = newRequiresCaptcha
+                    });
+                }
+
+                var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
+                
+                await loginAttemptService.ResetFailedAttemptsAsync(request.Email, userIp);
+                await loginAttemptService.RecordAttemptAsync(request.Email, userIp, true);
+
+                Response.Cookies.Append("access_token", token, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(15)
+                });
+                
+                Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(2)
+                });
+                
+                return Ok(user.Id);
+            }
+            catch (Exception ex)
             {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddDays(2)
-            });
-        return Ok(user.Id);
-    }
+                logger.LogError(ex, "Error during login attempt for {Email}", request.Email);
+                return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during login" });
+            }
+        }
 
     [AllowAnonymous]
     [HttpPost("register")]
@@ -157,6 +206,27 @@ public class AuthController(
             return BadRequest(new { message = "Invalid or expired token." });
 
         return Ok(new { message = "Password has been reset successfully." });
+    }
+    
+    [HttpGet("captcha-required")]
+    public async Task<IActionResult> CheckCaptchaRequired([FromQuery] string email)
+    {
+        if (string.IsNullOrEmpty(email))
+        {
+            return BadRequest("Email is required");
+        }
+
+        var userIp = GetUserIpAddress();
+        var requiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(email, userIp);
+            
+        return Ok(new { requiresCaptcha });
+    }
+    
+    private string GetUserIpAddress()
+    {
+        return (Request.Headers.TryGetValue("X-Forwarded-For", out var value) 
+            ? value.FirstOrDefault()?.Split(',')[0].Trim() 
+            : HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown") ?? string.Empty;
     }
     
     public class UserRequestDto
