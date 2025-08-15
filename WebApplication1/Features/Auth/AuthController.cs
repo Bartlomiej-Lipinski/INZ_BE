@@ -18,7 +18,7 @@ public class AuthController(
     IAuthService authorizationService,
     ILoginAttemptService loginAttemptService,
     ICaptchaService captchaService,
-    Logger<AuthController> logger)
+    ILogger<AuthController> logger)
     : ControllerBase
 {
 
