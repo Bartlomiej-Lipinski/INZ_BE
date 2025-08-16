@@ -34,9 +34,8 @@ public class DeleteUser : IEndpoint
         dbContext.Users.Remove(user);
         var deleted = await dbContext.SaveChangesAsync(cancellationToken);
 
-        if (deleted > 0)
-            return Results.Ok(ApiResponse<string>.Ok("User deleted successfully."));
-        else
-            return Results.Json(ApiResponse<string>.Fail("Failed to delete user."), statusCode: 500);
+        return deleted > 0
+            ? Results.Ok(ApiResponse<string>.Ok("User deleted successfully."))
+            : Results.Json(ApiResponse<string>.Fail("Failed to delete user."), statusCode: 500);
     }  
 }

@@ -4,7 +4,8 @@ namespace WebApplication1.Infrastructure.Data.Entities;
 
 public class RefreshToken
 {
-    [Key] public Guid Id { get; set; }
+    [Key]
+    public string Id { get; set; } = null!;
     public string Token { get; set; } = string.Empty;
     public string UserId { get; set; } = null!;
     public DateTime ExpiresAt { get; set; }

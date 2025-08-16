@@ -1,21 +1,10 @@
 ﻿using FluentAssertions;
-using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Groups;
-using WebApplication1.Infrastructure.Data.Context;
 
 namespace WebApplication1.Tests.Features.Groups;
 
-public class GetUserGroupsTests
+public class GetUserGroupsTest : TestBase
 {
-    private AppDbContext GetInMemoryDbContext()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: "TestDb_" + Guid.NewGuid())
-            .Options;
-
-        return new AppDbContext(options);
-    }
-
     [Fact]
     public async Task Handle_ReturnsGroups_WhenUserHasGroups()
     {

@@ -29,7 +29,8 @@ public class CaptchaService(HttpClient httpClient, IConfiguration configuration,
                 };
 
                 var encodedContent = new FormUrlEncodedContent(parameters);
-                var response = await httpClient.PostAsync("https://www.google.com/recaptcha/api/siteverify", encodedContent);
+                var apiUrl = configuration["ReCaptcha:ApiUrl"] ?? "https://www.google.com/recaptcha/api/siteverify";
+                var response = await httpClient.PostAsync(apiUrl, encodedContent);
 
                 if (!response.IsSuccessStatusCode)
                 {
