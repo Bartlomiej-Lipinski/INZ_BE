@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using WebApplication1.Extensions;
 using WebApplication1.Features.Auth;
 using WebApplication1.Infrastructure.Configuration;
 using WebApplication1.Infrastructure.Data.Context;
@@ -11,7 +12,9 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Middlewares;
 
+DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddLoginSecurity();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -49,17 +52,18 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddScoped<IEmailService, SendGridEmailService>();
-var emailSettings = builder.Configuration.GetSection("SendGrid").Get<EmailSettings>();
-if (string.IsNullOrEmpty(emailSettings?.ApiKey))
-    throw new InvalidOperationException("SendGrid:ApiKey configuration is missing.");
+var sendGridKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+if (string.IsNullOrEmpty(sendGridKey))
+    throw new InvalidOperationException("SENDGRID_API_KEY is missing from environment.");
 
-if (string.IsNullOrEmpty(emailSettings.SenderEmail))
-    throw new InvalidOperationException("SendGrid:SenderEmail configuration is missing.");
+var emailSettingsSection = builder.Configuration.GetSection("SendGrid");
+builder.Services.Configure<EmailSettings>(options =>
+{
+    options.ApiKey = sendGridKey;
+    options.SenderEmail = emailSettingsSection["SenderEmail"] ?? throw new InvalidOperationException();
+    options.SenderName = emailSettingsSection["SenderName"] ?? throw new InvalidOperationException();
+});
 
-if (string.IsNullOrEmpty(emailSettings.SenderName))
-    throw new InvalidOperationException("SendGrid:SenderName configuration is missing.");
-
-builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SendGrid"));
 builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
 
 builder.Services.AddEndpoints();
