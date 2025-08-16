@@ -13,6 +13,8 @@ public class Group
     [Required] public string Color { get; set; } = null!;
 
     [Required] public string Code { get; set; } = null!;
+    
+    public DateTime? codeExpiration { get; set; } 
 
     public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
 }
