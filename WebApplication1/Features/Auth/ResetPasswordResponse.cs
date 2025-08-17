@@ -2,7 +2,7 @@
 
 namespace WebApplication1.Features.Auth;
 
-public class ResetPasswordCommand
+public class ResetPasswordResponse
 {
     [Required]
     public string Token { get; set; } = null!;

@@ -1,6 +1,6 @@
 ﻿namespace WebApplication1.Features.Auth;
 
-public class CreateUserCommand
+public class UserRequest
 {
     public string Name { get; set; } = null!;
     public string UserName { get; set; } = null!;

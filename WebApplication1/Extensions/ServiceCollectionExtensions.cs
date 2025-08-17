@@ -1,4 +1,5 @@
 ﻿using WebApplication1.Features.Auth;
+using WebApplication1.Features.Auth.Services;
 
 namespace WebApplication1.Extensions;
 
@@ -8,6 +9,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<ILoginAttemptService, LoginAttemptService>();
         services.AddScoped<ICaptchaService, CaptchaService>();
+        services.AddScoped<ITwoFactorService, TwoFactorService>();
+        services.AddScoped<IEmailService, SendGridEmailService>();
         services.AddHttpClient<CaptchaService>();
             
         return services;

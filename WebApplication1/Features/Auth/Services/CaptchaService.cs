@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace WebApplication1.Features.Auth;
+namespace WebApplication1.Features.Auth.Services;
 
 public interface ICaptchaService
 {

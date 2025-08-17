@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Auth.Services;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
 
@@ -18,6 +19,8 @@ public class AuthController(
     IAuthService authorizationService,
     ILoginAttemptService loginAttemptService,
     ICaptchaService captchaService,
+    ITwoFactorService twoFactorService,
+    IEmailService emailService,
     ILogger<AuthController> logger)
     : ControllerBase
 {
@@ -32,6 +35,7 @@ public class AuthController(
             }
 
             var userIp = GetUserIpAddress();
+            var userAgent = Request.Headers["User-Agent"].FirstOrDefault();
             
             try
             {
@@ -71,27 +75,29 @@ public class AuthController(
                         requiresCaptcha = newRequiresCaptcha
                     });
                 }
+                
+                var has2Fa = await userManager.GetTwoFactorEnabledAsync(user);
+                if (has2Fa)
+                {
+                    var code = await twoFactorService.GenerateCodeAsync(user.Id, userIp, userAgent);
+
+                    if (user is { Email: not null, UserName: not null })
+                        await emailService.SendTwoFactorCodeAsync(user.Email, code, user.UserName);
+                    await loginAttemptService.RecordAttemptAsync(request.Email, userIp, true);
+                    
+                    return Ok(new { 
+                        requiresTwoFactor = true,
+                        message = "Verification code sent to your email",
+                        expiresIn = (int)twoFactorService.GetCodeExpiryTimeAsync(user.Id).Result.TotalSeconds
+                    });
+                }
 
                 var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
                 
                 await loginAttemptService.ResetFailedAttemptsAsync(request.Email, userIp);
                 await loginAttemptService.RecordAttemptAsync(request.Email, userIp, true);
 
-                Response.Cookies.Append("access_token", token, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddMinutes(15)
-                });
-                
-                Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddDays(2)
-                });
+                SetAuthCookies(token, refreshToken);
                 
                 return Ok(user.Id);
             }
@@ -182,24 +188,24 @@ public class AuthController(
         return Ok("Logged out successfully.");
     }
     
-    [HttpGet("secret")]
     [Authorize]
+    [HttpGet("secret")]
     public IActionResult Secret()
     {
         return Ok("This is a secret message only for authenticated users.");
     }
     
-    [HttpPost("password-reset-request")]
     [AllowAnonymous]
-    public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequestCommand dto)
+    [HttpPost("password-reset-request")]
+    public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequest dto)
     {
         await authorizationService.GeneratePasswordResetTokenAsync(dto.Email);
         return Ok(new { message = "If the email exists, a reset link has been sent." });
     }
     
-    [HttpPost("reset-password")]
     [AllowAnonymous]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand dto)
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordResponse dto)
     {
         var success = await authorizationService.ResetPasswordAsync(dto.Token, dto.NewPassword);
 
@@ -223,11 +229,106 @@ public class AuthController(
         return Ok(new { requiresCaptcha });
     }
     
+    [AllowAnonymous]
+    [HttpPost("verify-2fa")]
+    public async Task<IActionResult> VerifyTwoFactor([FromBody] TwoFactorVerificationRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var user = await userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return Unauthorized(new { Message = "Invalid request." });
+            }
+            
+            var isValidCode = await twoFactorService.ValidateCodeAsync(user.Id, request.Code);
+                
+            if (!isValidCode)
+            {
+                return Unauthorized(new { 
+                    Message = "Invalid or expired verification code.",
+                    codeExpired = !await twoFactorService.HasValidCodeAsync(user.Id)
+                });
+            }
+            
+            var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
+                
+            SetAuthCookies(token, refreshToken);
+                
+            return Ok(user.Id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during 2FA verification for {Email}", request.Email);
+            return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during verification" });
+        }
+    }
+    
+    [AllowAnonymous]
+    [HttpPost("resend-2fa")]
+    public async Task<IActionResult> ResendTwoFactorCode([FromBody] TwoFactorRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var user = await userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return Ok(new { message = "If the email exists, a new code has been sent." });
+            }
+
+            var userIp = GetUserIpAddress();
+            var userAgent = Request.Headers.UserAgent.FirstOrDefault();
+            
+            var code = await twoFactorService.GenerateCodeAsync(user.Id, userIp, userAgent);
+            if (user is { Email: not null, UserName: not null })
+                await emailService.SendTwoFactorCodeAsync(user.Email, code, user.UserName);
+
+            return Ok(new { 
+                message = "New verification code sent",
+                expiresIn = (int)twoFactorService.GetCodeExpiryTimeAsync(user.Id).Result.TotalSeconds
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during 2FA code resend for {Email}", request.Email);
+            return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred" });
+        }
+    }
+    
     private string GetUserIpAddress()
     {
         return (Request.Headers.TryGetValue("X-Forwarded-For", out var value) 
             ? value.FirstOrDefault()?.Split(',')[0].Trim() 
             : HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown") ?? string.Empty;
+    }
+    
+    private void SetAuthCookies(string token, string refreshToken)
+    {
+        Response.Cookies.Append("access_token", token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddMinutes(15)
+        });
+                
+        Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(2)
+        });
     }
     
     public class UserRequestDto

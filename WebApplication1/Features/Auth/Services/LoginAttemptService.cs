@@ -2,7 +2,7 @@
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
 
-namespace WebApplication1.Features.Auth;
+namespace WebApplication1.Features.Auth.Services;
 
 public interface ILoginAttemptService
 {
