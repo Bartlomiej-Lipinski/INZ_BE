@@ -3,34 +3,23 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Groups;
-using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Groups;
 
-public class PostGroupTests
+public class PostGroupTest : TestBase
 {
-    private AppDbContext CreateInMemoryDbContext()
-    {
-        var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        return new AppDbContext(options);
-    }
-    
     private HttpContext CreateHttpContextWithUser(string? userId = null)
     {
         var context = new DefaultHttpContext();
 
-        if (userId != null)
+        if (userId == null) return context;
+        var claims = new List<Claim>
         {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId)
-            };
-            var identity = new ClaimsIdentity(claims, "TestAuthType");
-            context.User = new ClaimsPrincipal(identity);
-        }
+            new(ClaimTypes.NameIdentifier, userId)
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        context.User = new ClaimsPrincipal(identity);
 
         return context;
     }
@@ -39,8 +28,8 @@ public class PostGroupTests
     public async Task Handle_ReturnsCreatedResult_WhenValidRequest()
     {
         // Arrange
-        await using var dbContext = CreateInMemoryDbContext();
-        var userId = "user-123";
+        await using var dbContext = GetInMemoryDbContext();
+        const string userId = "user-123";
         var httpContext = CreateHttpContextWithUser(userId);
         var requestDto = TestDataFactory.CreateGroupRequestDto("MyGroup", "Blue");
 
@@ -82,7 +71,7 @@ public class PostGroupTests
     public async Task Handle_ReturnsBadRequest_WhenRequestInvalid()
     {
         // Arrange
-        await using var dbContext = CreateInMemoryDbContext();
+        await using var dbContext = GetInMemoryDbContext();
         var httpContext = CreateHttpContextWithUser("user-123");
         var invalidRequestDto = new PostGroup.GroupRequestDto { Name = "", Color = "" };
 
@@ -108,7 +97,7 @@ public class PostGroupTests
     public async Task Handle_ReturnsUnauthorized_WhenUserNotAuthenticated()
     {
         // Arrange
-        await using var dbContext = CreateInMemoryDbContext();
+        await using var dbContext = GetInMemoryDbContext();
         var httpContext = CreateHttpContextWithUser();
         var requestDto = TestDataFactory.CreateGroupRequestDto();
 

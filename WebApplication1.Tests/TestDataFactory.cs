@@ -9,7 +9,7 @@ public static class TestDataFactory
     {
         return new Group
         {
-            Id = id ?? Guid.NewGuid().ToString(),
+            Id = id ?? "g1",
             Name = name ?? "Test Group",
             Color = color ?? "#FFFFFF",
             Code = code ?? GenerateUniqueCode()
@@ -20,8 +20,8 @@ public static class TestDataFactory
     {
         return new GroupUser
         {
-            UserId = userId ?? Guid.NewGuid().ToString(),
-            GroupId = groupId ?? Guid.NewGuid().ToString(),
+            UserId = userId ?? "user1",
+            GroupId = groupId ?? "g1",
             IsAdmin = isAdmin
         };
     }
@@ -37,6 +37,14 @@ public static class TestDataFactory
         {
             Name = name ?? "TestGroup",
             Color = color ?? "Red"
+        };
+    }
+
+    public static User CreateUser(string? id = null)
+    {
+        return new User
+        {
+
         };
     }
 }

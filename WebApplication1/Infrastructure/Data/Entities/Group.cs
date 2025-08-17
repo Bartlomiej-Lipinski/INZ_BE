@@ -6,15 +6,19 @@ namespace WebApplication1.Infrastructure.Data.Entities;
 [Index(nameof(Code), IsUnique = true)]
 public class Group
 {
-    [Key] public string Id { get; set; } = Guid.NewGuid().ToString();
+    [Key]
+    public string Id { get; set; } = Guid.NewGuid().ToString();
 
-    [Required] public string Name { get; set; } = null!;
+    [Required]
+    public string Name { get; set; } = null!;
 
-    [Required] public string Color { get; set; } = null!;
+    [Required]
+    public string Color { get; set; } = null!;
 
-    [Required] public string Code { get; set; } = null!;
+    [Required]
+    public string Code { get; set; } = null!;
     
     public DateTime? codeExpiration { get; set; } 
-
+    
     public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
 }

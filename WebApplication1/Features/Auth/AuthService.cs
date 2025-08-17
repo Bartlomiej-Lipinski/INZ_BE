@@ -1,4 +1,5 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+﻿using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,7 +29,8 @@ public class AuthService(IConfiguration configuration, AppDbContext context, IEm
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email)
         };
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Auth:Key"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Auth:Key"]
+                                                                  ?? throw new InvalidOperationException()));
         var token = new JwtSecurityToken(claims: claims,expires:DateTime.UtcNow.AddMinutes(5),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
@@ -62,7 +64,7 @@ public class AuthService(IConfiguration configuration, AppDbContext context, IEm
 
         var tokenEntity = new PasswordResetToken
         {
-            Id = tokenId,
+            Id = tokenId.ToString(),
             TokenHash = tokenHash,
             UserId = user.Id,
             ExpiresAt = expiresAt,

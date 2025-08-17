@@ -46,12 +46,9 @@ public class GetUserById : IEndpoint
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (user == null)
-        {
-            return Results.NotFound(ApiResponse<string>.Fail("User not found."));
-        }
-
-        return Results.Ok(ApiResponse<UserResponseDto>.Ok(user));
+        return user == null
+            ? Results.NotFound(ApiResponse<string>.Fail("User not found."))
+            : Results.Ok(ApiResponse<UserResponseDto>.Ok(user));
     }
 
     public class UserResponseDto
