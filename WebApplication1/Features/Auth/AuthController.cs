@@ -97,7 +97,8 @@ public class AuthController(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error during login attempt for {Email}", request.Email);
+                logger.LogError(ex, "Error during login attempt for {Email}", request.Email.Replace("\r", "")
+                    .Replace("\n", ""));
                 return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during login" });
             }
         }
@@ -149,7 +150,7 @@ public class AuthController(
         token.IsRevoked = true;
         dbContext.RefreshTokens.Update(token);
         await dbContext.SaveChangesAsync(cancellationToken);
-        var(newJwt, newRefreshToken) = await authorizationService.GenerateTokensAsync(user);
+        await authorizationService.GenerateTokensAsync(user);
         return Ok(user.Id);
     }
     

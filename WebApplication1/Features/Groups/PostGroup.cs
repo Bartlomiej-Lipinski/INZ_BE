@@ -27,7 +27,7 @@ public class PostGroup : IEndpoint
         AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        if (requestDto == null || string.IsNullOrWhiteSpace(requestDto.Name) || string.IsNullOrWhiteSpace(requestDto.Color))
+        if (string.IsNullOrWhiteSpace(requestDto.Name) || string.IsNullOrWhiteSpace(requestDto.Color))
         {
             return Results.BadRequest(ApiResponse<string>.Fail("Name and Color are required"));
         }

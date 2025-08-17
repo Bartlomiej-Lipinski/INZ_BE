@@ -6,12 +6,17 @@ public class PasswordResetToken
 {
     [Key]
     public string Id { get; set; } = null!;
+    
     [Required]
     public string TokenHash { get; set; } = null!; //TODO add index on db
+    
     [Required]
     public string UserId { get; set; } = null!;
+    
     [Required]
     public DateTime ExpiresAt { get; set; }
+    
     public bool IsUsed { get; set; } = false;
+    
     public User? User { get; set; }
 }
