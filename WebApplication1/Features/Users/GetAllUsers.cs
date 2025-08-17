@@ -5,7 +5,7 @@ using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Users;
-
+//TODO: Delete this code in production, this is just for testing purposes
 [ApiExplorerSettings(GroupName = "Users")]
 public class GetAllUsers : IEndpoint
 {
@@ -15,7 +15,6 @@ public class GetAllUsers : IEndpoint
             .WithName("GetAllUsers")
             .WithDescription("Returns all users")
             .WithTags("Users")
-            .RequireAuthorization()
             .WithOpenApi();
     }
 

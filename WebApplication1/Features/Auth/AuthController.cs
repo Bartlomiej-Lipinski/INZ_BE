@@ -104,7 +104,7 @@ public class AuthController(
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register(UserRequestDto request)
+    public async Task<IActionResult> Register([FromBody]UserRequestDto request)
     {
         var user = new User
         {
@@ -128,7 +128,7 @@ public class AuthController(
             throw new ArgumentException("All fields are required.");
         }
         var result = await userManager.CreateAsync(user, request.Password);
-        return result.Succeeded ? Ok() : BadRequest(result.Errors);
+        return result.Succeeded ? Ok(user.Id) : BadRequest(result.Errors);
     }
     
     [Authorize("RefreshTokenPolicy")]
