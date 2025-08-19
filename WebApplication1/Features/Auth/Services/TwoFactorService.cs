@@ -39,8 +39,7 @@ public class TwoFactorService(AppDbContext context, ILogger<TwoFactorService> lo
             context.TwoFactorCodes.Add(twoFactorCode);
             await context.SaveChangesAsync();
 
-            logger.LogInformation("2FA code generated for user {UserId} (expires at {ExpiresAt})", 
-                userId, expiresAt);
+            logger.LogInformation("2FA code generated for user {UserId} (expires at {ExpiresAt})", userId, expiresAt);
 
             return code;
         }
@@ -87,7 +86,7 @@ public class TwoFactorService(AppDbContext context, ILogger<TwoFactorService> lo
             if (existingCodes.Count != 0)
             {
                 await context.SaveChangesAsync();
-                logger.LogInformation("Invalidated {Count} existing 2FA codes for user {UserId}", 
+                logger.LogInformation("Invalidated {Count} existing 2FA codes for user {UserId}",
                     existingCodes.Count, userId);
             }
         }

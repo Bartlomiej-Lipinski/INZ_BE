@@ -26,88 +26,89 @@ public class AuthController(
 {
 
     [AllowAnonymous]
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] ExtendedLoginRequest request)
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] ExtendedLoginRequest request)
+    {
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+            return BadRequest(ModelState);
+        }
 
-            var userIp = GetUserIpAddress();
-            var userAgent = Request.Headers["User-Agent"].FirstOrDefault();
+        var userIp = GetUserIpAddress();
+        var userAgent = Request.Headers.UserAgent.FirstOrDefault();
+        
+        try
+        {
+            var requiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
             
-            try
+            if (requiresCaptcha)
             {
-                var requiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
-                
-                if (requiresCaptcha)
+                if (string.IsNullOrEmpty(request.CaptchaToken))
                 {
-                    if (string.IsNullOrEmpty(request.CaptchaToken))
-                    {
-                        return BadRequest(new { 
-                            error = "CAPTCHA_REQUIRED", 
-                            message = "CAPTCHA verification required due to multiple failed login attempts",
-                            requiresCaptcha = true
-                        });
-                    }
-
-                    var isCaptchaValid = await captchaService.ValidateCaptchaAsync(request.CaptchaToken, userIp);
-                    if (!isCaptchaValid)
-                    {
-                        await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
-                        return StatusCode(403, new { 
-                            error = "CAPTCHA_INVALID", 
-                            message = "Invalid CAPTCHA verification",
-                            requiresCaptcha = true
-                        });
-                    }
+                    return BadRequest(new { 
+                        error = "CAPTCHA_REQUIRED", 
+                        message = "CAPTCHA verification required due to multiple failed login attempts",
+                        requiresCaptcha = true
+                    });
                 }
-                
-                var user = await userManager.FindByEmailAsync(request.Email);
-                if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
+
+                var isCaptchaValid = await captchaService.ValidateCaptchaAsync(request.CaptchaToken, userIp);
+                if (!isCaptchaValid)
                 {
                     await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
-                    var newRequiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
-                    
-                    return Unauthorized(new { 
-                        Message = "Invalid username or password.",
-                        requiresCaptcha = newRequiresCaptcha
+                    return StatusCode(403, new { 
+                        error = "CAPTCHA_INVALID", 
+                        message = "Invalid CAPTCHA verification",
+                        requiresCaptcha = true
                     });
                 }
-                
-                var has2Fa = await userManager.GetTwoFactorEnabledAsync(user);
-                if (has2Fa)
-                {
-                    var code = await twoFactorService.GenerateCodeAsync(user.Id, userIp, userAgent);
-
-                    if (user is { Email: not null, UserName: not null })
-                        await emailService.SendTwoFactorCodeAsync(user.Email, code, user.UserName);
-                    await loginAttemptService.RecordAttemptAsync(request.Email, userIp, true);
-                    
-                    return Ok(new { 
-                        requiresTwoFactor = true,
-                        message = "Verification code sent to your email",
-                        expiresIn = (int)twoFactorService.GetCodeExpiryTimeAsync(user.Id).Result.TotalSeconds
-                    });
-                }
-
-                var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
-                
-                await loginAttemptService.ResetFailedAttemptsAsync(request.Email, userIp);
-                await loginAttemptService.RecordAttemptAsync(request.Email, userIp, true);
-
-                SetAuthCookies(token, refreshToken);
-                
-                return Ok(user.Id);
             }
-            catch (Exception ex)
+            
+            var user = await userManager.FindByEmailAsync(request.Email);
+            if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
             {
-                logger.LogError(ex, "Error during login attempt for {Email}", request.Email.Replace("\r", "")
-                    .Replace("\n", ""));
-                return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during login" });
+                await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
+                var newRequiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
+                
+                return Unauthorized(new { 
+                    Message = "Invalid username or password.",
+                    requiresCaptcha = newRequiresCaptcha
+                });
             }
+            
+            var has2Fa = await userManager.GetTwoFactorEnabledAsync(user);
+                
+            if (has2Fa)
+            {
+                var code = await twoFactorService.GenerateCodeAsync(user.Id, userIp, userAgent);
+
+                if (user.Email != null) await emailService.SendTwoFactorCodeAsync(user.Email, code, user.UserName);
+
+                await loginAttemptService.RecordAttemptAsync(request.Email, userIp, true);
+                    
+                return Ok(new { 
+                    requiresTwoFactor = true,
+                    message = "Verification code sent to your email",
+                    expiresIn = (int)(await twoFactorService.GetCodeExpiryTimeAsync(user.Id)).TotalSeconds
+                });
+            }
+
+            var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
+            
+            await loginAttemptService.ResetFailedAttemptsAsync(request.Email, userIp);
+            await loginAttemptService.RecordAttemptAsync(request.Email, userIp, true);
+
+            SetAuthCookies(token, refreshToken);
+            
+            return Ok(user.Id);
         }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during login attempt for {Email}", request.Email.Replace("\r", "")
+                .Replace("\n", ""));
+            return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during login" });
+        }
+    }
 
     [AllowAnonymous]
     [HttpPost("register")]
@@ -265,7 +266,7 @@ public class AuthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error during 2FA verification for {Email}",
-                request.Email?.Replace("\r", "").Replace("\n", ""));
+                request.Email.Replace("\r", "").Replace("\n", ""));
             return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during verification" });
         }
     }
@@ -296,13 +297,13 @@ public class AuthController(
 
             return Ok(new { 
                 message = "New verification code sent",
-                expiresIn = (int)twoFactorService.GetCodeExpiryTimeAsync(user.Id).Result.TotalSeconds
+                expiresIn = (int)(await twoFactorService.GetCodeExpiryTimeAsync(user.Id)).TotalSeconds
             });
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error during 2FA verification for {Email}",
-                request.Email?.Replace("\r", "").Replace("\n", ""));
+                request.Email.Replace("\r", "").Replace("\n", ""));
             return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred" });
         }
     }

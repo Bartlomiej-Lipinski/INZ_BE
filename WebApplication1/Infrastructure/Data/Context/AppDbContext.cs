@@ -24,7 +24,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasIndex(e => new { e.Email, e.IpAddress, e.AttemptTime });
             entity.HasIndex(e => e.AttemptTime);
         });
-        
+
         modelBuilder.Entity<TwoFactorCode>(entity =>
         {
             entity.HasKey(e => e.Id);

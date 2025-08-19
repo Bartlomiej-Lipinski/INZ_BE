@@ -1,5 +1,4 @@
-﻿using WebApplication1.Features.Auth;
-using WebApplication1.Features.Auth.Services;
+﻿using WebApplication1.Features.Auth.Services;
 
 namespace WebApplication1.Extensions;
 
