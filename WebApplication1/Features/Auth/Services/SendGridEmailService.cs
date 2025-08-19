@@ -64,11 +64,11 @@ public class SendGridEmailService(IConfiguration configuration, ILogger<SendGrid
 
             await client.SendMailAsync(message);
                 
-            logger.LogInformation("2FA code email sent successfully to {Email}", email);
+            logger.LogInformation("2FA code email sent successfully.");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send 2FA code email to {Email}", email);
+            logger.LogError(ex, "Failed to send 2FA code email.");
             throw;
         }
     }

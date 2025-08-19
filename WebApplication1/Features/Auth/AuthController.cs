@@ -264,7 +264,8 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during 2FA verification for {Email}", request.Email);
+            logger.LogError(ex, "Error during 2FA verification for {Email}",
+                request.Email?.Replace("\r", "").Replace("\n", ""));
             return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during verification" });
         }
     }
@@ -300,7 +301,8 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during 2FA code resend for {Email}", request.Email);
+            logger.LogError(ex, "Error during 2FA verification for {Email}",
+                request.Email?.Replace("\r", "").Replace("\n", ""));
             return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred" });
         }
     }
