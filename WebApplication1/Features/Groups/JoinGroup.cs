@@ -49,13 +49,14 @@ public class JoinGroup : IEndpoint
         {
             GroupId = group.Id,
             UserId = userId,
-            IsAdmin = false // Default to non-admin
+            IsAdmin = false, // Default to non-admin
+            Accepted = AcceptanceStatus.Pending
         };
 
         await dbContext.GroupUsers.AddAsync(groupUser, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group."));
+        return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group. Awaiting admin approval."));
     }
     public record JoinGroupRequest(string Code, string UserId);
 }

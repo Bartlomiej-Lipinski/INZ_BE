@@ -19,7 +19,15 @@ public class GroupUser
     [Required]
     public bool IsAdmin { get; set; }
     
+    public AcceptanceStatus Accepted { get; set; } 
+    
     public Group Group { get; set; } = null!;
     
     public User User { get; set; } = null!;
+}
+public enum AcceptanceStatus
+{
+    Pending,
+    Accepted,
+    Rejected
 }
