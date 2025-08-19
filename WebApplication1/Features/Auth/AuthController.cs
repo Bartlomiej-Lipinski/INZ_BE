@@ -292,7 +292,7 @@ public class AuthController(
             var userAgent = Request.Headers.UserAgent.FirstOrDefault();
             
             var code = await twoFactorService.GenerateCodeAsync(user.Id, userIp, userAgent);
-            if (user is { Email: not null, UserName: not null })
+            if (user?.Email != null)
                 await emailService.SendTwoFactorCodeAsync(user.Email, code, user.UserName);
 
             return Ok(new { 
