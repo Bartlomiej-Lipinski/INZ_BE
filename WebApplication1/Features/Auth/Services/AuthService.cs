@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,7 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
 
-namespace WebApplication1.Features.Auth;
+namespace WebApplication1.Features.Auth.Services;
 
 public interface IAuthService
 {

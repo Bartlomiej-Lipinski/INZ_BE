@@ -2,7 +2,7 @@
 
 namespace WebApplication1.Features.Auth;
 
-public class PasswordResetRequestCommand
+public class PasswordResetRequest
 {
     [Required]
     [EmailAddress]

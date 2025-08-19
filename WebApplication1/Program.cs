@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApplication1.Extensions;
 using WebApplication1.Features.Auth;
+using WebApplication1.Features.Auth.Services;
 using WebApplication1.Infrastructure.Configuration;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
