@@ -83,7 +83,7 @@ public class TwoFactorService(AppDbContext context, ILogger<TwoFactorService> lo
                 code.IsUsed = true;
             }
 
-            if (existingCodes.Count != 0)
+            if (existingCodes.Any())
             {
                 await context.SaveChangesAsync();
                 logger.LogInformation("Invalidated {Count} existing 2FA codes for user {UserId}",
