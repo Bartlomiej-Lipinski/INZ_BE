@@ -43,7 +43,43 @@ public class SendGridEmailService(IConfiguration configuration, ILogger<SendGrid
             {
                 EnableSsl = bool.Parse(smtpSettings["EnableSsl"]),
                 Credentials = new NetworkCredential(
-                    smtpSettings["Username"], 
+    public Task SendTwoFactorCodeAsync(string email, string code, string userName = null)
+    {
+        throw new NotImplementedException("SendTwoFactorCodeAsync is not supported by SendGridEmailService. Use SmtpEmailService instead.");
+    }
+}
+
+public class SmtpEmailService(IConfiguration configuration, ILogger<SmtpEmailService> logger) : IEmailService
+{
+    public async Task SendAsync(string to, string subject, string body)
+    {
+        var smtpSettings = configuration.GetSection("SmtpSettings");
+        using var client = new SmtpClient(smtpSettings["Host"], int.Parse(smtpSettings["Port"]))
+        {
+            EnableSsl = bool.Parse(smtpSettings["EnableSsl"]),
+            Credentials = new NetworkCredential(
+                smtpSettings["Username"],
+                smtpSettings["Password"])
+        };
+        var message = new MailMessage(smtpSettings["FromEmail"], to, subject, body)
+        {
+            IsBodyHtml = true
+        };
+        await client.SendMailAsync(message);
+        logger.LogInformation("SMTP email sent successfully.");
+    }
+
+    public async Task SendTwoFactorCodeAsync(string email, string code, string userName = null)
+    {
+        try
+        {
+            var smtpSettings = configuration.GetSection("SmtpSettings");
+
+            using var client = new SmtpClient(smtpSettings["Host"], int.Parse(smtpSettings["Port"]))
+            {
+                EnableSsl = bool.Parse(smtpSettings["EnableSsl"]),
+                Credentials = new NetworkCredential(
+                    smtpSettings["Username"],
                     smtpSettings["Password"])
             };
 
