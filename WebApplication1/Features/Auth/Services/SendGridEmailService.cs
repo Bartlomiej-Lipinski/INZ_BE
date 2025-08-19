@@ -99,7 +99,7 @@ public class SendGridEmailService(IConfiguration configuration, ILogger<SendGrid
 
             if (response.IsSuccessStatusCode)
             {
-                logger.LogInformation("2FA code email sent successfully to {Email}", email);
+                logger.LogInformation("2FA code email sent successfully.");
             }
             else
             {
