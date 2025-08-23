@@ -36,18 +36,24 @@ public class GenerateCodeToJoinGroup : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Group not found."));
         }
 
-        group.Code = GenerateUniqueCode(dbContext, group.Id);
-        group.codeExpiration = DateTime.UtcNow.AddMinutes(5);
+        group.Code = GenerateUniqueCode(dbContext, group.Id); // Generate a unique 5-digit code
+        group.CodeExpirationTime = DateTime.UtcNow.AddMinutes(5);
         dbContext.Groups.Update(group);
         var updated = await dbContext.SaveChangesAsync(cancellationToken);
 
         if (updated > 0)
         {
-            return Results.Ok(ApiResponse<string>.Ok("Code generated successfully."));
+            return Results.Ok(ApiResponse<GenerateCodeResponse>.Ok(
+                new GenerateCodeResponse("New code generated successfully. The code is valid for 5 minutes.")));
         }
 
         return Results.Json(ApiResponse<string>.Fail("Failed to generate code."), statusCode: 500);
     }
+    /**
+     * Generates a unique 5-digit code that is not currently in use by any group.
+     * Ensures that the generated code does not conflict with existing codes in the database.
+     * 
+     */
     private static string GenerateUniqueCode(AppDbContext dbContext, string groupId)
     {
         string code;
@@ -56,9 +62,10 @@ public class GenerateCodeToJoinGroup : IEndpoint
             var random = new Random();
             code = random.Next(10000, 99999).ToString();
         } while (dbContext.Groups.Any(g => g.Code == code && g.Id != groupId) 
-                 || dbContext.Groups.Any(g => g.codeExpiration > DateTime.UtcNow && g.Code == code)
+                 || dbContext.Groups.Any(g => g.CodeExpirationTime > DateTime.UtcNow && g.Code == code)
                  );
 
         return code;
     }
+    public record GenerateCodeResponse(string message);
 }

@@ -35,7 +35,7 @@ public class JoinGroup : IEndpoint
         {
             return Results.NotFound(ApiResponse<string>.Fail("Group not found or code is invalid."));
         }
-        if (group.codeExpiration < DateTime.UtcNow)
+        if (group.CodeExpirationTime < DateTime.UtcNow)
         {
             return Results.BadRequest(ApiResponse<string>.Fail("The code has expired."));
         }

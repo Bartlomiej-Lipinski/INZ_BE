@@ -6,7 +6,7 @@ namespace WebApplication1.Infrastructure.Data.Entities;
 public class GroupUser
 {
     [Key]
-    public string Id { get; set; } = null!;
+    public string Id { get; set; } = Guid.NewGuid().ToString();
     
     [ForeignKey(nameof(Group))]
     [Column(Order = 0)]

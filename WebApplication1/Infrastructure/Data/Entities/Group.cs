@@ -18,7 +18,7 @@ public class Group
     [Required]
     public string Code { get; set; } = null!;
     
-    public DateTime? codeExpiration { get; set; } 
+    public DateTime? CodeExpirationTime { get; set; } 
     
     public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
 }
