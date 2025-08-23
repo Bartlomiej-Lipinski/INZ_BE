@@ -19,7 +19,7 @@ public class GroupUser
     [Required]
     public bool IsAdmin { get; set; }
     
-    public AcceptanceStatus Accepted { get; set; } 
+    public AcceptanceStatus AcceptanceStatus { get; set; } 
     
     public Group Group { get; set; } = null!;
     
