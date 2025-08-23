@@ -29,9 +29,15 @@ public class GetAmountOfJoinRequests : IEndpoint
             return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty."));
         }
 
+        var adminGroupIds = await dbContext.GroupUsers
+            .Where(gu => gu.UserId == request.UserId && gu.IsAdmin)
+            .Select(gu => gu.GroupId)
+            .ToListAsync(cancellationToken);
         var amount = await dbContext.GroupUsers
             .AsNoTracking()
-            .CountAsync(r => r.Group.GroupUsers.Any(gu => gu.UserId == request.UserId && gu.IsAdmin && gu.AcceptanceStatus == AcceptanceStatus.Pending), cancellationToken);
+            .Where(gu => adminGroupIds.Contains(gu.GroupId) && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
+            .CountAsync(cancellationToken);
+        
 
         return Results.Ok(ApiResponse<AmountResponse>.Ok(new AmountResponse(amount)));
     }
