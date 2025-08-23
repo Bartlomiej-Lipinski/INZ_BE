@@ -50,7 +50,7 @@ public class JoinGroup : IEndpoint
             GroupId = group.Id,
             UserId = userId,
             IsAdmin = false, // Default to non-admin
-            Accepted = AcceptanceStatus.Pending
+            AcceptanceStatus = AcceptanceStatus.Pending
         };
 
         await dbContext.GroupUsers.AddAsync(groupUser, cancellationToken);

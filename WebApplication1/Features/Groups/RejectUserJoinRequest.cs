@@ -31,7 +31,7 @@ public class RejectUserJoinRequest : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Join request not found."));
         }
 
-        if (groupUser.Accepted != AcceptanceStatus.Pending)
+        if (groupUser.AcceptanceStatus != AcceptanceStatus.Pending)
         {
             return Results.BadRequest(ApiResponse<string>.Fail("Join request is not pending."));
         }

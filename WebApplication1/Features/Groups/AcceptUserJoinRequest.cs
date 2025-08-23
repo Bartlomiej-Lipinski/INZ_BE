@@ -31,12 +31,12 @@ public class AcceptUserJoinRequest : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Join request not found."));
         }
 
-        if (groupUser.Accepted != AcceptanceStatus.Pending)
+        if (groupUser.AcceptanceStatus != AcceptanceStatus.Pending)
         {
             return Results.BadRequest(ApiResponse<string>.Fail("Join request is not pending."));
         }
 
-        groupUser.Accepted = AcceptanceStatus.Accepted;
+        groupUser.AcceptanceStatus = AcceptanceStatus.Accepted;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.Ok(ApiResponse<string>.Ok("Join request accepted successfully."));
