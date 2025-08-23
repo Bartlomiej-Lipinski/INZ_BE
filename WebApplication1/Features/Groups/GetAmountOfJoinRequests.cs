@@ -38,7 +38,6 @@ public class GetAmountOfJoinRequests : IEndpoint
             .Where(gu => adminGroupIds.Contains(gu.GroupId) && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
             .CountAsync(cancellationToken);
         
-
         return Results.Ok(ApiResponse<AmountResponse>.Ok(new AmountResponse(amount)));
     }
     public record AmountRequest(string UserId);
