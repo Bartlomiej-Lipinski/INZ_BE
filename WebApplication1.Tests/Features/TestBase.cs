@@ -5,10 +5,10 @@ namespace WebApplication1.Tests.Features;
 
 public class TestBase
 {
-    protected AppDbContext GetInMemoryDbContext()
+    protected static AppDbContext GetInMemoryDbContext(string dbName)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseInMemoryDatabase(databaseName: "TestDb_" + Guid.NewGuid())
+            .UseInMemoryDatabase(databaseName: dbName)
             .Options;
 
         return new AppDbContext(options);

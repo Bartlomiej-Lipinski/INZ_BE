@@ -19,6 +19,7 @@ public class GetAmountOfJoinRequests : IEndpoint
             .RequireAuthorization()
             .WithOpenApi();
     }
+    
     public static async Task<IResult> Handle(
         [FromBody] AmountRequest request,
         AppDbContext dbContext,
@@ -40,6 +41,8 @@ public class GetAmountOfJoinRequests : IEndpoint
         
         return Results.Ok(ApiResponse<AmountResponse>.Ok(new AmountResponse(amount)));
     }
+    
     public record AmountRequest(string UserId);
+    
     public record AmountResponse(int Amount);
 }

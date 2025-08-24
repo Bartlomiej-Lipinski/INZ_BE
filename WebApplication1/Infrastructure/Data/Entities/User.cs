@@ -18,5 +18,5 @@ public class User : IdentityUser
     public string? Status { get; set; }
     public string? Description { get; set; }
     public string? Photo { get; set; }
-    public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
+    //public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
 }

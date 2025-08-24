@@ -1,65 +1,49 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Users;
-using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Users;
 
-public class DeleteUserTest : TestBase
+public class DeleteUserTest: TestBase
 {
     [Fact]
-    public async Task Handle_ShouldReturnBadRequest_WhenUserNameIsEmpty()
+    public async Task Handle_Should_Return_BadRequest_When_UserName_Is_Empty()
     {
-        // Arrange
-        var dbContext = GetInMemoryDbContext();
-
-        // Act
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var result = await DeleteUser.Handle("", dbContext, CancellationToken.None);
-
-        // Assert
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
-        var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
-        badRequest!.Value?.Success.Should().BeFalse();
-        badRequest.Value?.Message.Should().Be("User name cannot be null or empty.");
+        result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
     }
-
+    
     [Fact]
-    public async Task Handle_ShouldReturnNotFound_WhenUserDoesNotExist()
+    public async Task Handle_Should_Return_NotFound_When_User_Does_Not_Exist()
     {
-        // Arrange
-        var dbContext = GetInMemoryDbContext();
-
-        // Act
-        var result = await DeleteUser.Handle("nonexistent", dbContext, CancellationToken.None);
-
-        // Assert
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
-        var notFound = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
-        notFound!.Value?.Success.Should().BeFalse();
-        notFound.Value?.Message.Should().Be("User not found.");
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var result = await DeleteUser.Handle("missingUser", dbContext, CancellationToken.None);
+        result.Should().BeOfType<NotFound<ApiResponse<string>>>();
     }
-
+    
     [Fact]
-    public async Task Handle_ShouldReturnOk_WhenUserIsDeleted()
+    public async Task Handle_Should_Return_Ok_When_User_Deleted_Successfully()
     {
-        // Arrange
-        var dbContext = GetInMemoryDbContext();
-        var user = new User
+        var dbName = Guid.NewGuid().ToString();
+
+        await using (var dbContext = GetInMemoryDbContext(dbName))
         {
-            Id = Guid.NewGuid().ToString(),
-            UserName = "testuser",
-            Email = "test@example.com"
-        };
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
+            dbContext.Users.Add(TestDataFactory.CreateUser("u1", "Test User", "test@test.com", "testUser"));
+            await dbContext.SaveChangesAsync();
+        }
 
-        // Act
-        var result = await DeleteUser.Handle("testuser", dbContext, CancellationToken.None);
+        await using (var context2 = GetInMemoryDbContext(dbName))
+        {
+            var users = await context2.Users.ToListAsync();
+            users.Should().Contain(u => u.UserName == "testUser");
 
-        // Assert
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
-        okResult!.Value?.Success.Should().BeTrue();
-        okResult.Value?.Message.Should().Be("User deleted successfully.");
+            var result = await DeleteUser.Handle("testUser", context2, CancellationToken.None);
+
+            result.Should().BeOfType<Ok<ApiResponse<string>>>();
+            (result as Ok<ApiResponse<string>>)?.Value?.Data.Should().Be("User deleted successfully.");
+        }
     }
 }

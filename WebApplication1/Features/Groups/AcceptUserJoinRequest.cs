@@ -18,6 +18,7 @@ public class AcceptUserJoinRequest : IEndpoint
             .RequireAuthorization()
             .WithOpenApi();
     }
+    
     public static async Task<IResult> Handle(
         [FromBody] AcceptUserJoinRequestDto request,
         AppDbContext dbContext,
