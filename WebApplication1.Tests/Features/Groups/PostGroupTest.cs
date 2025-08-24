@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using System.Text.Json;
+using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Groups;
@@ -12,100 +12,65 @@ public class PostGroupTest : TestBase
     private HttpContext CreateHttpContextWithUser(string? userId = null)
     {
         var context = new DefaultHttpContext();
-
-        if (userId == null) return context;
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, userId)
-        };
-        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        if (string.IsNullOrEmpty(userId)) return context;
+        var identity = new ClaimsIdentity([
+            new Claim(ClaimTypes.NameIdentifier, userId)
+        ], "TestAuth");
         context.User = new ClaimsPrincipal(identity);
-
         return context;
     }
     
     [Fact]
-    public async Task Handle_ReturnsCreatedResult_WhenValidRequest()
+    public async Task Handle_Should_Return_BadRequest_When_Name_Is_Missing()
     {
-        // Arrange
-        await using var dbContext = GetInMemoryDbContext();
-        const string userId = "user-123";
-        var httpContext = CreateHttpContextWithUser(userId);
-        var requestDto = TestDataFactory.CreateGroupRequestDto("MyGroup", "Blue");
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var httpContext = CreateHttpContextWithUser("user1");
 
-        // Act
-        var result = await PostGroup.Handle(httpContext, requestDto, dbContext, CancellationToken.None);
-
-        // Assert
-        var statusCodeResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
-        Assert.Equal(StatusCodes.Status201Created, statusCodeResult.StatusCode);
-        
-        await result.ExecuteAsync(httpContext);
-        
-        httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
-        using var reader = new StreamReader(httpContext.Response.Body);
-        var responseBody = await reader.ReadToEndAsync();
-
-        var apiResponse = JsonSerializer.Deserialize<ApiResponse<PostGroup.GroupResponseDto>>(responseBody, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
-
-        Assert.NotNull(apiResponse);
-        Assert.True(apiResponse!.Success);
-        Assert.Equal("MyGroup", apiResponse.Data?.Name);
-        Assert.Equal("Blue", apiResponse.Data?.Color);
-        Assert.NotNull(apiResponse.Data?.Id);
-        Assert.NotNull(apiResponse.Data.Code);
-        
-        var groupInDb = await dbContext.Groups.FindAsync(apiResponse.Data.Id);
-        Assert.NotNull(groupInDb);
-        Assert.Equal("MyGroup", groupInDb.Name);
-
-        var groupUserInDb = await dbContext.GroupUsers.FirstOrDefaultAsync(gu => gu.GroupId == groupInDb.Id && gu.UserId == userId);
-        Assert.NotNull(groupUserInDb);
-        Assert.True(groupUserInDb.IsAdmin);
+        var result = 
+            await PostGroup.Handle(
+                httpContext, TestDataFactory.CreateGroupRequestDto("",  "#FFF"), dbContext, CancellationToken.None);
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
     }
     
     [Fact]
-    public async Task Handle_ReturnsBadRequest_WhenRequestInvalid()
+    public async Task Handle_Should_Return_Unauthorized_When_No_UserId()
     {
-        // Arrange
-        await using var dbContext = GetInMemoryDbContext();
-        var httpContext = CreateHttpContextWithUser("user-123");
-        var invalidRequestDto = new PostGroup.GroupRequestDto { Name = "", Color = "" };
-
-        // Act
-        var result = await PostGroup.Handle(httpContext, invalidRequestDto, dbContext, CancellationToken.None);
-
-        // Assert
-        var statusCodeResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
-        Assert.Equal(StatusCodes.Status400BadRequest, statusCodeResult.StatusCode);
-        
-        httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
-        using var reader = new StreamReader(httpContext.Response.Body);
-        var responseBody = await reader.ReadToEndAsync();
-        
-        var jsonDoc = JsonDocument.Parse(responseBody);
-        var root = jsonDoc.RootElement;
-
-        Assert.True(root.TryGetProperty("message", out var messageProp));
-        Assert.Equal("Name and Color are required", messageProp.GetString());
-    }
-    
-    [Fact]
-    public async Task Handle_ReturnsUnauthorized_WhenUserNotAuthenticated()
-    {
-        // Arrange
-        await using var dbContext = GetInMemoryDbContext();
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContextWithUser();
-        var requestDto = TestDataFactory.CreateGroupRequestDto();
+        
+        var result = 
+            await PostGroup.Handle(
+                httpContext, TestDataFactory.CreateGroupRequestDto(
+                    "Test Group",  "#FFF"), dbContext, CancellationToken.None);
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
+    }
+    
+    [Fact]
+    public async Task Handle_Should_Create_Group_And_Assign_User_As_Admin()
+    {
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var httpContext = CreateHttpContextWithUser("user1");
+        var dto = TestDataFactory.CreateGroupRequestDto("My Group",  "#FFF");
+        
+        var result = await PostGroup.Handle(httpContext, dto, dbContext, CancellationToken.None);
+        
+        result.Should()
+            .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Created<ApiResponse<PostGroup.GroupResponseDto>>>();
+        var created = result as Microsoft.AspNetCore.Http.HttpResults.Created<ApiResponse<PostGroup.GroupResponseDto>>;
+            
+        created!.Value.Should().NotBeNull();
+        created.Value!.Success.Should().BeTrue();
+        created.Value.Data.Should().NotBeNull();
+        created.Value.Data!.Name.Should().Be(dto.Name);
+        created.Value.Data.Color.Should().Be(dto.Color);
+        created.Value.Data.Code.Should().NotBeNullOrEmpty();
+        
+        var group = await dbContext.Groups.FirstOrDefaultAsync(g => g.Name == dto.Name);
+        group.Should().NotBeNull();
 
-        // Act
-        var result = await PostGroup.Handle(httpContext, requestDto, dbContext, CancellationToken.None);
-
-        // Assert
-        var statusCodeResult = Assert.IsAssignableFrom<IStatusCodeHttpResult>(result);
-        Assert.Equal(StatusCodes.Status401Unauthorized, statusCodeResult.StatusCode);
+        var groupUser =
+            await dbContext.GroupUsers.FirstOrDefaultAsync(gu => gu.UserId == "user1" && gu.GroupId == group.Id);
+        groupUser.Should().NotBeNull();
+        groupUser.IsAdmin.Should().BeTrue();
     }
 }

@@ -18,10 +18,9 @@ public class GetJoinRequestsForAdmins : IEndpoint
             .RequireAuthorization()
             .WithOpenApi();
     }
+    
     public static async Task<IResult> Handle(
-        [FromBody] GetJoinRequestsForAdminsRequest request,
-        AppDbContext dbContext,
-        CancellationToken cancellationToken)
+        [FromBody] GetJoinRequestsForAdminsRequest request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
         var adminGroupIds = await dbContext.GroupUsers
             .AsNoTracking()
@@ -39,6 +38,8 @@ public class GetJoinRequestsForAdmins : IEndpoint
 
         return Results.Ok(ApiResponse<IEnumerable<SingleJoinRequestResponse>>.Ok(prndingRequests));
     }
+    
     public record GetJoinRequestsForAdminsRequest(string UserId);
+    
     public record SingleJoinRequestResponse(string GroupId, string GroupName, string UserId, string UserName);
 }

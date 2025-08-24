@@ -7,39 +7,56 @@ namespace WebApplication1.Tests.Features.Groups;
 public class GetGroupByIdTest : TestBase
 {
     [Fact]
-    public async Task Handle_ShouldReturnOk_WhenGroupExists()
+    public async Task Handle_Should_Return_Ok_With_Group_When_Group_Exists()
     {
-        // Arrange
-        var dbContext = GetInMemoryDbContext();
-        var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF", code: "ABC123");
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var group = TestDataFactory.CreateGroup("group1", "Test Group", "#FFFFFF", "CODE1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
-
-        // Act
-        var result = await GetGroupById.Handle("test-id", dbContext, CancellationToken.None);
-
-        // Assert
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>>();
+        
+        var result = await GetGroupById.Handle(group.Id, dbContext, CancellationToken.None);
+        result.Should()
+            .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>>();
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>;
+            
         okResult!.Value?.Success.Should().BeTrue();
         okResult.Value?.Data.Should().NotBeNull();
-        okResult.Value?.Data!.Id.Should().Be("test-id");
-        okResult.Value?.Data?.Name.Should().Be("Test Group");
+        okResult.Value?.Data!.Id.Should().Be(group.Id);
+        okResult.Value?.Data!.Name.Should().Be(group.Name);
+        okResult.Value?.Data!.Color.Should().Be(group.Color);
+        okResult.Value?.Data!.Code.Should().Be(group.Code);
     }
-
+    
     [Fact]
-    public async Task Handle_ShouldReturnNotFound_WhenGroupDoesNotExist()
+    public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
-        // Arrange
-        var dbContext = GetInMemoryDbContext();
-
-        // Act
-        var result = await GetGroupById.Handle("non-existent", dbContext, CancellationToken.None);
-
-        // Assert
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        
+        var result = await GetGroupById.Handle("nonexistent", dbContext, CancellationToken.None);
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
         var notFoundResult = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
+            
         notFoundResult!.Value?.Success.Should().BeFalse();
         notFoundResult.Value?.Message.Should().Be("Group not found");
+    }
+    
+    [Fact]
+    public async Task Handle_Should_Return_Ok_With_Correct_Dto_Properties()
+    {
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var group = TestDataFactory.CreateGroup("group2", "Another Group", "#000000", "CODE2");
+        dbContext.Groups.Add(group);
+        await dbContext.SaveChangesAsync();
+        
+        var result = await GetGroupById.Handle(group.Id, dbContext, CancellationToken.None);
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>;
+        okResult.Should().NotBeNull();
+
+        var dto = okResult.Value?.Data;
+        dto.Should().NotBeNull();
+        dto.Id.Should().Be("group2");
+        dto.Name.Should().Be("Another Group");
+        dto.Color.Should().Be("#000000");
+        dto.Code.Should().Be("CODE2");
     }
 }
