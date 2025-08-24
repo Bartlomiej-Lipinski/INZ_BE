@@ -22,11 +22,11 @@ public class LoginAttemptService(AppDbContext context) : ILoginAttemptService
         var cutoffTime = DateTime.UtcNow.Subtract(timeWindow);
         
         return await context.LoginAttempts
-            .Where(la => la.Email.Equals(email, StringComparison.OrdinalIgnoreCase) 
-                         && la.IpAddress == ipAddress
-                         && !la.IsSuccessful 
-                         && la.AttemptTime >= cutoffTime)
-            .CountAsync();
+           .Where(la => la.Email.ToLower() == email.ToLower()
+                 && la.IpAddress == ipAddress
+                 && !la.IsSuccessful 
+                 && la.AttemptTime >= cutoffTime)
+           .CountAsync();
     }
 
     public async Task RecordAttemptAsync(string email, string ipAddress, bool isSuccessful)
@@ -47,7 +47,8 @@ public class LoginAttemptService(AppDbContext context) : ILoginAttemptService
     public async Task ResetFailedAttemptsAsync(string email, string ipAddress)
     {
         var failedAttempts = await context.LoginAttempts
-            .Where(la => la.Email.Equals(email, StringComparison.OrdinalIgnoreCase) && la.IpAddress == ipAddress
+            .Where(la => la.Email.ToLower() == email.ToLower()
+                         && la.IpAddress == ipAddress
                          && !la.IsSuccessful)
             .ToListAsync();
 
