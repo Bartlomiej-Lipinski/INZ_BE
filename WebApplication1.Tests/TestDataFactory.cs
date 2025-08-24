@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using WebApplication1.Features.Auth;
+﻿using WebApplication1.Features.Auth;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
 
@@ -57,7 +56,7 @@ public static class TestDataFactory
     public static User CreateUser(
         string? id = null, string? name = null, string? email = null, string? userName = null, string? surname = null)
     {
-        Debug.Assert(id != null, nameof(id) + " != null");
+        ArgumentNullException.ThrowIfNull(id, nameof(id));
         return new User
         {
             Id = id,
@@ -70,7 +69,7 @@ public static class TestDataFactory
     
     public static GetUserGroups.GetUserGroupsRequest CreateGetUserGroupsRequest(string? userId = null)
     {
-        Debug.Assert(userId != null, nameof(userId) + " != null");
+        ArgumentNullException.ThrowIfNull(userId, nameof(userId));
         return new GetUserGroups.GetUserGroupsRequest(userId);
     }
 
