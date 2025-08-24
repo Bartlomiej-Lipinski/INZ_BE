@@ -45,8 +45,8 @@ public static class TestDataFactory
     public static AcceptUserJoinRequest.AcceptUserJoinRequestDto CreateAcceptUserJoinRequestDto(
         string? groupId, string? userId)
     {
-        Debug.Assert(groupId != null, nameof(groupId) + " != null");
-        Debug.Assert(userId != null, nameof(userId) + " != null");
+        ArgumentNullException.ThrowIfNull(groupId, nameof(groupId));
+        ArgumentNullException.ThrowIfNull(userId, nameof(userId));
         return new AcceptUserJoinRequest.AcceptUserJoinRequestDto
         {
             GroupId = groupId,
