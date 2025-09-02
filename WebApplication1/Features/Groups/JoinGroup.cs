@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -23,13 +24,13 @@ public class JoinGroup : IEndpoint
         AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Code))
+        if (string.IsNullOrWhiteSpace(request.GroupCode))
         {
             return Results.BadRequest(ApiResponse<string>.Fail("Group ID and Code are required."));
         }
 
         var group = await dbContext.Groups
-            .FirstOrDefaultAsync(g =>  g.Code == request.Code, cancellationToken);
+            .FirstOrDefaultAsync(g =>  g.Code == request.GroupCode, cancellationToken);
 
         if (group == null)
         {
@@ -58,5 +59,14 @@ public class JoinGroup : IEndpoint
 
         return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group. Awaiting admin approval."));
     }
-    public record JoinGroupRequest(string Code, string UserId);
+
+    public record JoinGroupRequest
+    {
+        [Required]
+        [MaxLength(5)]
+        public string GroupCode { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string UserId { get; set; }
+    }
 }

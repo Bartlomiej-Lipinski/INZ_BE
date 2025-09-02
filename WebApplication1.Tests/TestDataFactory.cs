@@ -85,7 +85,11 @@ public static class TestDataFactory
     
     public static JoinGroup.JoinGroupRequest CreateJoinGroupRequest(string groupCode, string userId)
     {
-        return new JoinGroup.JoinGroupRequest(groupCode, userId);
+        return new JoinGroup.JoinGroupRequest
+        {
+            GroupCode = groupCode,
+            UserId = userId
+        };
     }
     
     public static AuthController.UserRequestDto CreateUserRequestDto(

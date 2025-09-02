@@ -11,7 +11,7 @@ public class AcceptUserJoinRequest : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/groups/{groupId}/accept-join-request/{userId}", Handle)
+        app.MapPost("/groups/accept-join-request", Handle)
             .WithName("AcceptUserJoinRequest")
             .WithDescription("Accepts a user's join request to a group")
             .WithTags("Groups")
