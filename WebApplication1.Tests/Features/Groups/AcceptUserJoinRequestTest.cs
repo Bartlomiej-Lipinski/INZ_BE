@@ -15,7 +15,8 @@ public class AcceptUserJoinRequestTest : TestBase
 
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto(
-                "group1", "user1"), dbContext, CancellationToken.None);
+                "group1", "user1"), dbContext, null, CancellationToken.None);
+
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
         var notFound = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
@@ -34,8 +35,8 @@ public class AcceptUserJoinRequestTest : TestBase
         
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto(
-                groupUser.GroupId, groupUser.UserId), dbContext, CancellationToken.None);
-        
+                "group1", "user1"), dbContext, null, CancellationToken.None);
+
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
         badRequest!.Value?.Success.Should().BeFalse();
@@ -47,14 +48,15 @@ public class AcceptUserJoinRequestTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var groupUser =
-            TestDataFactory.CreateGroupUser("group1", "user1", false, AcceptanceStatus.Pending);
+            TestDataFactory.CreateGroupUser("group1","user1", false, AcceptanceStatus.Pending);
 
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto(
-                groupUser.GroupId, groupUser.UserId), dbContext, CancellationToken.None);
+                "group1", "user1"), dbContext, null, CancellationToken.None);
+
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -22,8 +24,24 @@ public class AcceptUserJoinRequest : IEndpoint
     public static async Task<IResult> Handle(
         [FromBody] AcceptUserJoinRequestDto request,
         AppDbContext dbContext,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
+        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? user.FindFirst("sub")?.Value;
+        
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            return Results.Unauthorized();
+        }
+        var admin = await dbContext.GroupUsers
+            .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == currentUserId && gu.IsAdmin, cancellationToken);
+        
+        if (admin == null)
+        {
+            return Results.BadRequest(ApiResponse<string>.Fail("Only group admin can accept join requests."));
+        }
+        
         var groupUser = await dbContext.GroupUsers
             .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == request.UserId, cancellationToken);
 
@@ -44,7 +62,11 @@ public class AcceptUserJoinRequest : IEndpoint
     }
     public record AcceptUserJoinRequestDto
     {
+        [Required]
+        [MaxLength(50)]
         public string GroupId { get; init; } = null!;
+        [Required]
+        [MaxLength(50)]
         public string UserId { get; init; } = null!;
     }
 }
