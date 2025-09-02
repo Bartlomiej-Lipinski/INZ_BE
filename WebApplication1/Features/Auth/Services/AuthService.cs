@@ -30,7 +30,8 @@ public class AuthService(IConfiguration configuration, AppDbContext context, IEm
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Auth:Key"]
                                                                   ?? throw new InvalidOperationException()));
-        var token = new JwtSecurityToken(claims: claims,expires:DateTime.UtcNow.AddMinutes(5),
+        //TODO fine tune token expiration times
+        var token = new JwtSecurityToken(claims: claims,expires:DateTime.UtcNow.AddMinutes(15),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         var refresh = new RefreshToken()
@@ -78,11 +79,11 @@ public class AuthService(IConfiguration configuration, AppDbContext context, IEm
         await emailService.SendAsync(user.Email!, "Reset hasła", emailBody);
     }
     
-    public async Task<bool> ResetPasswordAsync(string rawToken, string newPassword)
+    public async Task<bool> ResetPasswordAsync(string token, string newPassword)
     {
-        if (string.IsNullOrWhiteSpace(rawToken)) return false;
+        if (string.IsNullOrWhiteSpace(token)) return false;
         
-        var tokenHash = ComputeSha256Base64(rawToken);
+        var tokenHash = ComputeSha256Base64(token);
         
         var tokenRecord = await context.PasswordResetTokens
             .Include(t => t.User)

@@ -11,7 +11,7 @@ public class GetJoinRequestsForAdmins : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/groups/join-requests/admins", Handle)
+        app.MapGet("/groups/join-requests/admins/{userId}", Handle)
             .WithName("GetJoinRequestsForAdmins")
             .WithDescription("Returns join requests for group admins")
             .WithTags("Groups")
@@ -20,11 +20,11 @@ public class GetJoinRequestsForAdmins : IEndpoint
     }
     
     public static async Task<IResult> Handle(
-        [FromBody] GetJoinRequestsForAdminsRequest request, AppDbContext dbContext, CancellationToken cancellationToken)
+        [FromRoute] string userId, AppDbContext dbContext, CancellationToken cancellationToken)
     {
         var adminGroupIds = await dbContext.GroupUsers
             .AsNoTracking()
-            .Where(gu => gu.UserId == request.UserId && gu.IsAdmin)
+            .Where(gu => gu.UserId == userId && gu.IsAdmin)
             .Select(gu => gu.GroupId)
             .ToListAsync(cancellationToken);
         var prndingRequests = await dbContext.GroupUsers
@@ -39,7 +39,6 @@ public class GetJoinRequestsForAdmins : IEndpoint
         return Results.Ok(ApiResponse<IEnumerable<SingleJoinRequestResponse>>.Ok(prndingRequests));
     }
     
-    public record GetJoinRequestsForAdminsRequest(string UserId);
     
     public record SingleJoinRequestResponse(string GroupId, string GroupName, string UserId, string UserName);
 }

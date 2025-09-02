@@ -10,7 +10,7 @@ public class GenerateCodeToJoinGroup : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/groups/{id}/GenerateCodeToJoinGroup", Handle)
+        app.MapPut("/groups/{id}/join-code-generate", Handle)
             .WithName("GenerateCodeToJoinGroup")
             .WithDescription("Generates a new code to join a group")
             .WithTags("Groups")

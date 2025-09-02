@@ -2,7 +2,7 @@
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
-
+using System.ComponentModel.DataAnnotations;
 namespace WebApplication1.Features.Users;
 
 public class UpdateUserProfile:IEndpoint
@@ -48,6 +48,8 @@ public class UpdateUserProfile:IEndpoint
     }
     public record UpdateUserProfileRequest
     {
+        [Required]
+        [MaxLength(50)]
         public string id { get; init; } 
         public string? Name { get; init; }
         public string? Surname { get; init; }

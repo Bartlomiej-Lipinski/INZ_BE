@@ -40,8 +40,7 @@ public class PostGroup : IEndpoint
         {
             Id = Guid.NewGuid().ToString(),
             Name = requestDto.Name,
-            Color = requestDto.Color,
-            Code = GenerateUniqueCode()
+            Color = requestDto.Color
         };
 
         await dbContext.Groups.AddAsync(group, cancellationToken);
@@ -65,11 +64,6 @@ public class PostGroup : IEndpoint
         };
 
         return Results.Created($"/groups/{group.Id}", ApiResponse<GroupResponseDto>.Ok(response));
-    }
-
-    private static string GenerateUniqueCode()
-    {
-        return Guid.NewGuid().ToString()[..8].ToUpper();
     }
 
     public class GroupRequestDto

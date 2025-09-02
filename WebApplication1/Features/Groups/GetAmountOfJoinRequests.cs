@@ -12,7 +12,7 @@ public class GetAmountOfJoinRequests : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/groups/join-requests/amount", Handle)
+        app.MapGet("/groups/join-requests/amount/{userId}", Handle)
             .WithName("GetAmountOfJoinRequests")
             .WithDescription("Returns the amount of join requests for the current user")
             .WithTags("Groups")
@@ -21,17 +21,17 @@ public class GetAmountOfJoinRequests : IEndpoint
     }
     
     public static async Task<IResult> Handle(
-        [FromBody] AmountRequest request,
+        [FromRoute] string userId,
         AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.UserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty."));
         }
 
         var adminGroupIds = await dbContext.GroupUsers
-            .Where(gu => gu.UserId == request.UserId && gu.IsAdmin)
+            .Where(gu => gu.UserId == userId && gu.IsAdmin)
             .Select(gu => gu.GroupId)
             .ToListAsync(cancellationToken);
         var amount = await dbContext.GroupUsers
@@ -42,7 +42,6 @@ public class GetAmountOfJoinRequests : IEndpoint
         return Results.Ok(ApiResponse<AmountResponse>.Ok(new AmountResponse(amount)));
     }
     
-    public record AmountRequest(string UserId);
     
     public record AmountResponse(int Amount);
 }

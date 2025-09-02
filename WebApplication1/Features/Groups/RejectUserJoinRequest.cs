@@ -4,7 +4,7 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
-
+using System.ComponentModel.DataAnnotations;
 namespace WebApplication1.Features.Groups;
 
 public class RejectUserJoinRequest : IEndpoint
@@ -43,7 +43,11 @@ public class RejectUserJoinRequest : IEndpoint
     }
     public record RejectUserJoinRequestDto
     {
-        public string GroupId { get; init; } = null!;
-        public string UserId { get; init; } = null!;
+        [Required]
+        [MaxLength(50)]
+        public string GroupId { get; set; }
+        [Required]
+        [MaxLength(50)]
+        public string UserId { get; set; } 
     }
 }

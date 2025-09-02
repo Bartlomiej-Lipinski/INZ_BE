@@ -24,8 +24,7 @@ public class GetJOinRequestForAdminsTest : TestBase
             TestDataFactory.CreateGroupUser(group1.Id, user2.Id, false, AcceptanceStatus.Pending));
         await dbContext.SaveChangesAsync();
         
-        var request = new GetJoinRequestsForAdmins.GetJoinRequestsForAdminsRequest(user1.Id);
-        var result = await GetJoinRequestsForAdmins.Handle(request, dbContext, CancellationToken.None);
+        var result = await GetJoinRequestsForAdmins.Handle(user1.Id, dbContext, CancellationToken.None);
         result
             .Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.

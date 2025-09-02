@@ -139,8 +139,9 @@ public class AuthController(
         return result.Succeeded ? Ok(user.Id) : BadRequest(result.Errors);
     }
     
-    [Authorize("RefreshTokenPolicy")]
+    // [Authorize("RefreshTokenPolicy")]
     [HttpPost("refresh")]
+    [AllowAnonymous]
     public async Task<IActionResult> Refresh(RefreshRequest request,CancellationToken cancellationToken)
     {
         var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken: cancellationToken);
@@ -157,7 +158,8 @@ public class AuthController(
         token.IsRevoked = true;
         dbContext.RefreshTokens.Update(token);
         await dbContext.SaveChangesAsync(cancellationToken);
-        await authorizationService.GenerateTokensAsync(user);
+        var (newAccessToken, refreshToken) = await authorizationService.GenerateTokensAsync(user);
+        SetAuthCookies(newAccessToken, refreshToken);
         return Ok(user.Id);
     }
     
