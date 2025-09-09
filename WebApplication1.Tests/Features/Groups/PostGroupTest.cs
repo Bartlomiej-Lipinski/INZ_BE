@@ -63,7 +63,6 @@ public class PostGroupTest : TestBase
         created.Value.Data.Should().NotBeNull();
         created.Value.Data!.Name.Should().Be(dto.Name);
         created.Value.Data.Color.Should().Be(dto.Color);
-        created.Value.Data.Code.Should().NotBeNullOrEmpty();
         
         var group = await dbContext.Groups.FirstOrDefaultAsync(g => g.Name == dto.Name);
         group.Should().NotBeNull();

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
@@ -11,7 +12,7 @@ public class DeleteUser : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/users/{userName}", Handle)
+        app.MapDelete("/users", Handle)
             .WithName("DeleteUser")
             .WithDescription("Deletes a user by username")
             .WithTags("Users")
@@ -20,14 +21,18 @@ public class DeleteUser : IEndpoint
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string userName,
+        ClaimsPrincipal currentUser,
         AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrEmpty(userName))
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+        
+        if (string.IsNullOrEmpty(userId))
             return Results.BadRequest(ApiResponse<string>.Fail("User name cannot be null or empty."));
 
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        
         if (user == null)
             return Results.NotFound(ApiResponse<string>.Fail("User not found."));
 

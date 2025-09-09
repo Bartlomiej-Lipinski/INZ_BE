@@ -21,10 +21,13 @@ public class GetAmountOfJoinRequests : IEndpoint
     }
     
     public static async Task<IResult> Handle(
-        [FromRoute] string userId,
+        ClaimsPrincipal currentUser,
         AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+        
         if (string.IsNullOrWhiteSpace(userId))
         {
             return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty."));

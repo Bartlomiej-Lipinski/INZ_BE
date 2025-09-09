@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -11,7 +12,7 @@ public class GetJoinRequestsForAdmins : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/groups/join-requests/admins/{userId}", Handle)
+        app.MapGet("/groups/join-requests/admins", Handle)
             .WithName("GetJoinRequestsForAdmins")
             .WithDescription("Returns join requests for group admins")
             .WithTags("Groups")
@@ -20,8 +21,11 @@ public class GetJoinRequestsForAdmins : IEndpoint
     }
     
     public static async Task<IResult> Handle(
-        [FromRoute] string userId, AppDbContext dbContext, CancellationToken cancellationToken)
+        ClaimsPrincipal currentUser, AppDbContext dbContext, CancellationToken cancellationToken)
     {
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+        
         var adminGroupIds = await dbContext.GroupUsers
             .AsNoTracking()
             .Where(gu => gu.UserId == userId && gu.IsAdmin)

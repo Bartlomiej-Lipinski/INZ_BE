@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
@@ -21,17 +22,25 @@ public class GetUserById : IEndpoint
 
     public static async Task<IResult> Handle(
         [FromRoute] string id,
+        ClaimsPrincipal currentUser,
         AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
+        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? currentUser.FindFirst("sub")?.Value;
+        
         if (string.IsNullOrWhiteSpace(id))
         {
             return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty."));
         }
+        if (currentUserId != id)
+        {
+            return Results.Forbid();
+        }
 
         var user = await dbContext.Users
             .AsNoTracking()
-            .Where(u => u.Id == id)
+            .Where(u => u.Id == currentUserId)
             .Select(u => new UserResponseDto
             {
                 Id = u.Id,

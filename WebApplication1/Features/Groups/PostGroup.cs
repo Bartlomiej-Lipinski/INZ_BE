@@ -60,7 +60,6 @@ public class PostGroup : IEndpoint
             Id = group.Id,
             Name = group.Name,
             Color = group.Color,
-            Code = group.Code
         };
 
         return Results.Created($"/groups/{group.Id}", ApiResponse<GroupResponseDto>.Ok(response));
@@ -79,9 +78,12 @@ public class PostGroup : IEndpoint
 
     public class GroupResponseDto
     {
+        [MaxLength(50)]
         public string Id { get; set; } = null!;
+        [MaxLength(50)]
         public string Name { get; set; } = null!;
+        [MaxLength(7)]
         public string Color { get; set; } = null!;
-        public string Code { get; set; } = null!;
+        
     }
 }

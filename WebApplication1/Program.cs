@@ -16,8 +16,10 @@ using WebApplication1.Shared.Middlewares;
 DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLoginSecurity();
+// builder.Services.AddDbContext<AppDbContext>(options =>
+//     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseInMemoryDatabase("InMemoryDb"));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
@@ -26,9 +28,14 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000") // Zezwól na żądania z frontendowego adresu
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
+// builder.Services.AddAuthorization(opt =>
+// {
+//     opt.AddPolicy("RefreshTokenPolicy", policy => { policy.RequireClaim("refresh_token"); });
+// });
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -37,7 +44,7 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "API with JWT Authentication"
     });
-    
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -80,7 +87,7 @@ builder.Services.AddAuthentication(opt =>
         OnMessageReceived = context =>
         {
             Console.WriteLine("OnMessageReceived");
-            var accessToken = context.Request.Cookies["access token"];
+            var accessToken = context.Request.Cookies["access_token"];
             Console.WriteLine(accessToken);
             if (!string.IsNullOrEmpty(accessToken)) context.Token = accessToken;
 

@@ -163,7 +163,7 @@ public class AuthController(
         return Ok(user.Id);
     }
     
-    [HttpGet("logout")]
+    [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var accessToken = Request.Cookies["access_token"];
