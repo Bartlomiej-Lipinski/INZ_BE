@@ -238,7 +238,7 @@ public class AuthController(
         }
     }
     
-    [HttpGet("logout")]
+    [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;

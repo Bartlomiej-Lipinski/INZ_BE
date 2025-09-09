@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
@@ -11,29 +12,32 @@ public class GetUserGroups : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/users/{userId}/groups",
-                ([FromRoute] string userId, AppDbContext dbContext, CancellationToken cancellationToken) =>
-                {
-                    var request = new GetUserGroupsRequest(userId);
-                    return Handle(request, dbContext, cancellationToken);
-                })
+        app.MapGet("/users/groups",Handle)
             .WithName("GetUserGroups")
-            .WithDescription("Returns groups for a given user")
+            .WithDescription("Returns groups for the currently logged-in user")
             .WithTags("Groups")
             .WithOpenApi();
     }
 
-    public static async Task<ApiResponse<IEnumerable<GroupResponse>>> Handle(GetUserGroupsRequest request,
+    public static async Task<ApiResponse<IEnumerable<GroupResponse>>> Handle(ClaimsPrincipal currentUser,
         AppDbContext dbContext, CancellationToken cancellationToken)
     {
-        var groups = await dbContext.GroupUsers.AsNoTracking().Where(c => c.UserId == request.UserId)
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return ApiResponse<IEnumerable<GroupResponse>>.Fail("Unauthorized");
+        }
+
+        var groups = await dbContext.GroupUsers.AsNoTracking()
+            .AsQueryable()
+            .Where(c => c.UserId == userId)
             .Select(c => new GroupResponse(c.GroupId, c.Group.Name))
             .ToListAsync(cancellationToken);
-        
+
         return ApiResponse<IEnumerable<GroupResponse>>.Ok(groups);
     }
-
-    public record GetUserGroupsRequest(string UserId);
 
     public record GroupResponse(string Id, string Name);
 }

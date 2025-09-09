@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+using System.Security.Claims;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
@@ -12,7 +13,7 @@ public class GetJoinRequestsForAdmins : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/groups/join-requests/admins/{userId}", Handle)
+        app.MapGet("/groups/join-requests/admins", Handle)
             .WithName("GetJoinRequestsForAdmins")
             .WithDescription("Returns join requests for group admins")
             .WithTags("Groups")
@@ -21,12 +22,15 @@ public class GetJoinRequestsForAdmins : IEndpoint
     }
     
     public static async Task<IResult> Handle(
-        [FromRoute] string userId, 
+        ClaimsPrincipal currentUser, 
         AppDbContext dbContext, 
         CancellationToken cancellationToken,
         HttpContext httpContext,
         ILogger<GetJoinRequestsForAdmins> logger)
     {
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+        
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
         logger.LogInformation("Fetching join requests for admin user: {UserId}. TraceId: {TraceId}", userId, traceId);

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
@@ -22,8 +23,17 @@ public class JoinGroup : IEndpoint
     public static async Task<IResult> Handle(
         [FromBody] JoinGroupRequest request,
         AppDbContext dbContext,
+        ClaimsPrincipal user,
         CancellationToken cancellationToken)
     {
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? user.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Results.Unauthorized();
+        }
+        
         if (string.IsNullOrWhiteSpace(request.GroupCode))
         {
             return Results.BadRequest(ApiResponse<string>.Fail("Group ID and Code are required."));
@@ -40,12 +50,11 @@ public class JoinGroup : IEndpoint
         {
             return Results.BadRequest(ApiResponse<string>.Fail("The code has expired."));
         }
-        if (await dbContext.GroupUsers.AnyAsync(gu => gu.GroupId == group.Id && gu.UserId == request.UserId, cancellationToken))
+        if (await dbContext.GroupUsers.AnyAsync(gu => gu.GroupId == group.Id && gu.UserId == userId, cancellationToken))
         {
             return Results.BadRequest(ApiResponse<string>.Fail("You are already a member of this group."));
         }
 
-        var userId = request.UserId; // Assume UserId is passed in the request
         var groupUser = new GroupUser
         {
             GroupId = group.Id,
@@ -65,8 +74,5 @@ public class JoinGroup : IEndpoint
         [Required]
         [MaxLength(5)]
         public string GroupCode { get; set; }
-        [Required]
-        [MaxLength(50)]
-        public string UserId { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
@@ -12,7 +13,7 @@ public class DeleteUser : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/users/{userName}", Handle)
+        app.MapDelete("/users", Handle)
             .WithName("DeleteUser")
             .WithDescription("Deletes a user by username")
             .WithTags("Users")
@@ -21,26 +22,32 @@ public class DeleteUser : IEndpoint
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string userName,
+        ClaimsPrincipal currentUser,
         AppDbContext dbContext,
         CancellationToken cancellationToken,
         HttpContext httpContext,
         ILogger<DeleteUser> logger)
     {
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+        
+        if (string.IsNullOrEmpty(userId))
+            return Results.BadRequest(ApiResponse<string>.Fail("User name cannot be null or empty."));
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
-        if (string.IsNullOrEmpty(userName))
+        if (string.IsNullOrEmpty(userId))
         {
             logger.LogWarning("Invalid username provided for deletion. TraceId: {TraceId}", traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("User name cannot be null or empty.", traceId));
         }
 
-        logger.LogInformation("Attempting to delete user with username: {UserName}. TraceId: {TraceId}", userName, traceId);
+        logger.LogInformation("Attempting to delete user with username: {userId}. TraceId: {TraceId}", userId, traceId);
 
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserName == userName, cancellationToken);
+        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        
         if (user == null)
         {
-            logger.LogWarning("User not found for deletion with username: {UserName}. TraceId: {TraceId}", userName, traceId);
+            logger.LogWarning("User not found for deletion with username: {userId}. TraceId: {TraceId}", userId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("User not found.", traceId));
         }
 
@@ -49,12 +56,12 @@ public class DeleteUser : IEndpoint
 
         if (deleted > 0)
         {
-            logger.LogInformation("User successfully deleted with username: {UserName}. TraceId: {TraceId}", userName, traceId);
+            logger.LogInformation("User successfully deleted with username: {userId}. TraceId: {TraceId}", userId, traceId);
             return Results.Ok(ApiResponse<string>.Ok("User deleted successfully.", null, traceId));
         }
         else
         {
-            logger.LogError("Failed to delete user with username: {UserName}. TraceId: {TraceId}", userName, traceId);
+            logger.LogError("Failed to delete user with username: {userId}. TraceId: {TraceId}", userId, traceId);
             return Results.Json(ApiResponse<string>.Fail("Failed to delete user.", traceId), statusCode: 500);
         }
     }  

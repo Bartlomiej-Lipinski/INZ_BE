@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Responses;
@@ -14,7 +15,7 @@ public class RejectUserJoinRequestTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
         var result = await RejectUserJoinRequest.Handle(
-            TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"), dbContext, CancellationToken.None);
+            TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"), dbContext, CreateClaimsPrincipal("u1"), CancellationToken.None);
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
     }
@@ -28,8 +29,7 @@ public class RejectUserJoinRequestTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await RejectUserJoinRequest.Handle(
-                TestDataFactory.CreateRejectUserJoinRequestDto(
-                    groupUser.GroupId, groupUser.UserId), dbContext, CancellationToken.None);
+            TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"), dbContext, CreateClaimsPrincipal("u1"), CancellationToken.None);
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
     }
 
@@ -42,8 +42,7 @@ public class RejectUserJoinRequestTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var result = await RejectUserJoinRequest.Handle(
-                TestDataFactory.CreateRejectUserJoinRequestDto(
-                    groupUser.GroupId, groupUser.UserId), dbContext, CancellationToken.None);
+            TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"), dbContext, CreateClaimsPrincipal("u1"), CancellationToken.None);
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
@@ -52,5 +51,11 @@ public class RejectUserJoinRequestTest : TestBase
         
         var stillExists = await dbContext.GroupUsers.AnyAsync(gu => gu.GroupId == "g1" && gu.UserId == "u1");
         stillExists.Should().BeFalse();
+    }
+    private ClaimsPrincipal CreateClaimsPrincipal(string userId)
+    {
+        var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, userId) };
+        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        return new ClaimsPrincipal(identity);
     }
 }

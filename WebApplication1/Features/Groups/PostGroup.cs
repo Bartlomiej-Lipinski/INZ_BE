@@ -67,7 +67,7 @@ public class PostGroup : IEndpoint
 
         await dbContext.GroupUsers.AddAsync(groupUser, cancellationToken);
         var saved = await dbContext.SaveChangesAsync(cancellationToken);
-
+        
         if (saved > 0)
         {
             var response = new GroupResponseDto
@@ -75,7 +75,6 @@ public class PostGroup : IEndpoint
                 Id = group.Id,
                 Name = group.Name,
                 Color = group.Color,
-                Code = group.Code
             };
 
             logger.LogInformation("Group '{GroupName}' successfully created with ID: {GroupId}. TraceId: {TraceId}", 
@@ -101,9 +100,12 @@ public class PostGroup : IEndpoint
 
     public class GroupResponseDto
     {
+        [MaxLength(50)]
         public string Id { get; set; } = null!;
+        [MaxLength(50)]
         public string Name { get; set; } = null!;
+        [MaxLength(7)]
         public string Color { get; set; } = null!;
-        public string Code { get; set; } = null!;
+        
     }
 }
