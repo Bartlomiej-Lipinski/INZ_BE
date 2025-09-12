@@ -41,7 +41,7 @@ public class AuthController(
         var userIp = GetUserIpAddress();
         var userAgent = Request.Headers.UserAgent.FirstOrDefault();
         
-        logger.LogInformation("Login attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+        logger.LogInformation("Login attempt. TraceId: {TraceId}", traceId);
         
         try
         {
@@ -51,8 +51,8 @@ public class AuthController(
             {
                 if (string.IsNullOrEmpty(request.CaptchaToken))
                 {
-                    logger.LogWarning("CAPTCHA required for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
-                    return BadRequest(new { 
+                    logger.LogWarning("CAPTCHA required. TraceId: {TraceId}", traceId);
+                    return BadRequest(new {
                         error = "CAPTCHA_REQUIRED", 
                         message = "CAPTCHA verification required due to multiple failed login attempts",
                         requiresCaptcha = true,
@@ -64,8 +64,8 @@ public class AuthController(
                 if (!isCaptchaValid)
                 {
                     await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
-                    logger.LogWarning("Invalid CAPTCHA for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
-                    return StatusCode(403, new { 
+                    logger.LogWarning("Invalid CAPTCHA. TraceId: {TraceId}", traceId);
+                    return StatusCode(403, new {
                         error = "CAPTCHA_INVALID", 
                         message = "Invalid CAPTCHA verification",
                         requiresCaptcha = true,
@@ -80,8 +80,8 @@ public class AuthController(
                 await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
                 var newRequiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
                 
-                logger.LogWarning("Failed login attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
-                return Unauthorized(new { 
+                logger.LogWarning("Failed login attempt. TraceId: {TraceId}", traceId);
+                return Unauthorized(new {
                     Message = "Invalid username or password.",
                     requiresCaptcha = newRequiresCaptcha,
                     traceId
@@ -119,8 +119,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during login attempt for {Email}. TraceId: {TraceId}", 
-                request.Email.Replace("\r", "").Replace("\n", ""), traceId);
+            logger.LogError(ex, "Error during login attempt. TraceId: {TraceId}", traceId);
             return StatusCode(500, new { 
                 error = "INTERNAL_ERROR", 
                 message = "An error occurred during login",
@@ -135,7 +134,7 @@ public class AuthController(
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
         
-        logger.LogInformation("Registration attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+        logger.LogInformation("Registration attempt. TraceId: {TraceId}", traceId);
         
         try
         {
@@ -150,24 +149,21 @@ public class AuthController(
             
             if (request.Password is null || request.Password.Length < 6)
             {
-                logger.LogWarning("Invalid password length for registration. Email: {Email}. TraceId: {TraceId}", 
-                    request.Email, traceId);
+                logger.LogWarning("Invalid password length for registration. TraceId: {TraceId}", traceId);
                 return BadRequest(new { message = "Password must be at least 6 characters long.", traceId });
             }
             
             var emailExists = await dbContext.Users.AnyAsync(u => u.Email == user.Email);
             if (emailExists)
             {
-                logger.LogWarning("Registration attempt with existing email: {Email}. TraceId: {TraceId}", 
-                    request.Email, traceId);
+                logger.LogWarning("Registration attempt with existing email. TraceId: {TraceId}", traceId);
                 return BadRequest(new { message = "Email already exists.", traceId });
             }
             
             if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Surname) || 
                 string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             {
-                logger.LogWarning("Missing required fields for registration. Email: {Email}. TraceId: {TraceId}", 
-                    request.Email, traceId);
+                logger.LogWarning("Missing required fields for registration. TraceId: {TraceId}", traceId);
                 return BadRequest(new { message = "All fields are required.", traceId });
             }
             
@@ -181,15 +177,14 @@ public class AuthController(
             }
             else
             {
-                logger.LogWarning("Registration failed for email: {Email}. Errors: {Errors}. TraceId: {TraceId}", 
-                    request.Email, string.Join(", ", result.Errors.Select(e => e.Description)), traceId);
+                logger.LogWarning("Registration failed. Errors: {Errors}. TraceId: {TraceId}", 
+                    string.Join(", ", result.Errors.Select(e => e.Description)), traceId);
                 return BadRequest(new { errors = result.Errors, traceId });
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during registration for email: {Email}. TraceId: {TraceId}", 
-                request.Email, traceId);
+            logger.LogError(ex, "Error during registration. TraceId: {TraceId}", traceId);
             return StatusCode(500, new { 
                 message = "An error occurred during registration", traceId 
             });
@@ -340,23 +335,22 @@ public class AuthController(
 
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
         
-        logger.LogInformation("2FA verification attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+        logger.LogInformation("2FA verification attempt. TraceId: {TraceId}", traceId);
         
         try
         {
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                logger.LogWarning("Invalid 2FA verification attempt. User not found. Email: {Email}. TraceId: {TraceId}", 
-                    request.Email, traceId);
+                logger.LogWarning("Invalid 2FA verification attempt. User not found. TraceId: {TraceId}", traceId);
                 return Unauthorized(new { Message = "Invalid request." });
             }
-            
+
             var isValidCode = await twoFactorService.ValidateCodeAsync(user.Id, request.Code);
                 
             if (!isValidCode)
             {
-                logger.LogWarning("Invalid or expired 2FA code. Email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+                logger.LogWarning("Invalid or expired 2FA code. TraceId: {TraceId}", traceId);
                 return Unauthorized(new { 
                     Message = "Invalid or expired verification code.",
                     codeExpired = !await twoFactorService.HasValidCodeAsync(user.Id),
@@ -373,8 +367,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during 2FA verification for {Email}. TraceId: {TraceId}",
-                request.Email.Replace("\r", "").Replace("\n", ""), traceId);
+            logger.LogError(ex, "Error during 2FA verification. TraceId: {TraceId}", traceId);
             return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during verification" });
         }
     }
@@ -390,15 +383,14 @@ public class AuthController(
 
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
         
-        logger.LogInformation("Resend 2FA code attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+        logger.LogInformation("Resend 2FA code attempt. TraceId: {TraceId}", traceId);
         
         try
         {
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
-                logger.LogWarning("Resend 2FA code attempt for non-existing user. Email: {Email}. TraceId: {TraceId}", 
-                    request.Email, traceId);
+                logger.LogWarning("Resend 2FA code attempt for non-existing user. TraceId: {TraceId}", traceId);
                 return Ok(new { message = "If the email exists, a new code has been sent." });
             }
 
@@ -409,7 +401,7 @@ public class AuthController(
             if (user.Email != null)
                 await emailService.SendTwoFactorCodeAsync(user.Email, code, user.UserName);
 
-            logger.LogInformation("New 2FA code sent to email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+            logger.LogInformation("New 2FA code sent. TraceId: {TraceId}", traceId);
             return Ok(new { 
                 message = "New verification code sent",
                 expiresIn = (int)(await twoFactorService.GetCodeExpiryTimeAsync(user.Id)).TotalSeconds,
@@ -418,8 +410,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during 2FA code resend for {Email}. TraceId: {TraceId}",
-                request.Email.Replace("\r", "").Replace("\n", ""), traceId);
+            logger.LogError(ex, "Error during 2FA code resend. TraceId: {TraceId}", traceId);
             return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred" });
         }
     }
