@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
-using System.ComponentModel.DataAnnotations;
+
 namespace WebApplication1.Features.Users;
 
 public class UpdateUserProfile:IEndpoint
@@ -16,20 +18,29 @@ public class UpdateUserProfile:IEndpoint
             .RequireAuthorization()
             .WithOpenApi();
     }
+    
     public static async Task<IResult> Handle(
         [FromBody] UpdateUserProfileRequest request,
         AppDbContext dbContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        HttpContext httpContext,
+        ILogger<UpdateUserProfile> logger)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
         if (string.IsNullOrWhiteSpace(request.id))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty."));
+            logger.LogWarning("Invalid user ID provided for profile update. TraceId: {TraceId}", traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
         }
+
+        logger.LogInformation("Attempting to update profile for user ID: {UserId}. TraceId: {TraceId}", request.id, traceId);
 
         var user = await dbContext.Users.FindAsync(request.id);
         if (user == null)
         {
-            return Results.NotFound(ApiResponse<string>.Fail("User not found."));
+            logger.LogWarning("User not found for profile update with ID: {UserId}. TraceId: {TraceId}", request.id, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("User not found.", traceId));
         }
 
         user.Name = request.Name;
@@ -42,10 +53,18 @@ public class UpdateUserProfile:IEndpoint
         dbContext.Users.Update(user);
         var updated = await dbContext.SaveChangesAsync(cancellationToken);
 
-        return updated > 0
-            ? Results.Ok(ApiResponse<string>.Ok("User profile updated successfully."))
-            : Results.Json(ApiResponse<string>.Fail("Failed to update user profile."), statusCode: 500);
+        if (updated > 0)
+        {
+            logger.LogInformation("User profile successfully updated for ID: {UserId}. TraceId: {TraceId}", request.id, traceId);
+            return Results.Ok(ApiResponse<string>.Ok("User profile updated successfully.", traceId));
+        }
+        else
+        {
+            logger.LogError("Failed to update user profile for ID: {UserId}. TraceId: {TraceId}", request.id, traceId);
+            return Results.Json(ApiResponse<string>.Fail("Failed to update user profile.", traceId), statusCode: 500);
+        }
     }
+    
     public record UpdateUserProfileRequest
     {
         [Required]

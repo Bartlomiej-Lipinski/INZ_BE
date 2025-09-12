@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -20,14 +21,26 @@ public class GetJoinRequestsForAdmins : IEndpoint
     }
     
     public static async Task<IResult> Handle(
-        [FromRoute] string userId, AppDbContext dbContext, CancellationToken cancellationToken)
+        [FromRoute] string userId, 
+        AppDbContext dbContext, 
+        CancellationToken cancellationToken,
+        HttpContext httpContext,
+        ILogger<GetJoinRequestsForAdmins> logger)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
+        logger.LogInformation("Fetching join requests for admin user: {UserId}. TraceId: {TraceId}", userId, traceId);
+        
         var adminGroupIds = await dbContext.GroupUsers
             .AsNoTracking()
             .Where(gu => gu.UserId == userId && gu.IsAdmin)
             .Select(gu => gu.GroupId)
             .ToListAsync(cancellationToken);
-        var prndingRequests = await dbContext.GroupUsers
+            
+        logger.LogInformation("Found {GroupCount} groups where user {UserId} is admin. TraceId: {TraceId}", 
+            adminGroupIds.Count, userId, traceId);
+            
+        var pendingRequests = await dbContext.GroupUsers
             .AsNoTracking()
             .Where(gu => adminGroupIds.Contains(gu.GroupId) && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
             .Include(gu => gu.Group)
@@ -35,10 +48,11 @@ public class GetJoinRequestsForAdmins : IEndpoint
             .Select(gu => new SingleJoinRequestResponse(gu.GroupId, gu.Group.Name, gu.UserId, gu.User.UserName))
             .ToListAsync(cancellationToken);
 
+        logger.LogInformation("Found {RequestCount} pending join requests for admin user: {UserId}. TraceId: {TraceId}", 
+            pendingRequests.Count, userId, traceId);
 
-        return Results.Ok(ApiResponse<IEnumerable<SingleJoinRequestResponse>>.Ok(prndingRequests));
+        return Results.Ok(ApiResponse<IEnumerable<SingleJoinRequestResponse>>.Ok(pendingRequests, null, traceId));
     }
     
-    
-    public record SingleJoinRequestResponse(string GroupId, string GroupName, string UserId, string UserName);
+    public record SingleJoinRequestResponse(string GroupId, string GroupName, string UserId, string? UserName);
 }

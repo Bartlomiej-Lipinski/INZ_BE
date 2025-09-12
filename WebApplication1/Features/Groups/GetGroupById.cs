@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -22,14 +23,29 @@ public class GetGroupById : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string id,
         AppDbContext dbContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        HttpContext httpContext,
+        ILogger<GetGroupById> logger)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            logger.LogWarning("Invalid group ID provided. TraceId: {TraceId}", traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Group ID cannot be null or empty.", traceId));
+        }
+
+        logger.LogInformation("Fetching group with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
+
         var group = await dbContext.Groups
             .AsNoTracking()
             .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
 
         if (group == null)
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found"));
+        {
+            logger.LogWarning("Group not found with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found", traceId));
+        }
 
         var dto = new GroupResponseDto
         {
@@ -39,7 +55,8 @@ public class GetGroupById : IEndpoint
             Code = group.Code
         };
 
-        return Results.Ok(ApiResponse<GroupResponseDto>.Ok(dto));
+        logger.LogInformation("Group successfully retrieved with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
+        return Results.Ok(ApiResponse<GroupResponseDto>.Ok(dto, null, traceId));
     }
 
     public class GroupResponseDto

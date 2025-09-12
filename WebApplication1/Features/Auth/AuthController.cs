@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
@@ -29,13 +30,18 @@ public class AuthController(
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] ExtendedLoginRequest request)
     {
+        var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        
         if (!ModelState.IsValid)
         {
+            logger.LogWarning("Invalid login request data. TraceId: {TraceId}", traceId);
             return BadRequest(ModelState);
         }
 
         var userIp = GetUserIpAddress();
         var userAgent = Request.Headers.UserAgent.FirstOrDefault();
+        
+        logger.LogInformation("Login attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
         
         try
         {
@@ -45,10 +51,12 @@ public class AuthController(
             {
                 if (string.IsNullOrEmpty(request.CaptchaToken))
                 {
+                    logger.LogWarning("CAPTCHA required for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
                     return BadRequest(new { 
                         error = "CAPTCHA_REQUIRED", 
                         message = "CAPTCHA verification required due to multiple failed login attempts",
-                        requiresCaptcha = true
+                        requiresCaptcha = true,
+                        traceId
                     });
                 }
 
@@ -56,10 +64,12 @@ public class AuthController(
                 if (!isCaptchaValid)
                 {
                     await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
+                    logger.LogWarning("Invalid CAPTCHA for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
                     return StatusCode(403, new { 
                         error = "CAPTCHA_INVALID", 
                         message = "Invalid CAPTCHA verification",
-                        requiresCaptcha = true
+                        requiresCaptcha = true,
+                        traceId
                     });
                 }
             }
@@ -70,9 +80,11 @@ public class AuthController(
                 await loginAttemptService.RecordAttemptAsync(request.Email, userIp, false);
                 var newRequiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
                 
+                logger.LogWarning("Failed login attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
                 return Unauthorized(new { 
                     Message = "Invalid username or password.",
-                    requiresCaptcha = newRequiresCaptcha
+                    requiresCaptcha = newRequiresCaptcha,
+                    traceId
                 });
             }
             
@@ -85,11 +97,13 @@ public class AuthController(
                 if (user.Email != null) await emailService.SendTwoFactorCodeAsync(user.Email, code, user.UserName);
 
                 await loginAttemptService.RecordAttemptAsync(request.Email, userIp, true);
-                    
+                
+                logger.LogInformation("2FA code sent for user: {UserId}. TraceId: {TraceId}", user.Id, traceId);
                 return Ok(new { 
                     requiresTwoFactor = true,
                     message = "Verification code sent to your email",
-                    expiresIn = (int)(await twoFactorService.GetCodeExpiryTimeAsync(user.Id)).TotalSeconds
+                    expiresIn = (int)(await twoFactorService.GetCodeExpiryTimeAsync(user.Id)).TotalSeconds,
+                    traceId
                 });
             }
 
@@ -100,13 +114,18 @@ public class AuthController(
 
             SetAuthCookies(token, refreshToken);
             
+            logger.LogInformation("Successful login for user: {UserId}. TraceId: {TraceId}", user.Id, traceId);
             return Ok(user.Id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during login attempt for {Email}", request.Email.Replace("\r", "")
-                .Replace("\n", ""));
-            return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during login" });
+            logger.LogError(ex, "Error during login attempt for {Email}. TraceId: {TraceId}", 
+                request.Email.Replace("\r", "").Replace("\n", ""), traceId);
+            return StatusCode(500, new { 
+                error = "INTERNAL_ERROR", 
+                message = "An error occurred during login",
+                traceId
+            });
         }
     }
 
@@ -114,81 +133,159 @@ public class AuthController(
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody]UserRequestDto request)
     {
-        var user = new User
+        var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        
+        logger.LogInformation("Registration attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+        
+        try
         {
-            Name = request.Name,
-            UserName = request.UserName,
-            Surname = request.Surname,
-            Email = request.Email,
-            BirthDate = request.BirthDate,
-        };
-        if (request.Password is null || request.Password.Length < 6)
-        {
-            return BadRequest("Password must be at least 6 characters long.");
+            var user = new User
+            {
+                Name = request.Name,
+                UserName = request.UserName,
+                Surname = request.Surname,
+                Email = request.Email,
+                BirthDate = request.BirthDate,
+            };
+            
+            if (request.Password is null || request.Password.Length < 6)
+            {
+                logger.LogWarning("Invalid password length for registration. Email: {Email}. TraceId: {TraceId}", 
+                    request.Email, traceId);
+                return BadRequest(new { message = "Password must be at least 6 characters long.", traceId });
+            }
+            
+            var emailExists = await dbContext.Users.AnyAsync(u => u.Email == user.Email);
+            if (emailExists)
+            {
+                logger.LogWarning("Registration attempt with existing email: {Email}. TraceId: {TraceId}", 
+                    request.Email, traceId);
+                return BadRequest(new { message = "Email already exists.", traceId });
+            }
+            
+            if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Surname) || 
+                string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
+            {
+                logger.LogWarning("Missing required fields for registration. Email: {Email}. TraceId: {TraceId}", 
+                    request.Email, traceId);
+                return BadRequest(new { message = "All fields are required.", traceId });
+            }
+            
+            var result = await userManager.CreateAsync(user, request.Password);
+            
+            if (result.Succeeded)
+            {
+                logger.LogInformation("User successfully registered with ID: {UserId}. TraceId: {TraceId}", 
+                    user.Id, traceId);
+                return Ok(user.Id);
+            }
+            else
+            {
+                logger.LogWarning("Registration failed for email: {Email}. Errors: {Errors}. TraceId: {TraceId}", 
+                    request.Email, string.Join(", ", result.Errors.Select(e => e.Description)), traceId);
+                return BadRequest(new { errors = result.Errors, traceId });
+            }
         }
-        var emailExists = await dbContext.Users.AnyAsync(u => u.Email == user.Email);
-        if (emailExists)
+        catch (Exception ex)
         {
-            throw new ArgumentException("Email already exists.");
+            logger.LogError(ex, "Error during registration for email: {Email}. TraceId: {TraceId}", 
+                request.Email, traceId);
+            return StatusCode(500, new { 
+                message = "An error occurred during registration", traceId 
+            });
         }
-        if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Surname) || string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
-        {
-            throw new ArgumentException("All fields are required.");
-        }
-        var result = await userManager.CreateAsync(user, request.Password);
-        return result.Succeeded ? Ok(user.Id) : BadRequest(result.Errors);
     }
     
     // [Authorize("RefreshTokenPolicy")]
     [HttpPost("refresh")]
     [AllowAnonymous]
-    public async Task<IActionResult> Refresh(RefreshRequest request,CancellationToken cancellationToken)
+    public async Task<IActionResult> Refresh(RefreshRequest request, CancellationToken cancellationToken)
     {
-        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken, cancellationToken: cancellationToken);
+        var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        
+        logger.LogInformation("Token refresh attempt. TraceId: {TraceId}", traceId);
+        
+        try
+        {
+            var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t => t.Token == request.RefreshToken, 
+                cancellationToken: cancellationToken);
 
-        if (token is null || token.ExpiresAt < DateTime.UtcNow)
-        {
-            return Unauthorized();
+            if (token is null || token.ExpiresAt < DateTime.UtcNow)
+            {
+                logger.LogWarning("Invalid or expired refresh token. TraceId: {TraceId}", traceId);
+                return Unauthorized(new { message = "Invalid or expired refresh token", traceId });
+            }
+            
+            var user = await userManager.FindByIdAsync(token.UserId);
+            if (user is null)
+            {
+                logger.LogWarning("User not found for refresh token. UserId: {UserId}. TraceId: {TraceId}", 
+                    token.UserId, traceId);
+                return Unauthorized(new { message = "User not found", traceId });
+            }
+            
+            token.IsRevoked = true;
+            dbContext.RefreshTokens.Update(token);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            var (newAccessToken, refreshToken) = await authorizationService.GenerateTokensAsync(user);
+            SetAuthCookies(newAccessToken, refreshToken);
+            
+            logger.LogInformation("Token successfully refreshed for user: {UserId}. TraceId: {TraceId}", 
+                user.Id, traceId);
+            return Ok(user.Id);
         }
-        var user = await userManager.FindByIdAsync(token.UserId);
-        if (user is null)
+        catch (Exception ex)
         {
-            return Unauthorized();
+            logger.LogError(ex, "Error during token refresh. TraceId: {TraceId}", traceId);
+            return StatusCode(500, new { 
+                message = "An error occurred during token refresh", traceId 
+            });
         }
-        token.IsRevoked = true;
-        dbContext.RefreshTokens.Update(token);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        var (newAccessToken, refreshToken) = await authorizationService.GenerateTokensAsync(user);
-        SetAuthCookies(newAccessToken, refreshToken);
-        return Ok(user.Id);
     }
     
     [HttpGet("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        var accessToken = Request.Cookies["access_token"];
-        var refreshToken = Request.Cookies["refresh_token"];
+        var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
         
-        if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
+        logger.LogInformation("Logout attempt. TraceId: {TraceId}", traceId);
+        
+        try
         {
-            return BadRequest("No tokens found.");
-        }
+            var accessToken = Request.Cookies["access_token"];
+            var refreshToken = Request.Cookies["refresh_token"];
+            
+            if (string.IsNullOrEmpty(accessToken) || string.IsNullOrEmpty(refreshToken))
+            {
+                logger.LogWarning("No tokens found for logout. TraceId: {TraceId}", traceId);
+                return BadRequest(new { message = "No tokens found.", traceId });
+            }
 
-        var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t =>
-            t.Token == refreshToken, cancellationToken: cancellationToken);
-        if (token is null)
+            var token = await dbContext.RefreshTokens.FirstOrDefaultAsync(t =>
+                t.Token == refreshToken, cancellationToken: cancellationToken);
+            if (token is null)
+            {
+                logger.LogWarning("Invalid refresh token for logout. TraceId: {TraceId}", traceId);
+                return BadRequest(new { message = "Invalid refresh token.", traceId });
+            }
+
+            token.IsRevoked = true;
+            dbContext.RefreshTokens.Update(token);
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            Response.Cookies.Delete("access_token");
+            Response.Cookies.Delete("refresh_token");
+
+            logger.LogInformation("User successfully logged out. TraceId: {TraceId}", traceId);
+            return Ok(new { message = "Logged out successfully.", traceId });
+        }
+        catch (Exception ex)
         {
-            return BadRequest("Invalid refresh token.");
+            logger.LogError(ex, "Error during logout. TraceId: {TraceId}", traceId);
+            return StatusCode(500, new { 
+                message = "An error occurred during logout", traceId 
+            });
         }
-
-        token.IsRevoked = true;
-        dbContext.RefreshTokens.Update(token);
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        Response.Cookies.Delete("access_token");
-        Response.Cookies.Delete("refresh_token");
-
-        return Ok("Logged out successfully.");
     }
     
     [Authorize]
@@ -241,11 +338,17 @@ public class AuthController(
             return BadRequest(ModelState);
         }
 
+        var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        
+        logger.LogInformation("2FA verification attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+        
         try
         {
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
+                logger.LogWarning("Invalid 2FA verification attempt. User not found. Email: {Email}. TraceId: {TraceId}", 
+                    request.Email, traceId);
                 return Unauthorized(new { Message = "Invalid request." });
             }
             
@@ -253,9 +356,11 @@ public class AuthController(
                 
             if (!isValidCode)
             {
+                logger.LogWarning("Invalid or expired 2FA code. Email: {Email}. TraceId: {TraceId}", request.Email, traceId);
                 return Unauthorized(new { 
                     Message = "Invalid or expired verification code.",
-                    codeExpired = !await twoFactorService.HasValidCodeAsync(user.Id)
+                    codeExpired = !await twoFactorService.HasValidCodeAsync(user.Id),
+                    traceId
                 });
             }
             
@@ -263,12 +368,13 @@ public class AuthController(
                 
             SetAuthCookies(token, refreshToken);
                 
+            logger.LogInformation("2FA verification successful for user: {UserId}. TraceId: {TraceId}", user.Id, traceId);
             return Ok(user.Id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during 2FA verification for {Email}",
-                request.Email.Replace("\r", "").Replace("\n", ""));
+            logger.LogError(ex, "Error during 2FA verification for {Email}. TraceId: {TraceId}",
+                request.Email.Replace("\r", "").Replace("\n", ""), traceId);
             return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred during verification" });
         }
     }
@@ -282,11 +388,17 @@ public class AuthController(
             return BadRequest(ModelState);
         }
 
+        var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        
+        logger.LogInformation("Resend 2FA code attempt for email: {Email}. TraceId: {TraceId}", request.Email, traceId);
+        
         try
         {
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
+                logger.LogWarning("Resend 2FA code attempt for non-existing user. Email: {Email}. TraceId: {TraceId}", 
+                    request.Email, traceId);
                 return Ok(new { message = "If the email exists, a new code has been sent." });
             }
 
@@ -294,18 +406,20 @@ public class AuthController(
             var userAgent = Request.Headers.UserAgent.FirstOrDefault();
             
             var code = await twoFactorService.GenerateCodeAsync(user.Id, userIp, userAgent);
-            if (user?.Email != null)
+            if (user.Email != null)
                 await emailService.SendTwoFactorCodeAsync(user.Email, code, user.UserName);
 
+            logger.LogInformation("New 2FA code sent to email: {Email}. TraceId: {TraceId}", request.Email, traceId);
             return Ok(new { 
                 message = "New verification code sent",
-                expiresIn = (int)(await twoFactorService.GetCodeExpiryTimeAsync(user.Id)).TotalSeconds
+                expiresIn = (int)(await twoFactorService.GetCodeExpiryTimeAsync(user.Id)).TotalSeconds,
+                traceId
             });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during 2FA verification for {Email}",
-                request.Email.Replace("\r", "").Replace("\n", ""));
+            logger.LogError(ex, "Error during 2FA code resend for {Email}. TraceId: {TraceId}",
+                request.Email.Replace("\r", "").Replace("\n", ""), traceId);
             return StatusCode(500, new { error = "INTERNAL_ERROR", message = "An error occurred" });
         }
     }

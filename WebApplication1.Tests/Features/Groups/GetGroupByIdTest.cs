@@ -1,4 +1,7 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Moq;
 using WebApplication1.Features.Groups;
 using WebApplication1.Shared.Responses;
 
@@ -10,11 +13,18 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_Ok_With_Group_When_Group_Exists()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var mockHttpContext = new Mock<HttpContext>();
+        var mockLogger = new Mock<ILogger<GetGroupById>>();
+        
+        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
+        
         var group = TestDataFactory.CreateGroup("group1", "Test Group", "#FFFFFF", "CODE1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
-        var result = await GetGroupById.Handle(group.Id, dbContext, CancellationToken.None);
+        var result = await GetGroupById.Handle(group.Id, dbContext, CancellationToken.None,
+            mockHttpContext.Object, mockLogger.Object);
+            
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>>();
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>;
@@ -25,30 +35,65 @@ public class GetGroupByIdTest : TestBase
         okResult.Value?.Data!.Name.Should().Be(group.Name);
         okResult.Value?.Data!.Color.Should().Be(group.Color);
         okResult.Value?.Data!.Code.Should().Be(group.Code);
+        okResult.Value?.TraceId.Should().Be("test-trace-id");
     }
     
     [Fact]
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var mockHttpContext = new Mock<HttpContext>();
+        var mockLogger = new Mock<ILogger<GetGroupById>>();
         
-        var result = await GetGroupById.Handle("nonexistent", dbContext, CancellationToken.None);
+        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
+        
+        var result = await GetGroupById.Handle("nonexistent", dbContext, CancellationToken.None,
+            mockHttpContext.Object, mockLogger.Object);
+            
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
         var notFoundResult = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
             
         notFoundResult!.Value?.Success.Should().BeFalse();
         notFoundResult.Value?.Message.Should().Be("Group not found");
+        notFoundResult.Value?.TraceId.Should().Be("test-trace-id");
     }
     
+    [Fact]
+    public async Task Handle_Should_Return_BadRequest_When_Id_Is_NullOrEmpty()
+    {
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var mockHttpContext = new Mock<HttpContext>();
+        var mockLogger = new Mock<ILogger<GetGroupById>>();
+        
+        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
+        
+        var result = await GetGroupById.Handle("", dbContext, CancellationToken.None,
+            mockHttpContext.Object, mockLogger.Object);
+            
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
+        var badRequestResult = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
+        
+        badRequestResult!.Value?.Success.Should().BeFalse();
+        badRequestResult.Value?.Message.Should().Be("Group ID cannot be null or empty.");
+        badRequestResult.Value?.TraceId.Should().Be("test-trace-id");
+    }
+
     [Fact]
     public async Task Handle_Should_Return_Ok_With_Correct_Dto_Properties()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var mockHttpContext = new Mock<HttpContext>();
+        var mockLogger = new Mock<ILogger<GetGroupById>>();
+        
+        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
+        
         var group = TestDataFactory.CreateGroup("group2", "Another Group", "#000000", "CODE2");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
-        var result = await GetGroupById.Handle(group.Id, dbContext, CancellationToken.None);
+        var result = await GetGroupById.Handle(group.Id, dbContext, CancellationToken.None,
+            mockHttpContext.Object, mockLogger.Object);
+            
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>;
         okResult.Should().NotBeNull();
 
@@ -58,5 +103,6 @@ public class GetGroupByIdTest : TestBase
         dto.Name.Should().Be("Another Group");
         dto.Color.Should().Be("#000000");
         dto.Code.Should().Be("CODE2");
+        okResult.Value?.TraceId.Should().Be("test-trace-id");
     }
 }

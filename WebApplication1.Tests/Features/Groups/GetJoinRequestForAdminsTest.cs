@@ -1,15 +1,23 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Moq;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
 
 namespace WebApplication1.Tests.Features.Groups;
 
-public class GetJOinRequestForAdminsTest : TestBase
+public class GetJoinRequestForAdminsTest : TestBase
 {
     [Fact]
     public async Task Test_JoinRequest_For_Admins()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var mockHttpContext = new Mock<HttpContext>();
+        var mockLogger = new Mock<ILogger<GetJoinRequestsForAdmins>>();
+        
+        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
+        
         var user1 = TestDataFactory.CreateUser("user1");
         var user2 = TestDataFactory.CreateUser("user2");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#FFFFFF", "CODE1");
@@ -17,14 +25,16 @@ public class GetJOinRequestForAdminsTest : TestBase
         
         dbContext.Users.AddRange(user1, user2);
         dbContext.Groups.AddRange(group1, group2);
-        dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(group1.Id, user1.Id, true));
+        
+        dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user1.Id, group1.Id, true));
         dbContext.GroupUsers.Add(
-            TestDataFactory.CreateGroupUser(group2.Id, user1.Id, false, AcceptanceStatus.Pending));
+            TestDataFactory.CreateGroupUser(user1.Id, group2.Id, false, AcceptanceStatus.Pending));
         dbContext.GroupUsers.Add(
-            TestDataFactory.CreateGroupUser(group1.Id, user2.Id, false, AcceptanceStatus.Pending));
+            TestDataFactory.CreateGroupUser(user2.Id, group1.Id, false, AcceptanceStatus.Pending));
         await dbContext.SaveChangesAsync();
         
-        var result = await GetJoinRequestsForAdmins.Handle(user1.Id, dbContext, CancellationToken.None);
+        var result = await GetJoinRequestsForAdmins.Handle(user1.Id, dbContext, CancellationToken.None, 
+            mockHttpContext.Object, mockLogger.Object);
         result
             .Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.
@@ -35,6 +45,7 @@ public class GetJOinRequestForAdminsTest : TestBase
                 Ok<Shared.Responses.ApiResponse<IEnumerable<GetJoinRequestsForAdmins.SingleJoinRequestResponse>>>;
         okResult!.Value?.Success.Should().BeTrue();
         okResult.Value?.Data.Should().NotBeNull();
+        okResult.Value?.TraceId.Should().Be("test-trace-id");
        
         if (okResult.Value?.Data != null)
         {
@@ -43,7 +54,7 @@ public class GetJOinRequestForAdminsTest : TestBase
             responses[0].GroupId.Should().Be(group1.Id);
             responses[0].GroupName.Should().Be(group1.Name);
             responses[0].UserId.Should().Be(user2.Id);
-            responses[0].UserName.Should().Be(user2.Name);
+            responses[0].UserName.Should().Be(user2.UserName);
         }
     }
 }

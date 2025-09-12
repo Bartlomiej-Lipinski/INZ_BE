@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Infrastructure.Data.Context;
@@ -25,22 +26,34 @@ public class PostGroup : IEndpoint
         HttpContext httpContext, 
         [FromBody] GroupRequestDto requestDto,
         AppDbContext dbContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        ILogger<PostGroup> logger)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
         if (string.IsNullOrWhiteSpace(requestDto.Name) || string.IsNullOrWhiteSpace(requestDto.Color))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("Name and Color are required"));
+            logger.LogWarning("Invalid group data provided. Name: {Name}, Color: {Color}. TraceId: {TraceId}", 
+                requestDto.Name, requestDto.Color, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Name and Color are required", traceId));
         }
 
         var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
+        {
+            logger.LogWarning("Unauthorized attempt to create group. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
+        }
+
+        logger.LogInformation("Creating new group '{GroupName}' for user {UserId}. TraceId: {TraceId}", 
+            requestDto.Name, userId, traceId);
         
         var group = new Group
         {
             Id = Guid.NewGuid().ToString(),
             Name = requestDto.Name,
-            Color = requestDto.Color
+            Color = requestDto.Color,
+            Code = Guid.NewGuid().ToString()[..8].ToUpper()
         };
 
         await dbContext.Groups.AddAsync(group, cancellationToken);
@@ -53,17 +66,26 @@ public class PostGroup : IEndpoint
         };
 
         await dbContext.GroupUsers.AddAsync(groupUser, cancellationToken);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var saved = await dbContext.SaveChangesAsync(cancellationToken);
 
-        var response = new GroupResponseDto
+        if (saved > 0)
         {
-            Id = group.Id,
-            Name = group.Name,
-            Color = group.Color,
-            Code = group.Code
-        };
+            var response = new GroupResponseDto
+            {
+                Id = group.Id,
+                Name = group.Name,
+                Color = group.Color,
+                Code = group.Code
+            };
 
-        return Results.Created($"/groups/{group.Id}", ApiResponse<GroupResponseDto>.Ok(response));
+            logger.LogInformation("Group '{GroupName}' successfully created with ID: {GroupId}. TraceId: {TraceId}", 
+                group.Name, group.Id, traceId);
+            return Results.Created($"/groups/{group.Id}", ApiResponse<GroupResponseDto>.Ok(response, null, traceId));
+        }
+
+        logger.LogError("Failed to create group '{GroupName}' for user {UserId}. TraceId: {TraceId}", 
+            requestDto.Name, userId, traceId);
+        return Results.Json(ApiResponse<string>.Fail("Failed to create group", traceId), statusCode: 500);
     }
 
     public class GroupRequestDto
