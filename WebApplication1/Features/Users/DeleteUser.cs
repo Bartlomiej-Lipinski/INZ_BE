@@ -50,7 +50,7 @@ public class DeleteUser : IEndpoint
         if (deleted > 0)
         {
             logger.LogInformation("User successfully deleted with username: {UserName}. TraceId: {TraceId}", userName, traceId);
-            return Results.Ok(ApiResponse<string>.Ok("User deleted successfully.", "User deleted successfully.", traceId));
+            return Results.Ok(ApiResponse<string>.Ok("User deleted successfully.", null, traceId));
         }
         else
         {
