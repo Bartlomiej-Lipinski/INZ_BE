@@ -7,7 +7,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 
 namespace WebApplication1.Tests.Features.Groups;
 
-public class GetJoinRequestForAdminsTest : TestBase
+public class GetJoinRequestsForAdminsTest : TestBase
 {
     [Fact]
     public async Task Test_JoinRequest_For_Admins()
