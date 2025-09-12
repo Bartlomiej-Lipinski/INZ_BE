@@ -85,14 +85,12 @@ public class AcceptUserJoinRequest : IEndpoint
         {
             logger.LogInformation("Join request accepted successfully. GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}", 
                 request.GroupId, request.UserId, traceId);
-            return Results.Ok(ApiResponse<string>.Ok("Join request accepted successfully.", "Join request accepted successfully.", traceId));
+            return Results.Ok(ApiResponse<string>.Ok("Join request accepted successfully.", null, traceId));
         }
-        else
-        {
-            logger.LogError("Failed to save join request acceptance. GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}", 
-                request.GroupId, request.UserId, traceId);
-            return Results.Json(ApiResponse<string>.Fail("Failed to accept join request.", traceId), statusCode: 500);
-        }
+
+        logger.LogError("Failed to save join request acceptance. GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}", 
+            request.GroupId, request.UserId, traceId);
+        return Results.Json(ApiResponse<string>.Fail("Failed to accept join request.", traceId), statusCode: 500);
     }
     public record AcceptUserJoinRequestDto
     {
