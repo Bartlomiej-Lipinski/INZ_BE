@@ -2,6 +2,8 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Moq;
 using WebApplication1.Features.Groups;
 using WebApplication1.Shared.Responses;
 
@@ -12,6 +14,8 @@ public class PostGroupTest : TestBase
     private HttpContext CreateHttpContextWithUser(string? userId = null)
     {
         var context = new DefaultHttpContext();
+        context.TraceIdentifier = "test-trace-id";
+        
         if (string.IsNullOrEmpty(userId)) return context;
         var identity = new ClaimsIdentity([
             new Claim(ClaimTypes.NameIdentifier, userId)
@@ -25,11 +29,16 @@ public class PostGroupTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContextWithUser("user1");
+        var mockLogger = new Mock<ILogger<PostGroup>>();
 
         var result = 
             await PostGroup.Handle(
-                httpContext, TestDataFactory.CreateGroupRequestDto("",  "#FFF"), dbContext, CancellationToken.None);
+                httpContext, TestDataFactory.CreateGroupRequestDto("",  "#FFF"), dbContext, 
+                CancellationToken.None, mockLogger.Object);
+                
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
+        var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
+        badRequest!.Value!.TraceId.Should().Be("test-trace-id");
     }
     
     [Fact]
@@ -37,11 +46,13 @@ public class PostGroupTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContextWithUser();
+        var mockLogger = new Mock<ILogger<PostGroup>>();
         
         var result = 
             await PostGroup.Handle(
                 httpContext, TestDataFactory.CreateGroupRequestDto(
-                    "Test Group",  "#FFF"), dbContext, CancellationToken.None);
+                    "Test Group",  "#FFF"), dbContext, CancellationToken.None, mockLogger.Object);
+                    
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
     
@@ -50,9 +61,10 @@ public class PostGroupTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContextWithUser("user1");
+        var mockLogger = new Mock<ILogger<PostGroup>>();
         var dto = TestDataFactory.CreateGroupRequestDto("My Group",  "#FFF");
         
-        var result = await PostGroup.Handle(httpContext, dto, dbContext, CancellationToken.None);
+        var result = await PostGroup.Handle(httpContext, dto, dbContext, CancellationToken.None, mockLogger.Object);
         
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Created<ApiResponse<PostGroup.GroupResponseDto>>>();
@@ -64,6 +76,7 @@ public class PostGroupTest : TestBase
         created.Value.Data!.Name.Should().Be(dto.Name);
         created.Value.Data.Color.Should().Be(dto.Color);
         created.Value.Data.Code.Should().NotBeNullOrEmpty();
+        created.Value.TraceId.Should().Be("test-trace-id");
         
         var group = await dbContext.Groups.FirstOrDefaultAsync(g => g.Name == dto.Name);
         group.Should().NotBeNull();

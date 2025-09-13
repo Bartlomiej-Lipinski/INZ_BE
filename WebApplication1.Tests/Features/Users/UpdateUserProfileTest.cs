@@ -6,7 +6,7 @@ namespace WebApplication1.Tests.Features.Users;
 public class UpdateUserProfileTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Update_User_Profile_When_Valid()
+    public Task Handle_Should_Update_User_Profile_When_Valid()
     {
         // // Arrange
         // var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -14,5 +14,8 @@ public class UpdateUserProfileTest : TestBase
         // dbContext.Users.Add(user);
         // await dbContext.SaveChangesAsync();
         // var httpContext = new DefaultHttpContext();
+        
+        // TODO: Implement this test
+        return Task.CompletedTask;
     }
 }

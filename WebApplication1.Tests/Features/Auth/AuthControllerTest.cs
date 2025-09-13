@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Newtonsoft.Json;
 using WebApplication1.Features.Auth;
 using WebApplication1.Features.Auth.Services;
 using WebApplication1.Infrastructure.Data.Context;
@@ -43,7 +44,10 @@ public class AuthControllerTest : TestBase
         {
             ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext()
+                HttpContext = new DefaultHttpContext
+                {
+                    TraceIdentifier = "test-trace-id"
+                }
             }
         };
         
@@ -65,6 +69,27 @@ public class AuthControllerTest : TestBase
                 "test@test.com", "testUser", "password123", "Test", "User"));
         
         result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult!.Value.Should().NotBeNull();
+    }
+    
+    [Fact]
+    public async Task Register_Should_Return_BadRequest_When_Password_Too_Short()
+    {
+        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var controller = CreateController(dbContext, out var userManagerMock, out var authServiceMock,
+            out var loginAttemptMock, out var captchaMock, out var twoFactorMock, out var emailMock, out var loggerMock);
+
+        var result = await controller.Register(
+            TestDataFactory.CreateUserRequestDto(
+                "test@test.com", "testUser", "123", "Test", "User"));
+        
+        result.Should().BeOfType<BadRequestObjectResult>();
+        var badRequest = result as BadRequestObjectResult;
+        badRequest!.Value.Should().NotBeNull();
+        
+        var jsonResponse = JsonConvert.SerializeObject(badRequest.Value);
+        jsonResponse.Should().Contain("test-trace-id");
     }
     
     [Fact]
@@ -80,11 +105,18 @@ public class AuthControllerTest : TestBase
         userManagerMock.Setup(u => u.CheckPasswordAsync(user, "wrong")).ReturnsAsync(false);
         loginAttemptMock.Setup(
             l => l.RequiresCaptchaAsync("test@test.com", It.IsAny<string>())).ReturnsAsync(false);
+        loginAttemptMock.Setup(
+            l => l.RecordAttemptAsync("test@test.com", It.IsAny<string>(), false)).Returns(Task.CompletedTask);
         
         var result = await controller.Login(
             TestDataFactory.CreateExtendedLoginRequest("test@test.com", "wrong"));
 
         result.Should().BeOfType<UnauthorizedObjectResult>();
+        var unauthorized = result as UnauthorizedObjectResult;
+        unauthorized!.Value.Should().NotBeNull();
+        
+        var jsonResponse = JsonConvert.SerializeObject(unauthorized.Value);
+        jsonResponse.Should().Contain("test-trace-id");
     }
     
     [Fact]
@@ -98,11 +130,23 @@ public class AuthControllerTest : TestBase
         userManagerMock.Setup(u => u.FindByEmailAsync(user.Email!)).ReturnsAsync(user);
         userManagerMock.Setup(u => u.CheckPasswordAsync(user, "password123")).ReturnsAsync(true);
         userManagerMock.Setup(u => u.GetTwoFactorEnabledAsync(user)).ReturnsAsync(true);
+        loginAttemptMock.Setup(
+            l => l.RequiresCaptchaAsync(user.Email!, It.IsAny<string>())).ReturnsAsync(false);
+        loginAttemptMock.Setup(
+            l => l.RecordAttemptAsync(user.Email!, It.IsAny<string>(), true)).Returns(Task.CompletedTask);
         
         twoFactorMock.Setup(
             t => t.GenerateCodeAsync(user.Id, It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync("123456");
+        twoFactorMock.Setup(
+            t => t.GetCodeExpiryTimeAsync(user.Id)).ReturnsAsync(TimeSpan.FromMinutes(5));
         
         var result = await controller.Login(new ExtendedLoginRequest { Email = user.Email!, Password = "password123" });
+        
         result.Should().BeOfType<OkObjectResult>();
+        var okResult = result as OkObjectResult;
+        okResult!.Value.Should().NotBeNull();
+
+        var jsonResponse = JsonConvert.SerializeObject(okResult.Value);
+        jsonResponse.Should().Contain("test-trace-id");
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -20,8 +21,14 @@ public class GetAllUsers : IEndpoint
 
     private static async Task<IResult> Handle(
         AppDbContext dbContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        HttpContext httpContext,
+        ILogger<GetAllUsers> logger)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
+        logger.LogInformation("Fetching all users. TraceId: {TraceId}", traceId);
+
         var users = await dbContext.Users
             .AsNoTracking()
             .Select(u => new UserResponseDto
@@ -38,9 +45,14 @@ public class GetAllUsers : IEndpoint
             })
             .ToListAsync(cancellationToken);
 
-        return users.Count == 0
-            ? Results.NotFound(ApiResponse<string>.Fail("No users found."))
-            : Results.Ok(ApiResponse<List<UserResponseDto>>.Ok(users));
+        if (users.Count == 0)
+        {
+            logger.LogWarning("No users found. TraceId: {TraceId}", traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("No users found.", traceId));
+        }
+
+        logger.LogInformation("Successfully retrieved {UserCount} users. TraceId: {TraceId}", users.Count, traceId);
+        return Results.Ok(ApiResponse<List<UserResponseDto>>.Ok(users, null, traceId));
     }
 
     private class UserResponseDto

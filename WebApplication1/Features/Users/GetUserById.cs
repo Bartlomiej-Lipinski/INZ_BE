@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -22,12 +23,19 @@ public class GetUserById : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string id,
         AppDbContext dbContext,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        HttpContext httpContext,
+        ILogger<GetUserById> logger)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
         if (string.IsNullOrWhiteSpace(id))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty."));
+            logger.LogWarning("Invalid user ID provided. TraceId: {TraceId}", traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
         }
+
+        logger.LogInformation("Fetching user with ID: {UserId}. TraceId: {TraceId}", id, traceId);
 
         var user = await dbContext.Users
             .AsNoTracking()
@@ -46,9 +54,14 @@ public class GetUserById : IEndpoint
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        return user == null
-            ? Results.NotFound(ApiResponse<string>.Fail("User not found."))
-            : Results.Ok(ApiResponse<UserResponseDto>.Ok(user));
+        if (user == null)
+        {
+            logger.LogWarning("User not found with ID: {UserId}. TraceId: {TraceId}", id, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("User not found.", traceId));
+        }
+
+        logger.LogInformation("User successfully retrieved with ID: {UserId}. TraceId: {TraceId}", id, traceId);
+        return Results.Ok(ApiResponse<UserResponseDto>.Ok(user, null, traceId));
     }
 
     public class UserResponseDto
