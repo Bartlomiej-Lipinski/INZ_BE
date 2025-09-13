@@ -35,8 +35,11 @@ public class UpdateUserProfile:IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+            return Results.Unauthorized();
         }
+
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
 
         if (string.IsNullOrWhiteSpace(userId))
         {
