@@ -26,7 +26,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000") // Zezwól na żądania z frontendowego adresu
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 builder.Services.AddSwaggerGen(options =>
@@ -82,7 +83,7 @@ builder.Services.AddAuthentication(opt =>
             var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
             logger.LogDebug("JWT OnMessageReceived event triggered");
             
-            var accessToken = context.Request.Cookies["access token"];
+            var accessToken = context.Request.Cookies["access_token"];
             if (!string.IsNullOrEmpty(accessToken))
             {
                 context.Token = accessToken;

@@ -5,6 +5,8 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+
 namespace WebApplication1.Features.Groups;
 
 public class RejectUserJoinRequest : IEndpoint
@@ -21,8 +23,26 @@ public class RejectUserJoinRequest : IEndpoint
     public static async Task<IResult> Handle(
         [FromBody] RejectUserJoinRequestDto request,
         AppDbContext dbContext,
+        ClaimsPrincipal currentUser,
         CancellationToken cancellationToken)
     {
+        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? currentUser.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            return Results.Unauthorized();
+        }
+        var currentGroupUser = await dbContext.GroupUsers
+            .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == currentUserId, cancellationToken);
+
+        bool isAdmin = currentGroupUser?.IsAdmin == true;
+        if (!isAdmin)
+        {
+            return Results.BadRequest(ApiResponse<string>.Fail("Only group admin can reject join requests."));
+        }
+        
+        
         var groupUser = await dbContext.GroupUsers
             .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == request.UserId, cancellationToken);
 

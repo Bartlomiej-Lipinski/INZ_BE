@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
@@ -61,9 +62,13 @@ public class GetGroupById : IEndpoint
 
     public class GroupResponseDto
     {
+        [MaxLength(50)]
         public string Id { get; set; } = null!;
+        [MaxLength(50)]
         public string Name { get; set; } = null!;
+        [MaxLength(7)]
         public string Color { get; set; } = null!;
+        [MaxLength(5)]
         public string Code { get; set; } = null!;
     }
 }

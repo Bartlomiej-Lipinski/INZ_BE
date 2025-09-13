@@ -67,11 +67,11 @@ public static class TestDataFactory
         };
     }
     
-    public static GetUserGroups.GetUserGroupsRequest CreateGetUserGroupsRequest(string? userId = null)
-    {
-        ArgumentNullException.ThrowIfNull(userId, nameof(userId));
-        return new GetUserGroups.GetUserGroupsRequest(userId);
-    }
+    // public static GetUserGroups.GetUserGroupsRequest CreateGetUserGroupsRequest(string? userId = null)
+    // {
+    //     ArgumentNullException.ThrowIfNull(userId, nameof(userId));
+    //     return new GetUserGroups.GetUserGroupsRequest(userId);
+    // }
 
     public static RejectUserJoinRequest.RejectUserJoinRequestDto CreateRejectUserJoinRequestDto(
         string groupId, string userId)
@@ -83,12 +83,11 @@ public static class TestDataFactory
         };
     }
     
-    public static JoinGroup.JoinGroupRequest CreateJoinGroupRequest(string groupCode, string userId)
+    public static JoinGroup.JoinGroupRequest CreateJoinGroupRequest(string groupCode)
     {
         return new JoinGroup.JoinGroupRequest
         {
             GroupCode = groupCode,
-            UserId = userId
         };
     }
     

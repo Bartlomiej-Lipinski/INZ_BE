@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
@@ -22,11 +23,15 @@ public class GetUserById : IEndpoint
 
     public static async Task<IResult> Handle(
         [FromRoute] string id,
+        ClaimsPrincipal currentUser,
         AppDbContext dbContext,
         CancellationToken cancellationToken,
         HttpContext httpContext,
         ILogger<GetUserById> logger)
     {
+        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? currentUser.FindFirst("sub")?.Value;
+        
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
         if (string.IsNullOrWhiteSpace(id))
@@ -34,12 +39,16 @@ public class GetUserById : IEndpoint
             logger.LogWarning("Invalid user ID provided. TraceId: {TraceId}", traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
         }
+        if (currentUserId != id)
+        {
+            return Results.Forbid();
+        }
 
         logger.LogInformation("Fetching user with ID: {UserId}. TraceId: {TraceId}", id, traceId);
 
         var user = await dbContext.Users
             .AsNoTracking()
-            .Where(u => u.Id == id)
+            .Where(u => u.Id == currentUserId)
             .Select(u => new UserResponseDto
             {
                 Id = u.Id,
