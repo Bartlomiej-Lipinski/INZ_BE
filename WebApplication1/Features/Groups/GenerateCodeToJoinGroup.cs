@@ -49,11 +49,7 @@ public class GenerateCodeToJoinGroup : IEndpoint
 
         return Results.Json(ApiResponse<string>.Fail("Failed to generate code."), statusCode: 500);
     }
-    /**
-     * Generates a unique 5-digit code that is not currently in use by any group.
-     * Ensures that the generated code does not conflict with existing codes in the database.
-     * 
-     */
+
     private static string GenerateUniqueCode(AppDbContext dbContext, string groupId)
     {
         string code;

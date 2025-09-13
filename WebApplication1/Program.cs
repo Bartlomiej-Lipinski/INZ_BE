@@ -79,21 +79,33 @@ builder.Services.AddAuthentication(opt =>
     {
         OnMessageReceived = context =>
         {
-            Console.WriteLine("OnMessageReceived");
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogDebug("JWT OnMessageReceived event triggered");
+            
             var accessToken = context.Request.Cookies["access token"];
-            Console.WriteLine(accessToken);
-            if (!string.IsNullOrEmpty(accessToken)) context.Token = accessToken;
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                context.Token = accessToken;
+                logger.LogDebug("Access token retrieved from cookie");
+            }
+            else
+            {
+                logger.LogDebug("No access token found in cookie");
+            }
 
             return Task.CompletedTask;
         },
-        OnTokenValidated = _ =>
+        OnTokenValidated = context =>
         {
-            Console.WriteLine("OnTokenValidated");
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogDebug("JWT token successfully validated for user: {UserId}", 
+                context.Principal?.Identity?.Name ?? "Unknown");
             return Task.CompletedTask;
         },
-        OnAuthenticationFailed = _ =>
+        OnAuthenticationFailed = context =>
         {
-            Console.WriteLine("OnAuthenticationFailed");
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning("JWT authentication failed: {Error}", context.Exception?.Message);
             return Task.CompletedTask;
         }
     };
