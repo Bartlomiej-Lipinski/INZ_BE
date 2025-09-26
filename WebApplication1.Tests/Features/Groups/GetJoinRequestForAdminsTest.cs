@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Security.Claims;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
 
@@ -15,38 +16,42 @@ public class GetJoinRequestsForAdminsTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var mockHttpContext = new Mock<HttpContext>();
         var mockLogger = new Mock<ILogger<GetJoinRequestsForAdmins>>();
-        
+
         mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
-        
+
         var user1 = TestDataFactory.CreateUser("user1");
         var user2 = TestDataFactory.CreateUser("user2");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#FFFFFF", "CODE1");
         var group2 = TestDataFactory.CreateGroup("group2", "Group 2", "#000000", "CODE2");
-        
+
         dbContext.Users.AddRange(user1, user2);
         dbContext.Groups.AddRange(group1, group2);
-        
+
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user1.Id, group1.Id, true));
         dbContext.GroupUsers.Add(
             TestDataFactory.CreateGroupUser(user1.Id, group2.Id, false, AcceptanceStatus.Pending));
         dbContext.GroupUsers.Add(
             TestDataFactory.CreateGroupUser(user2.Id, group1.Id, false, AcceptanceStatus.Pending));
         await dbContext.SaveChangesAsync();
-        
-        var result = await GetJoinRequestsForAdmins.Handle(user1.Id, dbContext, CancellationToken.None, 
+
+        var claimsPrincipal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user1.Id) })
+        );
+
+        var result = await GetJoinRequestsForAdmins.Handle(claimsPrincipal, dbContext, CancellationToken.None, 
             mockHttpContext.Object, mockLogger.Object);
         result
             .Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.
                 Ok<Shared.Responses.ApiResponse<IEnumerable<GetJoinRequestsForAdmins.SingleJoinRequestResponse>>>>();
-        var okResult = 
-            result as 
+        var okResult =
+            result as
                 Microsoft.AspNetCore.Http.HttpResults.
                 Ok<Shared.Responses.ApiResponse<IEnumerable<GetJoinRequestsForAdmins.SingleJoinRequestResponse>>>;
         okResult!.Value?.Success.Should().BeTrue();
         okResult.Value?.Data.Should().NotBeNull();
         okResult.Value?.TraceId.Should().Be("test-trace-id");
-       
+
         if (okResult.Value?.Data != null)
         {
             var responses = okResult.Value?.Data.ToList();

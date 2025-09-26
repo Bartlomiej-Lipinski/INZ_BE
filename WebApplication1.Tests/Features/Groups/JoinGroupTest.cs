@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Security.Claims;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -15,10 +16,13 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
+        var claimsPrincipal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+        );
         
         await GenerateCodeToJoinGroup.Handle("g1", dbContext, CancellationToken.None);
         await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest(group.Code, "user1"), dbContext, CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest(group.Code), dbContext,claimsPrincipal ,CancellationToken.None);
         
         var groupUser = 
             await dbContext.GroupUsers.FirstOrDefaultAsync(gu => gu.GroupId == "g1" && gu.UserId == "user1");
@@ -31,9 +35,14 @@ public class JoinGroupTest : TestBase
     public async Task Handle_ShouldReturnNotFound_WhenGroupDoesNotExist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-       
+        var user = TestDataFactory.CreateUser(id: "user1");
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        var claimsPrincipal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+        );
         var result = await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest("INVALIDCODE", "user1"), dbContext, CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest("INVALIDCODE"), dbContext,claimsPrincipal ,CancellationToken.None);
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<Shared.Responses.ApiResponse<string>>>();
         
@@ -58,10 +67,15 @@ public class JoinGroupTest : TestBase
         existingGroup!.CodeExpirationTime = DateTime.UtcNow.AddMinutes(-1);
         dbContext.Groups.Update(existingGroup);
         await dbContext.SaveChangesAsync();
-        
+        var user1 = TestDataFactory.CreateUser(id: "user1");
+        dbContext.Users.Add(user1);
+        await dbContext.SaveChangesAsync();
+        var claimsPrincipal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user1.Id) })
+        );
         var result = await JoinGroup.Handle(
             TestDataFactory.CreateJoinGroupRequest(
-                existingGroup.Code, "user1"), dbContext, CancellationToken.None);
+                existingGroup.Code), dbContext,claimsPrincipal ,CancellationToken.None);
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<Shared.Responses.ApiResponse<string>>>();
         
@@ -79,13 +93,16 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
+        var claimsPrincipal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+        );
         
         await GenerateCodeToJoinGroup.Handle("g1", dbContext, CancellationToken.None);
         await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest(group.Code, "user1"), dbContext, CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest(group.Code), dbContext,claimsPrincipal ,CancellationToken.None);
         
         var result = await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest(group.Code, "user1"), dbContext, CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest(group.Code), dbContext,claimsPrincipal ,CancellationToken.None);
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<Shared.Responses.ApiResponse<string>>>();
         
