@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Auth.Services;
 using WebApplication1.Infrastructure.Data.Context;
@@ -12,6 +13,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 namespace WebApplication1.Features.Auth;
 
 // zmienić rodzaj zwracanych danych żeby nie było zwracanego tokena i refresh tokena w odpowiedzi
+[EnableRateLimiting("AuthPolicy")]
 [Controller]
 [Route("api/[controller]")]
 public class AuthController(
@@ -191,9 +193,8 @@ public class AuthController(
         }
     }
     
-    // [Authorize("RefreshTokenPolicy")]
+    [Authorize("RefreshTokenPolicy")]
     [HttpPost("refresh")]
-    [AllowAnonymous]
     public async Task<IActionResult> Refresh(RefreshRequest request, CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
