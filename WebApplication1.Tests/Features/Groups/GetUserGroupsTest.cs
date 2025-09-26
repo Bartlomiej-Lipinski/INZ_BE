@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Security.Claims;
+using FluentAssertions;
 using WebApplication1.Features.Groups;
 
 namespace WebApplication1.Tests.Features.Groups;
@@ -8,9 +9,12 @@ public class GetUserGroupsTest : TestBase
     [Fact]
     public async Task Handle_Should_Return_EmptyList_When_User_Has_No_Groups()
     {
+        var user = TestDataFactory.CreateUser("user1", "Test User");
+        var claimsPrincipal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+        );
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var response = await GetUserGroups.Handle(
-                TestDataFactory.CreateGetUserGroupsRequest("user1"), dbContext, CancellationToken.None);
+        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None);
         
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();
@@ -31,8 +35,12 @@ public class GetUserGroupsTest : TestBase
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user.Id, group2.Id));
         await dbContext.SaveChangesAsync();
         
+        var claimsPrincipal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+        );
+        
         var response = await GetUserGroups.Handle(
-                TestDataFactory.CreateGetUserGroupsRequest(user.Id), dbContext, CancellationToken.None);
+                claimsPrincipal, dbContext, CancellationToken.None);
 
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();
@@ -55,9 +63,12 @@ public class GetUserGroupsTest : TestBase
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user1.Id, group1.Id));
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user2.Id, group2.Id));
         await dbContext.SaveChangesAsync();
+
+        var claimsPrincipal = new ClaimsPrincipal(
+            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user1.Id) })
+        );
         
-        var response = await GetUserGroups.Handle(
-            new GetUserGroups.GetUserGroupsRequest(user1.Id), dbContext, CancellationToken.None);
+        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None);
         
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();
