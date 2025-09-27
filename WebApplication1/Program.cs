@@ -16,8 +16,7 @@ using WebApplication1.Shared.Middlewares;
 DotNetEnv.Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddLoginSecurity();
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddRateLimiter(options =>
@@ -53,12 +52,12 @@ builder.Services.AddRateLimiter(options =>
         return RateLimitPartition.GetNoLimiter("NoAuth");
     });
 });
-
+var frontendOrigin = builder.Configuration["Frontend:Origin"] ?? throw new InvalidOperationException("Frontend:Origin is missing in configuration.");
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins(frontendOrigin)
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -160,21 +159,24 @@ builder.Services.AddAuthentication(opt =>
     {
         OnMessageReceived = ctx =>
         {
-            Console.WriteLine("OnMessageReceived");
+            var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogDebug("OnMessageReceived event triggered");
             var accessToken = ctx.Request.Cookies["access_token"];
-            Console.WriteLine(accessToken);
+            logger.LogDebug("Access token: {AccessToken}", accessToken);
             if (!string.IsNullOrEmpty(accessToken)) ctx.Token = accessToken;
 
             return Task.CompletedTask;
         },
         OnTokenValidated = context =>
         {
-            Console.WriteLine("OnTokenValidated");
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogDebug("OnTokenValidated event triggered");
             return Task.CompletedTask;
         },
         OnAuthenticationFailed = context =>
         {
-            Console.WriteLine("OnAuthenticationFailed");
+            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+            logger.LogWarning("OnAuthenticationFailed event triggered");
             return Task.CompletedTask;
         }
     };
