@@ -303,10 +303,23 @@ public class AuthController(
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordResponse dto)
     {
+        var user = await userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            return BadRequest(new { message = "Invalid or expired token." });
+
         var success = await authorizationService.ResetPasswordAsync(dto.Token, dto.NewPassword);
 
         if (!success)
             return BadRequest(new { message = "Invalid or expired token." });
+        
+        await userManager.UpdateSecurityStampAsync(user);
+        
+        var tokens = dbContext.RefreshTokens.Where(t => t.UserId == user.Id && !t.IsRevoked);
+        foreach (var token in tokens)
+        {
+            token.IsRevoked = true;
+        }
+        await dbContext.SaveChangesAsync();
 
         return Ok(new { message = "Password has been reset successfully." });
     }
