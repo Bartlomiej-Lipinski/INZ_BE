@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Auth.Services;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Auth;
 
@@ -296,6 +297,16 @@ public class AuthController(
     public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequest dto)
     {
         await authorizationService.GeneratePasswordResetTokenAsync(dto.Email);
+        var user = await userManager.FindByEmailAsync(dto.Email);
+        if (user == null)
+            return Ok(ApiResponse<string>.Fail("If the email exists, a reset link has been sent."));
+        await userManager.UpdateSecurityStampAsync(user);
+        var tokens = dbContext.RefreshTokens.Where(t => t.UserId == user.Id && !t.IsRevoked);
+        foreach (var token in tokens)
+        {
+            token.IsRevoked = true;
+        }
+        await dbContext.SaveChangesAsync();
         return Ok(new { message = "If the email exists, a reset link has been sent." });
     }
     
@@ -303,22 +314,14 @@ public class AuthController(
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordResponse dto)
     {
-        var user = await userManager.FindByEmailAsync(dto.Email);
-        if (user == null)
-            return BadRequest(new { message = "Invalid or expired token." });
-
+        var validation = ValidatePassword(dto.NewPassword);
+        if (!string.IsNullOrEmpty(validation))
+            return BadRequest(new { message = validation });
+        
         var success = await authorizationService.ResetPasswordAsync(dto.Token, dto.NewPassword);
 
         if (!success)
             return BadRequest(new { message = "Invalid or expired token." });
-        
-        await userManager.UpdateSecurityStampAsync(user);
-        
-        var tokens = dbContext.RefreshTokens.Where(t => t.UserId == user.Id && !t.IsRevoked);
-        foreach (var token in tokens)
-        {
-            token.IsRevoked = true;
-        }
         await dbContext.SaveChangesAsync();
 
         return Ok(new { message = "Password has been reset successfully." });
@@ -453,6 +456,25 @@ public class AuthController(
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddDays(2)
         });
+    }
+    private static string ValidatePassword(string password)
+    {
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+            return "Hasło musi mieć co najmniej 8 znaków.";
+
+        if (!password.Any(char.IsUpper))
+            return "Hasło musi zawierać co najmniej jedną wielką literę.";
+
+        if (!password.Any(char.IsLower))
+            return "Hasło musi zawierać co najmniej jedną małą literę.";
+
+        if (!password.Any(char.IsDigit))
+            return "Hasło musi zawierać co najmniej jedną cyfrę.";
+
+        if (!password.Any(ch => !char.IsLetterOrDigit(ch)))
+            return "Hasło musi zawierać co najmniej jeden znak specjalny.";
+
+        return string.Empty;
     }
     
     public class UserRequestDto
