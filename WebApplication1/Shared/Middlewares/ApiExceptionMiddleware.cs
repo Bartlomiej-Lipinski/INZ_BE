@@ -14,18 +14,32 @@ public class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMi
         catch (Exception ex)
         {
             var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
-            
+            int statusCode = ex switch
+            {
+                ArgumentException => 400,
+                UnauthorizedAccessException => 401,
+                KeyNotFoundException => 404,
+                _ => 500
+            };
+            string errorMessage = statusCode switch
+            {
+                400 => "Nieprawidłowe żądanie.",
+                401 => "Brak autoryzacji.",
+                404 => "Nie znaleziono zasobu.",
+                500 => "Wystąpił błąd serwera. Skontaktuj się z administratorem.",
+                _ => "Wystąpił błąd."
+            };
             //TODO: Możemy tutaj zwracać różne kody odpowiedzi w zależności od rodzaju błędu
-            logger.LogError(ex, "Error occurred. TraceId: {TraceId}, Message: {Message}", traceId, ex.Message);
+            logger.LogError(ex, "Error occurred. TraceId: {TraceId}", traceId);
             context.Response.ContentType = "application/json";
-            context.Response.StatusCode = 500;
-
+            context.Response.StatusCode = statusCode;
+           
             var error = new ApiErrorResponse
             {
                 Error = new ApiError
                 {
-                    Code = "INTERNAL_SERVER_ERROR",
-                    Message = ex.Message,
+                    Code = statusCode.ToString(),
+                    Message = errorMessage,
                     TraceId = traceId
                 }
             };

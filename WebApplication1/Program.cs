@@ -203,11 +203,11 @@ var app = builder.Build();
 app.MapSwagger();
 
 app.UseMiddleware<ApiExceptionMiddleware>();
+app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapEndpoints();
-app.UseCors("AllowFrontend");
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
