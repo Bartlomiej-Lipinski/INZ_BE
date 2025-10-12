@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
@@ -19,15 +20,20 @@ public class GetUserGroups : IEndpoint
             .WithOpenApi();
     }
 
-    public static async Task<ApiResponse<IEnumerable<GroupResponse>>> Handle(ClaimsPrincipal currentUser,
-        AppDbContext dbContext, CancellationToken cancellationToken)
+    public static async Task<ApiResponse<IEnumerable<GroupResponse>>> Handle(
+        ClaimsPrincipal currentUser,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken,
+        HttpContext httpContext)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(userId))
         {
-            return ApiResponse<IEnumerable<GroupResponse>>.Fail("Unauthorized");
+            return ApiResponse<IEnumerable<GroupResponse>>.Fail("Unauthorized", traceId);
         }
 
         var groups = await dbContext.GroupUsers.AsNoTracking()
@@ -36,7 +42,7 @@ public class GetUserGroups : IEndpoint
             .Select(c => new GroupResponse(c.GroupId, c.Group.Name))
             .ToListAsync(cancellationToken);
 
-        return ApiResponse<IEnumerable<GroupResponse>>.Ok(groups);
+        return ApiResponse<IEnumerable<GroupResponse>>.Ok(groups, null, traceId);
     }
 
     public record GroupResponse(string Id, string Name);

@@ -17,7 +17,7 @@ public interface IAuthService
     Task<bool> ResetPasswordAsync(string token, string newPassword);
 }
 
-public class AuthService(IConfiguration configuration, AppDbContext context, IEmailService emailService) : IAuthService
+internal class AuthService(IConfiguration configuration, AppDbContext context, IEmailService emailService) : IAuthService
 {
     public async Task<(string token, string refreshToken)> GenerateTokensAsync(User user)
     {

@@ -2,9 +2,9 @@
 
 namespace WebApplication1.Extensions;
 
-public static class ServiceCollectionExtensions
+internal static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddLoginSecurity(this IServiceCollection services)
+    internal static IServiceCollection AddLoginSecurity(this IServiceCollection services)
     {
         services.AddScoped<ILoginAttemptService, LoginAttemptService>();
         services.AddScoped<ICaptchaService, CaptchaService>();

@@ -14,14 +14,21 @@ using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Middlewares;
 
 DotNetEnv.Env.Load();
+
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddLoginSecurity();
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+builder.Services.AddLoginSecurity();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers();
+
 builder.Services.AddRateLimiter(options =>
 {
-        // Global limiter: 20 requests per minute per IP
+    // Global limiter: 20 requests/min/IP
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -33,26 +40,28 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
 
-        // Limiter for AuthController endpoints: 5 requests per minute per user
+    // Auth limiter: 5 requests/min/user
     options.AddPolicy("AuthPolicy", context =>
     {
-        if (context.Request.Path.StartsWithSegments("/api/auth"))
-        {
-            var user = context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
-            return RateLimitPartition.GetFixedWindowLimiter(
-                user,
-                _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = 5,
-                    Window = TimeSpan.FromMinutes(1),
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 0
-                });
-        }
-        return RateLimitPartition.GetNoLimiter("NoAuth");
+        if (!context.Request.Path.StartsWithSegments("/api/auth"))
+            return RateLimitPartition.GetNoLimiter("NoAuth");
+
+        var user = context.User.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+        return RateLimitPartition.GetFixedWindowLimiter(
+            user,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0
+            });
     });
 });
-var frontendOrigin = builder.Configuration["Frontend:Origin"] ?? throw new InvalidOperationException("Frontend:Origin is missing in configuration.");
+
+var frontendOrigin = builder.Configuration["Frontend:Origin"]
+                     ?? throw new InvalidOperationException("Frontend:Origin is missing in configuration.");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -63,6 +72,93 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 });
+
+var sendGridKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
+if (string.IsNullOrEmpty(sendGridKey))
+    throw new InvalidOperationException("SENDGRID_API_KEY is missing from environment.");
+
+var emailSettingsSection = builder.Configuration.GetSection("SendGrid");
+builder.Services.Configure<EmailSettings>(options =>
+{
+    options.ApiKey = sendGridKey;
+    options.SenderEmail = emailSettingsSection["SenderEmail"] ?? throw new InvalidOperationException();
+    options.SenderName = emailSettingsSection["SenderName"] ?? throw new InvalidOperationException();
+});
+
+builder.Services.AddIdentity<User, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>();
+
+var jwtSection = builder.Configuration.GetSection("JwtSettings");
+var issuer = jwtSection["Issuer"];
+var audience = jwtSection["Audience"];
+var secret = jwtSection["SecretKey"];
+
+if (builder.Environment.IsProduction())
+{
+    issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? issuer;
+    audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? audience;
+    secret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? secret;
+}
+
+if (string.IsNullOrWhiteSpace(secret))
+    throw new InvalidOperationException("JWT SecretKey is missing.");
+
+var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+const string RefreshScheme = "RefreshScheme";
+
+builder.Services.AddAuthentication(opt =>
+{
+    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(opt =>
+{
+    opt.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Cookies["access_token"];
+            if (!string.IsNullOrEmpty(accessToken))
+                context.Token = accessToken;
+
+            return Task.CompletedTask;
+        }
+    };
+
+    opt.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = !builder.Environment.IsDevelopment(),
+        ValidateAudience = !builder.Environment.IsDevelopment(),
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        IssuerSigningKey = key,
+        ClockSkew = TimeSpan.Zero
+    };
+})
+.AddJwtBearer(RefreshScheme, opt =>
+{
+    opt.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = key,
+        ValidateIssuer = !builder.Environment.IsDevelopment(),
+        ValidateAudience = !builder.Environment.IsDevelopment(),
+        ValidateLifetime = false,
+        ValidIssuer = issuer,
+        ValidAudience = audience,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("RefreshTokenPolicy", policy =>
+    {
+        policy.AddAuthenticationSchemes(RefreshScheme)
+            .RequireAuthenticatedUser();
+    });
+
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -79,139 +175,44 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n" +
-                      "Enter your token in the text input below.\r\n\r\n" +
-                      "Example: \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\""
+        Description = "Enter JWT token below."
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
     });
 });
-builder.Services.AddControllers();
-builder.Services.AddScoped<IEmailService, SendGridEmailService>();
-var sendGridKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
-if (string.IsNullOrEmpty(sendGridKey))
-    throw new InvalidOperationException("SENDGRID_API_KEY is missing from environment.");
 
-var emailSettingsSection = builder.Configuration.GetSection("SendGrid");
-builder.Services.Configure<EmailSettings>(options =>
-{
-    options.ApiKey = sendGridKey;
-    options.SenderEmail = emailSettingsSection["SenderEmail"] ?? throw new InvalidOperationException();
-    options.SenderName = emailSettingsSection["SenderName"] ?? throw new InvalidOperationException();
-});
-
-builder.Services.AddIdentity<User, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
 builder.Services.AddEndpoints();
-var conf = builder.Configuration["Auth:Key"];
-if (conf == null) throw new Exception("Auth:Key is not set in configuration.");
-
-var key = Encoding.UTF8.GetBytes(conf);
-const string RefreshScheme = "RefreshScheme";
-builder.Services.AddAuthentication(opt =>
-{
-    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(opt =>
-{
-    opt.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
-        {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogDebug("JWT OnMessageReceived event triggered");
-
-            var accessToken = context.Request.Cookies["access_token"];
-            if (!string.IsNullOrEmpty(accessToken))
-            {
-                context.Token = accessToken;
-                logger.LogDebug("Access token retrieved from cookie");
-            }
-            else
-            {
-                logger.LogDebug("No access token found in cookie");
-            }
-
-            return Task.CompletedTask;
-        },
-        OnTokenValidated = context =>
-        {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogDebug("JWT token successfully validated for user: {UserId}",
-                context.Principal?.Identity?.Name ?? "Unknown");
-            return Task.CompletedTask;
-        },
-        OnAuthenticationFailed = context =>
-        {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning("JWT authentication failed: {Error}", context.Exception?.Message);
-            return Task.CompletedTask;
-        }
-    };
-    opt.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ClockSkew = TimeSpan.Zero
-    };
-}).AddJwtBearer(RefreshScheme, opt =>
-{
-    opt.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = ctx =>
-        {
-            var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogDebug("OnMessageReceived event triggered");
-            var accessToken = ctx.Request.Cookies["access_token"];
-            logger.LogDebug("Access token: {AccessToken}", accessToken);
-            if (!string.IsNullOrEmpty(accessToken)) ctx.Token = accessToken;
-
-            return Task.CompletedTask;
-        },
-        OnTokenValidated = context =>
-        {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogDebug("OnTokenValidated event triggered");
-            return Task.CompletedTask;
-        },
-        OnAuthenticationFailed = context =>
-        {
-            var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
-            logger.LogWarning("OnAuthenticationFailed event triggered");
-            return Task.CompletedTask;
-        }
-    };
-
-    opt.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = false,
-        IssuerSigningKey =  new SymmetricSecurityKey(key),
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = false,           
-        ClockSkew = TimeSpan.Zero
-    }; 
-});
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("RefreshTokenPolicy", policy =>
-    {
-        policy.AddAuthenticationSchemes(RefreshScheme).RequireAuthenticatedUser();
-    });
-});
 builder.Services.AddOpenApi();
+
 var app = builder.Build();
-app.MapSwagger();
 
 app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseCors("AllowFrontend");
-app.UseAuthentication();
-app.UseAuthorization();
-app.MapControllers();
-app.MapEndpoints();
+app.UseRateLimiter();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+app.MapEndpoints();
 app.UseHttpsRedirection();
+
 app.Run();

@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
 
@@ -16,16 +18,22 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
+        var httpContext = new DefaultHttpContext();
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
         );
         
-        await GenerateCodeToJoinGroup.Handle("g1", dbContext, CancellationToken.None);
+        await GenerateCodeToJoinGroup.Handle(
+            "g1", dbContext, httpContext, NullLogger<GenerateCodeToJoinGroup>.Instance, CancellationToken.None);
         await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest(group.Code), dbContext,claimsPrincipal ,CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest(group.Code),
+            dbContext,
+            claimsPrincipal,
+            CancellationToken.None,
+            httpContext
+        );
         
-        var groupUser = 
-            await dbContext.GroupUsers.FirstOrDefaultAsync(gu => gu.GroupId == "g1" && gu.UserId == "user1");
+        var groupUser = await dbContext.GroupUsers.FirstOrDefaultAsync(gu => gu.GroupId == "g1" && gu.UserId == "user1");
         groupUser.Should().NotBeNull();
         groupUser.IsAdmin.Should().BeFalse();
         groupUser.AcceptanceStatus.Should().Be(AcceptanceStatus.Pending);
@@ -38,11 +46,19 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
+        var httpContext = new DefaultHttpContext();
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
         );
+        
         var result = await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest("INVALIDCODE"), dbContext,claimsPrincipal ,CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest("INVALIDCODE"),
+            dbContext,
+            claimsPrincipal,
+            CancellationToken.None,
+            httpContext
+        );
+        
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<Shared.Responses.ApiResponse<string>>>();
         
@@ -56,12 +72,14 @@ public class JoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenCodeIsExpired()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString()); 
+        var httpContext = new DefaultHttpContext();
         
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
 
-        await GenerateCodeToJoinGroup.Handle("g1", dbContext, CancellationToken.None);
+        await GenerateCodeToJoinGroup.Handle("g1", dbContext, new DefaultHttpContext(), 
+            NullLogger<GenerateCodeToJoinGroup>.Instance, CancellationToken.None);
         
         var existingGroup = await dbContext.Groups.FirstOrDefaultAsync(g => g.Id == "g1");
         existingGroup!.CodeExpirationTime = DateTime.UtcNow.AddMinutes(-1);
@@ -71,11 +89,17 @@ public class JoinGroupTest : TestBase
         dbContext.Users.Add(user1);
         await dbContext.SaveChangesAsync();
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user1.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user1.Id)])
         );
+        
         var result = await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest(
-                existingGroup.Code), dbContext,claimsPrincipal ,CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest(existingGroup.Code),
+            dbContext,
+            claimsPrincipal,
+            CancellationToken.None,
+            httpContext
+        );
+        
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<Shared.Responses.ApiResponse<string>>>();
         
@@ -93,16 +117,29 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
+        var httpContext = new DefaultHttpContext();
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
         );
         
-        await GenerateCodeToJoinGroup.Handle("g1", dbContext, CancellationToken.None);
+        await GenerateCodeToJoinGroup.Handle("g1", dbContext, httpContext, 
+            NullLogger<GenerateCodeToJoinGroup>.Instance, CancellationToken.None);
         await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest(group.Code), dbContext,claimsPrincipal ,CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest(group.Code), 
+            dbContext,
+            claimsPrincipal,
+            CancellationToken.None,
+            httpContext
+        );
         
         var result = await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest(group.Code), dbContext,claimsPrincipal ,CancellationToken.None);
+            TestDataFactory.CreateJoinGroupRequest(group.Code), 
+            dbContext,
+            claimsPrincipal,
+            CancellationToken.None,
+            httpContext
+        );
+        
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<Shared.Responses.ApiResponse<string>>>();
         

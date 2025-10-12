@@ -4,7 +4,7 @@ namespace WebApplication1.Infrastructure.Data.Entities;
 
 public class TwoFactorCode
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
         
     [Required]
     public string UserId { get; set; }

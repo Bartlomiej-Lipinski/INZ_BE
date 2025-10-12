@@ -30,26 +30,20 @@ public class UpdateUserProfile:IEndpoint
         HttpContext httpContext,
         ILogger<UpdateUserProfile> logger)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
         if (string.IsNullOrWhiteSpace(userId))
         {
+            logger.LogWarning("Unauthorized profile update attempt. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
-        }
-
-        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Invalid user ID provided for profile update. TraceId: {TraceId}", traceId);
-            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
         }
 
         logger.LogInformation("Attempting to update profile for user ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 
-        var user = await dbContext.Users.FindAsync(userId);
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
         if (user == null)
         {
             logger.LogWarning("User not found for profile update with ID: {UserId}. TraceId: {TraceId}", userId, traceId);
@@ -71,11 +65,9 @@ public class UpdateUserProfile:IEndpoint
             logger.LogInformation("User profile successfully updated for ID: {UserId}. TraceId: {TraceId}", userId, traceId);
             return Results.Ok(ApiResponse<string>.Ok("User profile updated successfully.", traceId));
         }
-        else
-        {
-            logger.LogError("Failed to update user profile for ID: {UserId}. TraceId: {TraceId}", userId, traceId);
-            return Results.Json(ApiResponse<string>.Fail("Failed to update user profile.", traceId), statusCode: 500);
-        }
+
+        logger.LogError("No changes were saved for user profile update. UserId: {UserId}, TraceId: {TraceId}", userId, traceId);
+        return Results.Json(ApiResponse<string>.Fail("No changes were saved.", traceId), statusCode: 500);
     }
     
     public record UpdateUserProfileRequest

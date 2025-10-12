@@ -1,5 +1,6 @@
 ﻿using System.Security.Claims;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using WebApplication1.Features.Groups;
 
 namespace WebApplication1.Tests.Features.Groups;
@@ -11,10 +12,12 @@ public class GetUserGroupsTest : TestBase
     {
         var user = TestDataFactory.CreateUser("user1", "Test User");
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
         );
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None);
+        var httpContext = new DefaultHttpContext();
+        
+        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None, httpContext);
         
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();
@@ -28,19 +31,17 @@ public class GetUserGroupsTest : TestBase
         var user = TestDataFactory.CreateUser("user1", "Test User");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#fff", "C1");
         var group2 = TestDataFactory.CreateGroup("group2", "Group 2", "#000", "C2");
-            
+        var httpContext = new DefaultHttpContext();
+        
         dbContext.Users.Add(user);
         dbContext.Groups.AddRange(group1, group2);
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user.Id, group1.Id));
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user.Id, group2.Id));
         await dbContext.SaveChangesAsync();
         
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
-        );
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)]));
         
-        var response = await GetUserGroups.Handle(
-                claimsPrincipal, dbContext, CancellationToken.None);
+        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None, httpContext);
 
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();
@@ -57,7 +58,8 @@ public class GetUserGroupsTest : TestBase
         var user2 = TestDataFactory.CreateUser("user2", "User Two");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#fff", "C1");
         var group2 = TestDataFactory.CreateGroup("group2", "Group 2", "#000", "C2");
-            
+        var httpContext = new DefaultHttpContext();
+        
         dbContext.Users.AddRange(user1, user2);
         dbContext.Groups.AddRange(group1, group2);
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user1.Id, group1.Id));
@@ -65,10 +67,10 @@ public class GetUserGroupsTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user1.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user1.Id)])
         );
         
-        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None);
+        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None, httpContext);
         
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();

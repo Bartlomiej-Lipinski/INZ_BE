@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
@@ -23,28 +24,35 @@ public class GetAmountOfJoinRequests : IEndpoint
     public static async Task<IResult> Handle(
         ClaimsPrincipal currentUser,
         AppDbContext dbContext,
+        HttpContext httpContext,
+        ILogger<GetAmountOfJoinRequests> logger,
         CancellationToken cancellationToken)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
         
         if (string.IsNullOrWhiteSpace(userId))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty."));
+            logger.LogWarning("User ID not found in claims. TraceId: {TraceId}", traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
         }
 
         var adminGroupIds = await dbContext.GroupUsers
             .Where(gu => gu.UserId == userId && gu.IsAdmin)
             .Select(gu => gu.GroupId)
             .ToListAsync(cancellationToken);
+        
         var amount = await dbContext.GroupUsers
             .AsNoTracking()
             .Where(gu => adminGroupIds.Contains(gu.GroupId) && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
             .CountAsync(cancellationToken);
         
-        return Results.Ok(ApiResponse<AmountResponse>.Ok(new AmountResponse(amount)));
+        logger.LogInformation("Pending join requests fetched for user {UserId}. Amount: {Amount}, TraceId: {TraceId}",
+            userId, amount, traceId);
+        return Results.Ok(ApiResponse<AmountResponse>.Ok(new AmountResponse(amount), null, traceId));
     }
-    
-    
-    public record AmountResponse(int Amount);
+
+    private record AmountResponse(int Amount);
 }

@@ -57,7 +57,7 @@ public class GetGroupById : IEndpoint
         };
 
         logger.LogInformation("Group successfully retrieved with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
-        return Results.Ok(ApiResponse<GroupResponseDto>.Ok(dto, null, traceId));
+        return Results.Ok(ApiResponse<GroupResponseDto>.Ok(dto, "Group retrieved successfully", traceId));
     }
 
     public class GroupResponseDto

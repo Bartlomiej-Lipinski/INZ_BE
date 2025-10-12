@@ -5,7 +5,7 @@ namespace WebApplication1.Infrastructure.Data.Entities;
 public class PasswordResetToken
 {
     [Key]
-    public string Id { get; set; } = null!;
+    public string Id { get; init; } = null!;
     
     [Required]
     public string TokenHash { get; set; } = null!; //TODO add index on db

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,12 +21,16 @@ public class JoinGroup : IEndpoint
             .RequireAuthorization()
             .WithOpenApi();
     }
+    
     public static async Task<IResult> Handle(
         [FromBody] JoinGroupRequest request,
         AppDbContext dbContext,
         ClaimsPrincipal user,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        HttpContext httpContext)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
         var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? user.FindFirst("sub")?.Value;
 
@@ -36,7 +41,7 @@ public class JoinGroup : IEndpoint
         
         if (string.IsNullOrWhiteSpace(request.GroupCode))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("Group ID and Code are required."));
+            return Results.BadRequest(ApiResponse<string>.Fail("Group ID and Code are required.", traceId));
         }
 
         var group = await dbContext.Groups
@@ -44,15 +49,15 @@ public class JoinGroup : IEndpoint
 
         if (group == null)
         {
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found or code is invalid."));
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found or code is invalid.", traceId));
         }
         if (group.CodeExpirationTime < DateTime.UtcNow)
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("The code has expired."));
+            return Results.BadRequest(ApiResponse<string>.Fail("The code has expired.", traceId));
         }
         if (await dbContext.GroupUsers.AnyAsync(gu => gu.GroupId == group.Id && gu.UserId == userId, cancellationToken))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("You are already a member of this group."));
+            return Results.BadRequest(ApiResponse<string>.Fail("You are already a member of this group.", traceId));
         }
 
         var groupUser = new GroupUser
@@ -66,7 +71,7 @@ public class JoinGroup : IEndpoint
         await dbContext.GroupUsers.AddAsync(groupUser, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group. Awaiting admin approval."));
+        return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group. Awaiting admin approval.", null, traceId));
     }
 
     public record JoinGroupRequest

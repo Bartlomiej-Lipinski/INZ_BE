@@ -28,26 +28,24 @@ public class DeleteUser : IEndpoint
         HttpContext httpContext,
         ILogger<DeleteUser> logger)
     {
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-        
-        if (string.IsNullOrEmpty(userId))
-            return Results.BadRequest(ApiResponse<string>.Fail("User name cannot be null or empty."));
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+
         if (string.IsNullOrEmpty(userId))
         {
-            logger.LogWarning("Invalid username provided for deletion. TraceId: {TraceId}", traceId);
-            return Results.BadRequest(ApiResponse<string>.Fail("User name cannot be null or empty.", traceId));
+            logger.LogWarning("Invalid user ID provided for deletion. TraceId: {TraceId}", traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
         }
 
-        logger.LogInformation("Attempting to delete user with username: {userId}. TraceId: {TraceId}", userId, traceId);
+        logger.LogInformation("Attempting to delete user with ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 
         var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         
         if (user == null)
         {
-            logger.LogWarning("User not found for deletion with username: {userId}. TraceId: {TraceId}", userId, traceId);
+            logger.LogWarning("User not found for deletion with ID: {UserId}. TraceId: {TraceId}", userId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("User not found.", traceId));
         }
 
@@ -56,13 +54,11 @@ public class DeleteUser : IEndpoint
 
         if (deleted > 0)
         {
-            logger.LogInformation("User successfully deleted with username: {userId}. TraceId: {TraceId}", userId, traceId);
+            logger.LogInformation("User successfully deleted with ID: {UserId}. TraceId: {TraceId}", userId, traceId);
             return Results.Ok(ApiResponse<string>.Ok("User deleted successfully.", null, traceId));
         }
-        else
-        {
-            logger.LogError("Failed to delete user with username: {userId}. TraceId: {TraceId}", userId, traceId);
-            return Results.Json(ApiResponse<string>.Fail("Failed to delete user.", traceId), statusCode: 500);
-        }
+
+        logger.LogError("Failed to delete user with ID: {UserId}. TraceId: {TraceId}", userId, traceId);
+        return Results.Json(ApiResponse<string>.Fail("Failed to delete user.", traceId), statusCode: 500);
     }  
 }

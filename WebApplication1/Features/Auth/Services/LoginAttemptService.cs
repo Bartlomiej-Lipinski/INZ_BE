@@ -12,7 +12,7 @@ public interface ILoginAttemptService
     Task<bool> RequiresCaptchaAsync(string email, string ipAddress);
 }
 
-public class LoginAttemptService(AppDbContext context) : ILoginAttemptService
+internal sealed class LoginAttemptService(AppDbContext context) : ILoginAttemptService
 {
     private const int MaxFailedAttempts = 3;
     private readonly TimeSpan _timeWindow = TimeSpan.FromMinutes(30);

@@ -92,6 +92,7 @@ public class AcceptUserJoinRequest : IEndpoint
             request.GroupId, request.UserId, traceId);
         return Results.Json(ApiResponse<string>.Fail("Failed to accept join request.", traceId), statusCode: 500);
     }
+    
     public record AcceptUserJoinRequestDto
     {
         [Required]

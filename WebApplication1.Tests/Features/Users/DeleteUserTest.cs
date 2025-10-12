@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using WebApplication1.Features.Users;
 using WebApplication1.Shared.Responses;
@@ -13,24 +14,22 @@ namespace WebApplication1.Tests.Features.Users;
 public class DeleteUserTest: TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_BadRequest_When_UserName_Is_Empty()
+    public async Task Handle_Should_Return_BadRequest_When_UserId_Is_Empty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var mockHttpContext = new Mock<HttpContext>();
-        var mockLogger = new Mock<ILogger<DeleteUser>>();
+        var mockHttpContext = new DefaultHttpContext
+        {
+            TraceIdentifier = "test-trace-id"
+        };
+        var mockLogger = NullLogger<DeleteUser>.Instance;
+        var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
 
-        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
-
-        var user1 = TestDataFactory.CreateUser("u1", "Test User", "test@test.com", "testUser");
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user1.Id) })
-        );
-        var result = await DeleteUser.Handle(claimsPrincipal, dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await DeleteUser.Handle(claimsPrincipal, dbContext, CancellationToken.None, mockHttpContext, mockLogger);
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequest = result as BadRequest<ApiResponse<string>>;
         badRequest!.Value!.TraceId.Should().Be("test-trace-id");
+        badRequest.Value.Message.Should().Be("User ID cannot be null or empty.");
     }
 
     [Fact]
@@ -44,7 +43,7 @@ public class DeleteUserTest: TestBase
 
         var user1 = TestDataFactory.CreateUser("u1", "Test User", "test@test.com", "testUser");
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user1.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user1.Id)])
         );
         var result = await DeleteUser.Handle(claimsPrincipal, dbContext, CancellationToken.None,
             mockHttpContext.Object, mockLogger.Object);
@@ -75,14 +74,20 @@ public class DeleteUserTest: TestBase
             users.Should().Contain(u => u.UserName == "testUser");
 
             var claimsPrincipal = new ClaimsPrincipal(
-                new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "testUser") })
+                new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "u1")])
             );
-            var result = await DeleteUser.Handle(claimsPrincipal, context2, CancellationToken.None,
-                mockHttpContext.Object, mockLogger.Object);
+
+            var result = await DeleteUser.Handle(
+                claimsPrincipal, 
+                context2, 
+                CancellationToken.None,
+                mockHttpContext.Object, 
+                mockLogger.Object
+            );
 
             result.Should().BeOfType<Ok<ApiResponse<string>>>();
             var okResult = result as Ok<ApiResponse<string>>;
-            okResult!.Value!.Message.Should().Be("User deleted successfully.");
+            okResult!.Value!.Data.Should().Be("User deleted successfully.");
             okResult.Value.TraceId.Should().Be("test-trace-id");
         }
     }

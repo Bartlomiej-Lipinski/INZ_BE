@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
@@ -21,11 +22,16 @@ public class GenerateCodeToJoinGroup : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string id,
         AppDbContext dbContext,
+        HttpContext httpContext,
+        ILogger<GenerateCodeToJoinGroup> logger,
         CancellationToken cancellationToken)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
         if (string.IsNullOrWhiteSpace(id))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("Group ID cannot be null or empty."));
+            logger.LogWarning("Group ID is null or empty. TraceId: {TraceId}", traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Group ID cannot be null or empty.", traceId));
         }
 
         var group = await dbContext.Groups
@@ -33,21 +39,27 @@ public class GenerateCodeToJoinGroup : IEndpoint
 
         if (group == null)
         {
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found."));
+            logger.LogWarning("Group not found. GroupId: {GroupId}, TraceId: {TraceId}", id, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        group.Code = GenerateUniqueCode(dbContext, group.Id); // Generate a unique 5-digit code
+        group.Code = GenerateUniqueCode(dbContext, group.Id);
         group.CodeExpirationTime = DateTime.UtcNow.AddMinutes(5);
         dbContext.Groups.Update(group);
+        
         var updated = await dbContext.SaveChangesAsync(cancellationToken);
 
         if (updated > 0)
         {
+            logger.LogInformation("New join code generated. GroupId: {GroupId}, TraceId: {TraceId}", id, traceId);
             return Results.Ok(ApiResponse<GenerateCodeResponse>.Ok(
-                new GenerateCodeResponse("New code generated successfully. The code is valid for 5 minutes.")));
+                new GenerateCodeResponse("New code generated successfully. The code is valid for 5 minutes."),
+                null,
+                traceId));
         }
-
-        return Results.Json(ApiResponse<string>.Fail("Failed to generate code."), statusCode: 500);
+        
+        logger.LogError("Failed to generate code. GroupId: {GroupId}, TraceId: {TraceId}", id, traceId);
+        return Results.Json(ApiResponse<string>.Fail("Failed to generate code.", traceId), statusCode: 500);
     }
 
     private static string GenerateUniqueCode(AppDbContext dbContext, string groupId)
@@ -63,5 +75,6 @@ public class GenerateCodeToJoinGroup : IEndpoint
 
         return code;
     }
+    
     public record GenerateCodeResponse(string message);
 }
