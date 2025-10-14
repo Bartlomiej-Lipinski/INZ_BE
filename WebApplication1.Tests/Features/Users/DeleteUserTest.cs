@@ -24,7 +24,8 @@ public class DeleteUserTest: TestBase
         var mockLogger = NullLogger<DeleteUser>.Instance;
         var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity());
 
-        var result = await DeleteUser.Handle(claimsPrincipal, dbContext, CancellationToken.None, mockHttpContext, mockLogger);
+        var result = await DeleteUser
+            .Handle(claimsPrincipal, dbContext, mockHttpContext, mockLogger, CancellationToken.None);
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequest = result as BadRequest<ApiResponse<string>>;
@@ -45,8 +46,8 @@ public class DeleteUserTest: TestBase
         var claimsPrincipal = new ClaimsPrincipal(
             new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user1.Id)])
         );
-        var result = await DeleteUser.Handle(claimsPrincipal, dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await DeleteUser
+            .Handle(claimsPrincipal, dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<NotFound<ApiResponse<string>>>();
         var notFound = result as NotFound<ApiResponse<string>>;
@@ -80,9 +81,9 @@ public class DeleteUserTest: TestBase
             var result = await DeleteUser.Handle(
                 claimsPrincipal, 
                 context2, 
-                CancellationToken.None,
                 mockHttpContext.Object, 
-                mockLogger.Object
+                mockLogger.Object,
+                CancellationToken.None
             );
 
             result.Should().BeOfType<Ok<ApiResponse<string>>>();

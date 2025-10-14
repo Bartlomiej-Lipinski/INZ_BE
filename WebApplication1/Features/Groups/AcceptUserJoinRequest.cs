@@ -26,9 +26,9 @@ public class AcceptUserJoinRequest : IEndpoint
         [FromBody] AcceptUserJoinRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal? user,
-        CancellationToken cancellationToken,
         HttpContext httpContext,
-        ILogger<AcceptUserJoinRequest> logger)
+        ILogger<AcceptUserJoinRequest> logger,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
@@ -47,17 +47,20 @@ public class AcceptUserJoinRequest : IEndpoint
             return Results.Unauthorized();
         }
         
-        logger.LogInformation("Processing join request acceptance. GroupId: {GroupId}, UserId: {UserId}, AdminId: {AdminId}. TraceId: {TraceId}", 
+        logger.LogInformation("Processing join request acceptance. " +
+                              "GroupId: {GroupId}, UserId: {UserId}, AdminId: {AdminId}. TraceId: {TraceId}", 
             request.GroupId, request.UserId, currentUserId, traceId);
         
         var admin = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == currentUserId && gu.IsAdmin, cancellationToken);
+            .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == currentUserId && gu.IsAdmin,
+                cancellationToken);
         
         if (admin == null)
         {
             logger.LogWarning("User {UserId} is not admin of group {GroupId}. TraceId: {TraceId}", 
                 currentUserId, request.GroupId, traceId);
-            return Results.BadRequest(ApiResponse<string>.Fail("Only group admin can accept join requests.", traceId));
+            return Results.BadRequest(ApiResponse<string>
+                .Fail("Only group admin can accept join requests.", traceId));
         }
         
         var groupUser = await dbContext.GroupUsers
@@ -72,7 +75,8 @@ public class AcceptUserJoinRequest : IEndpoint
 
         if (groupUser.AcceptanceStatus != AcceptanceStatus.Pending)
         {
-            logger.LogWarning("Join request is not pending. GroupId: {GroupId}, UserId: {UserId}, Status: {Status}. TraceId: {TraceId}", 
+            logger.LogWarning("Join request is not pending. " +
+                              "GroupId: {GroupId}, UserId: {UserId}, Status: {Status}. TraceId: {TraceId}", 
                 request.GroupId, request.UserId, groupUser.AcceptanceStatus, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Join request is not pending.", traceId));
         }
@@ -83,7 +87,8 @@ public class AcceptUserJoinRequest : IEndpoint
 
         if (saved > 0)
         {
-            logger.LogInformation("Join request accepted successfully. GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}", 
+            logger.LogInformation("Join request accepted successfully. " +
+                                  "GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}", 
                 request.GroupId, request.UserId, traceId);
             return Results.Ok(ApiResponse<string>.Ok("Join request accepted successfully.", null, traceId));
         }

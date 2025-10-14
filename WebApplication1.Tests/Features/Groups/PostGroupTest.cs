@@ -11,11 +11,13 @@ namespace WebApplication1.Tests.Features.Groups;
 
 public class PostGroupTest : TestBase
 {
-    private HttpContext CreateHttpContextWithUser(string? userId = null)
+    private static DefaultHttpContext CreateHttpContextWithUser(string? userId = null)
     {
-        var context = new DefaultHttpContext();
-        context.TraceIdentifier = "test-trace-id";
-        
+        var context = new DefaultHttpContext
+        {
+            TraceIdentifier = "test-trace-id"
+        };
+
         if (string.IsNullOrEmpty(userId)) return context;
         var identity = new ClaimsIdentity([
             new Claim(ClaimTypes.NameIdentifier, userId)
@@ -31,10 +33,12 @@ public class PostGroupTest : TestBase
         var httpContext = CreateHttpContextWithUser("user1");
         var mockLogger = new Mock<ILogger<PostGroup>>();
 
-        var result = 
-            await PostGroup.Handle(
-                httpContext, TestDataFactory.CreateGroupRequestDto("",  "#FFF"), dbContext, 
-                CancellationToken.None, mockLogger.Object);
+        var result = await PostGroup.Handle(
+                httpContext,
+                TestDataFactory.CreateGroupRequestDto("",  "#FFF"),
+                dbContext,
+                mockLogger.Object,
+                CancellationToken.None);
                 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
@@ -51,7 +55,7 @@ public class PostGroupTest : TestBase
         var result = 
             await PostGroup.Handle(
                 httpContext, TestDataFactory.CreateGroupRequestDto(
-                    "Test Group",  "#FFF"), dbContext, CancellationToken.None, mockLogger.Object);
+                    "Test Group",  "#FFF"), dbContext, mockLogger.Object, CancellationToken.None);
                     
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
@@ -64,7 +68,7 @@ public class PostGroupTest : TestBase
         var mockLogger = new Mock<ILogger<PostGroup>>();
         var dto = TestDataFactory.CreateGroupRequestDto("My Group",  "#FFF");
         
-        var result = await PostGroup.Handle(httpContext, dto, dbContext, CancellationToken.None, mockLogger.Object);
+        var result = await PostGroup.Handle(httpContext, dto, dbContext, mockLogger.Object, CancellationToken.None);
         
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Created<ApiResponse<PostGroup.GroupResponseDto>>>();

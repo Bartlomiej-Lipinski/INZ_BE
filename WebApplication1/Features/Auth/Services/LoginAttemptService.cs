@@ -22,7 +22,7 @@ internal sealed class LoginAttemptService(AppDbContext context) : ILoginAttemptS
         var cutoffTime = DateTime.UtcNow.Subtract(timeWindow);
         
         return await context.LoginAttempts
-           .Where(la => la.Email.ToLower() == email.ToLower()
+           .Where(la => la.Email.Equals(email, StringComparison.CurrentCultureIgnoreCase)
                  && la.IpAddress == ipAddress
                  && !la.IsSuccessful 
                  && la.AttemptTime >= cutoffTime)
@@ -47,7 +47,7 @@ internal sealed class LoginAttemptService(AppDbContext context) : ILoginAttemptS
     public async Task ResetFailedAttemptsAsync(string email, string ipAddress)
     {
         var failedAttempts = await context.LoginAttempts
-            .Where(la => la.Email.ToLower() == email.ToLower()
+            .Where(la => la.Email.Equals(email, StringComparison.CurrentCultureIgnoreCase)
                          && la.IpAddress == ipAddress
                          && !la.IsSuccessful)
             .ToListAsync();

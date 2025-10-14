@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Tokens;
 
 namespace WebApplication1.Features.Auth.Services;
 
@@ -17,7 +18,8 @@ public interface IAuthService
     Task<bool> ResetPasswordAsync(string token, string newPassword);
 }
 
-internal class AuthService(IConfiguration configuration, AppDbContext context, IEmailService emailService) : IAuthService
+internal class AuthService(IConfiguration configuration, AppDbContext context, IEmailService emailService)
+    : IAuthService
 {
     public async Task<(string token, string refreshToken)> GenerateTokensAsync(User user)
     {

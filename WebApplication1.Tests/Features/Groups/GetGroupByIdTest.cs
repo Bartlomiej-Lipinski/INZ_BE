@@ -22,8 +22,8 @@ public class GetGroupByIdTest : TestBase
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
-        var result = await GetGroupById.Handle(group.Id, dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await GetGroupById
+            .Handle(group.Id, dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
             
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>>();
@@ -47,8 +47,8 @@ public class GetGroupByIdTest : TestBase
         
         mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
         
-        var result = await GetGroupById.Handle("nonexistent", dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await GetGroupById
+            .Handle("nonexistent", dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
             
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
         var notFoundResult = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
@@ -67,8 +67,8 @@ public class GetGroupByIdTest : TestBase
         
         mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
         
-        var result = await GetGroupById.Handle("", dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await GetGroupById
+            .Handle("", dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
             
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequestResult = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
@@ -91,8 +91,8 @@ public class GetGroupByIdTest : TestBase
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
-        var result = await GetGroupById.Handle(group.Id, dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await GetGroupById
+            .Handle(group.Id, dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
             
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>;
         okResult.Should().NotBeNull();

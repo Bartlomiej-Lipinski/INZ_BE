@@ -17,7 +17,7 @@ public class GetUserGroupsTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = new DefaultHttpContext();
         
-        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None, httpContext);
+        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, httpContext, CancellationToken.None);
         
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();
@@ -41,7 +41,7 @@ public class GetUserGroupsTest : TestBase
         
         var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)]));
         
-        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None, httpContext);
+        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, httpContext, CancellationToken.None);
 
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();
@@ -70,7 +70,7 @@ public class GetUserGroupsTest : TestBase
             new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user1.Id)])
         );
         
-        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, CancellationToken.None, httpContext);
+        var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, httpContext, CancellationToken.None);
         
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();

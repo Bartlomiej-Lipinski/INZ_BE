@@ -27,8 +27,14 @@ public class GetUserByIdTest: TestBase
             new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")])
         );
         
-        var result = await GetUserById.Handle("user1",claimsPrincipal ,dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await GetUserById.Handle(
+            "user1",
+            claimsPrincipal,
+            dbContext, 
+            mockHttpContext.Object, 
+            mockLogger.Object, 
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Ok<ApiResponse<GetUserById.UserResponseDto>>>();
         var okResult = result as Ok<ApiResponse<GetUserById.UserResponseDto>>;
@@ -57,9 +63,9 @@ public class GetUserByIdTest: TestBase
             "nonexistent",
             claimsPrincipal,
             dbContext,
-            CancellationToken.None,
             mockHttpContext.Object,
-            mockLogger.Object
+            mockLogger.Object,
+            CancellationToken.None
         );
 
         result.Should().BeOfType<ForbidHttpResult>();
@@ -77,8 +83,8 @@ public class GetUserByIdTest: TestBase
         var claimsPrincipal = new ClaimsPrincipal(
             new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
         );
-        var result = await GetUserById.Handle("",claimsPrincipal ,dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await GetUserById
+            .Handle("",claimsPrincipal ,dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequest = result as BadRequest<ApiResponse<string>>;

@@ -12,7 +12,7 @@ namespace WebApplication1.Tests.Features.Groups;
 
 public class AcceptUserJoinRequestTest : TestBase
 {
-    private ClaimsPrincipal CreateUser(string userId)
+    private static ClaimsPrincipal CreateUser(string userId)
     {
         var identity = new ClaimsIdentity([
             new Claim(ClaimTypes.NameIdentifier, userId)
@@ -20,7 +20,7 @@ public class AcceptUserJoinRequestTest : TestBase
         return new ClaimsPrincipal(identity);
     }
 
-    private HttpContext CreateMockHttpContext()
+    private static DefaultHttpContext CreateMockHttpContext()
     {
         var context = new DefaultHttpContext
         {
@@ -42,7 +42,7 @@ public class AcceptUserJoinRequestTest : TestBase
 
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, user, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, user, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
         var notFound = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
@@ -67,7 +67,7 @@ public class AcceptUserJoinRequestTest : TestBase
         
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, user, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, user, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
@@ -93,7 +93,7 @@ public class AcceptUserJoinRequestTest : TestBase
         
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, user, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, user, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
@@ -115,7 +115,7 @@ public class AcceptUserJoinRequestTest : TestBase
 
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, null, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, null, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
@@ -137,7 +137,7 @@ public class AcceptUserJoinRequestTest : TestBase
 
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, user, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, user, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;

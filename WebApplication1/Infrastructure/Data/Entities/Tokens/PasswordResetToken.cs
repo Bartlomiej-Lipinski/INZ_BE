@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebApplication1.Infrastructure.Data.Entities;
+namespace WebApplication1.Infrastructure.Data.Entities.Tokens;
 
 public class PasswordResetToken
 {

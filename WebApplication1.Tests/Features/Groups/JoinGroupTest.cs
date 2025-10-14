@@ -23,14 +23,14 @@ public class JoinGroupTest : TestBase
             new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
         );
         
-        await GenerateCodeToJoinGroup.Handle(
-            "g1", dbContext, httpContext, NullLogger<GenerateCodeToJoinGroup>.Instance, CancellationToken.None);
+        await GenerateCodeToJoinGroup
+            .Handle("g1", dbContext, httpContext, NullLogger<GenerateCodeToJoinGroup>.Instance, CancellationToken.None);
         await JoinGroup.Handle(
             TestDataFactory.CreateJoinGroupRequest(group.Code),
             dbContext,
             claimsPrincipal,
-            CancellationToken.None,
-            httpContext
+            httpContext,
+            CancellationToken.None
         );
         
         var groupUser = await dbContext.GroupUsers.FirstOrDefaultAsync(gu => gu.GroupId == "g1" && gu.UserId == "user1");
@@ -48,15 +48,14 @@ public class JoinGroupTest : TestBase
         await dbContext.SaveChangesAsync();
         var httpContext = new DefaultHttpContext();
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
-        );
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)]));
         
         var result = await JoinGroup.Handle(
             TestDataFactory.CreateJoinGroupRequest("INVALIDCODE"),
             dbContext,
             claimsPrincipal,
-            CancellationToken.None,
-            httpContext
+            httpContext,
+            CancellationToken.None
         );
         
         result.Should()
@@ -96,8 +95,8 @@ public class JoinGroupTest : TestBase
             TestDataFactory.CreateJoinGroupRequest(existingGroup.Code),
             dbContext,
             claimsPrincipal,
-            CancellationToken.None,
-            httpContext
+            httpContext,
+            CancellationToken.None
         );
         
         result.Should()
@@ -128,16 +127,16 @@ public class JoinGroupTest : TestBase
             TestDataFactory.CreateJoinGroupRequest(group.Code), 
             dbContext,
             claimsPrincipal,
-            CancellationToken.None,
-            httpContext
+            httpContext,
+            CancellationToken.None
         );
         
         var result = await JoinGroup.Handle(
             TestDataFactory.CreateJoinGroupRequest(group.Code), 
             dbContext,
             claimsPrincipal,
-            CancellationToken.None,
-            httpContext
+            httpContext,
+            CancellationToken.None
         );
         
         result.Should()

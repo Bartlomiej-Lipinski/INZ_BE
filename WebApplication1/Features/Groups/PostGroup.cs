@@ -26,8 +26,8 @@ public class PostGroup : IEndpoint
         HttpContext httpContext, 
         [FromBody] GroupRequestDto requestDto,
         AppDbContext dbContext,
-        CancellationToken cancellationToken,
-        ILogger<PostGroup> logger)
+        ILogger<PostGroup> logger,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
@@ -79,7 +79,8 @@ public class PostGroup : IEndpoint
 
             logger.LogInformation("Group '{GroupName}' successfully created with ID: {GroupId}. TraceId: {TraceId}", 
                 group.Name, group.Id, traceId);
-            return Results.Created($"/groups/{group.Id}", ApiResponse<GroupResponseDto>.Ok(response, null, traceId));
+            return Results.Created($"/groups/{group.Id}", ApiResponse<GroupResponseDto>
+                .Ok(response, null, traceId));
         }
 
         logger.LogError("Failed to create group '{GroupName}' for user {UserId}. TraceId: {TraceId}", 
@@ -87,7 +88,7 @@ public class PostGroup : IEndpoint
         return Results.Json(ApiResponse<string>.Fail("Failed to create group", traceId), statusCode: 500);
     }
 
-    public class GroupRequestDto
+    public record GroupRequestDto
     {
         [Required]
         [MaxLength(100)]
@@ -97,7 +98,7 @@ public class PostGroup : IEndpoint
         public string Color { get; set; } = null!;
     }
 
-    public class GroupResponseDto
+    public record GroupResponseDto
     {
         [MaxLength(50)]
         public string Id { get; set; } = null!;

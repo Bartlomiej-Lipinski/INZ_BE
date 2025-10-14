@@ -22,10 +22,10 @@ public class RejectUserJoinRequestTest : TestBase
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"), 
             dbContext, 
-            claimsPrincipal, 
-            CancellationToken.None,
+            claimsPrincipal,
             logger,
-            httpContext
+            httpContext, 
+            CancellationToken.None
         );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -45,9 +45,10 @@ public class RejectUserJoinRequestTest : TestBase
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
             dbContext, 
             CreateClaimsPrincipal("u1"), 
-            CancellationToken.None, 
             logger, 
-            httpContext);
+            httpContext, 
+            CancellationToken.None
+            );
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
     }
 
@@ -65,9 +66,10 @@ public class RejectUserJoinRequestTest : TestBase
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
             dbContext, 
             CreateClaimsPrincipal("u1"), 
-            CancellationToken.None, 
             logger, 
-            httpContext);
+            httpContext, 
+            CancellationToken.None
+            );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;

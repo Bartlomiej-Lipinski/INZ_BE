@@ -24,9 +24,9 @@ public class GetGroupById : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string id,
         AppDbContext dbContext,
-        CancellationToken cancellationToken,
         HttpContext httpContext,
-        ILogger<GetGroupById> logger)
+        ILogger<GetGroupById> logger,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
@@ -38,9 +38,7 @@ public class GetGroupById : IEndpoint
 
         logger.LogInformation("Fetching group with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
 
-        var group = await dbContext.Groups
-            .AsNoTracking()
-            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+        var group = await dbContext.Groups.AsNoTracking().FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
 
         if (group == null)
         {
@@ -60,7 +58,7 @@ public class GetGroupById : IEndpoint
         return Results.Ok(ApiResponse<GroupResponseDto>.Ok(dto, "Group retrieved successfully", traceId));
     }
 
-    public class GroupResponseDto
+    public record GroupResponseDto
     {
         [MaxLength(50)]
         public string Id { get; set; } = null!;

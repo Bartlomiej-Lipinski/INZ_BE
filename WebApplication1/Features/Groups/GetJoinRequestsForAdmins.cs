@@ -24,11 +24,11 @@ public class GetJoinRequestsForAdmins : IEndpoint
     public static async Task<IResult> Handle(
         ClaimsPrincipal currentUser, 
         AppDbContext dbContext, 
-        CancellationToken cancellationToken,
         HttpContext httpContext,
-        ILogger<GetJoinRequestsForAdmins> logger)
+        ILogger<GetJoinRequestsForAdmins> logger,
+        CancellationToken cancellationToken)
     {
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value 
                      ?? currentUser.FindFirst("sub")?.Value;
         
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
@@ -46,7 +46,8 @@ public class GetJoinRequestsForAdmins : IEndpoint
             
         var pendingRequests = await dbContext.GroupUsers
             .AsNoTracking()
-            .Where(gu => adminGroupIds.Contains(gu.GroupId) && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
+            .Where(gu => adminGroupIds.Contains(gu.GroupId) 
+                         && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
             .Include(gu => gu.Group)
             .Include(gu => gu.User)
             .Select(gu => new SingleJoinRequestResponse(gu.GroupId, gu.Group.Name, gu.UserId, gu.User.UserName))

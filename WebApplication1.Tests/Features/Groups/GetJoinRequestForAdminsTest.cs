@@ -28,25 +28,24 @@ public class GetJoinRequestsForAdminsTest : TestBase
         dbContext.Groups.AddRange(group1, group2);
 
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user1.Id, group1.Id, true));
-        dbContext.GroupUsers.Add(
-            TestDataFactory.CreateGroupUser(user1.Id, group2.Id, false, AcceptanceStatus.Pending));
-        dbContext.GroupUsers.Add(
-            TestDataFactory.CreateGroupUser(user2.Id, group1.Id, false, AcceptanceStatus.Pending));
+        dbContext.GroupUsers
+            .Add(TestDataFactory.CreateGroupUser(user1.Id, group2.Id, false, AcceptanceStatus.Pending));
+        dbContext.GroupUsers
+            .Add(TestDataFactory.CreateGroupUser(user2.Id, group1.Id, false, AcceptanceStatus.Pending));
         await dbContext.SaveChangesAsync();
 
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user1.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user1.Id)])
         );
 
-        var result = await GetJoinRequestsForAdmins.Handle(claimsPrincipal, dbContext, CancellationToken.None, 
-            mockHttpContext.Object, mockLogger.Object);
+        var result = await GetJoinRequestsForAdmins
+            .Handle(claimsPrincipal, dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
         result
             .Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.
                 Ok<Shared.Responses.ApiResponse<IEnumerable<GetJoinRequestsForAdmins.SingleJoinRequestResponse>>>>();
         var okResult =
-            result as
-                Microsoft.AspNetCore.Http.HttpResults.
+            result as Microsoft.AspNetCore.Http.HttpResults.
                 Ok<Shared.Responses.ApiResponse<IEnumerable<GetJoinRequestsForAdmins.SingleJoinRequestResponse>>>;
         okResult!.Value?.Success.Should().BeTrue();
         okResult.Value?.Data.Should().NotBeNull();

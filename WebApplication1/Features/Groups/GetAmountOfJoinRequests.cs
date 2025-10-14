@@ -46,7 +46,8 @@ public class GetAmountOfJoinRequests : IEndpoint
         
         var amount = await dbContext.GroupUsers
             .AsNoTracking()
-            .Where(gu => adminGroupIds.Contains(gu.GroupId) && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
+            .Where(gu => adminGroupIds.Contains(gu.GroupId) 
+                         && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
             .CountAsync(cancellationToken);
         
         logger.LogInformation("Pending join requests fetched for user {UserId}. Amount: {Amount}, TraceId: {TraceId}",

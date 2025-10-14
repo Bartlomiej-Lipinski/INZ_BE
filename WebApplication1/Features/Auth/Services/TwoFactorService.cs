@@ -86,7 +86,7 @@ internal sealed class TwoFactorService(AppDbContext context, ILogger<TwoFactorSe
         if (existingCodes.Count != 0)
         {
             await context.SaveChangesAsync();
-            logger.LogInformation("Invalidated {Count} existing 2FA codes for user {UserId}",
+            logger.LogInformation("Invalidated {Count} existing 2FA codes for user {UserId}", 
                 existingCodes.Count, userId);
         }
     }
@@ -120,12 +120,15 @@ internal sealed class TwoFactorService(AppDbContext context, ILogger<TwoFactorSe
         uint number;
         const uint maxExclusive = 1000000U;
         const uint maxAcceptable = uint.MaxValue - (uint.MaxValue % maxExclusive);
+        
         do
         {
             var bytes = new byte[4];
             rng.GetBytes(bytes);
             number = BitConverter.ToUInt32(bytes, 0);
+            
         } while (number >= maxAcceptable);
+        
         number %= maxExclusive;
         return number.ToString("D6");
     }

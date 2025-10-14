@@ -24,13 +24,13 @@ public class DeleteUser : IEndpoint
     public static async Task<IResult> Handle(
         ClaimsPrincipal currentUser,
         AppDbContext dbContext,
-        CancellationToken cancellationToken,
         HttpContext httpContext,
-        ILogger<DeleteUser> logger)
+        ILogger<DeleteUser> logger,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value 
                      ?? currentUser.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(userId))

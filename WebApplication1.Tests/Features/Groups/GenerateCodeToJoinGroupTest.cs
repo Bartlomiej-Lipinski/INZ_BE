@@ -22,14 +22,12 @@ public class GenerateCodeToJoinGroupTest : TestBase
         var result = await GenerateCodeToJoinGroup.Handle("g1", dbContext, httpContext, logger, CancellationToken.None);
         
         result.Should()
-            .BeOfType<Microsoft.AspNetCore.Http.HttpResults
-                .Ok<ApiResponse<GenerateCodeToJoinGroup.GenerateCodeResponse>>>();
+            .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GenerateCodeToJoinGroup.GenerateCodeResponse>>>();
         
         var okResult = 
-            result as Microsoft.AspNetCore.Http.HttpResults
-                .Ok<ApiResponse<GenerateCodeToJoinGroup.GenerateCodeResponse>>;
+            result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GenerateCodeToJoinGroup.GenerateCodeResponse>>;
         okResult!.Value?.Success.Should().BeTrue();
-        okResult.Value?.Data?.message.Should().Be("New code generated successfully. The code is valid for 5 minutes.");
+        okResult.Value?.Data?.Message.Should().Be("New code generated successfully. The code is valid for 5 minutes.");
         
         var updatedGroup = await dbContext.Groups.FindAsync("g1");
         updatedGroup.Should().NotBeNull();
@@ -43,7 +41,8 @@ public class GenerateCodeToJoinGroupTest : TestBase
         var httpContext = new DefaultHttpContext();
         var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
         
-        var result = await GenerateCodeToJoinGroup.Handle("non-existent", dbContext, httpContext, logger, CancellationToken.None);
+        var result = await GenerateCodeToJoinGroup
+            .Handle("non-existent", dbContext, httpContext, logger, CancellationToken.None);
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
        
