@@ -102,6 +102,8 @@ if (builder.Environment.IsProduction())
 
 if (string.IsNullOrWhiteSpace(secret))
     throw new InvalidOperationException("JWT SecretKey is missing.");
+if (secret.Length < 32)
+    throw new InvalidOperationException("JWT SecretKey must be at least 32 characters long for security.");
 
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
 const string RefreshScheme = "RefreshScheme";

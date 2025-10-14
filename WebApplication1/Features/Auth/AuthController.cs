@@ -422,7 +422,9 @@ public class AuthController(
         if (!password.Any(char.IsDigit))
             return "Hasło musi zawierać co najmniej jedną cyfrę.";
 
-        return password.All(char.IsLetterOrDigit) ? "Hasło musi zawierać co najmniej jeden znak specjalny." : string.Empty;
+        if (password.All(char.IsLetterOrDigit))
+            return "Hasło musi zawierać co najmniej jeden znak specjalny.";
+        return string.Empty;
     }
     
     public class UserRequestDto
