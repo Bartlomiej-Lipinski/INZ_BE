@@ -1,5 +1,6 @@
 ﻿using WebApplication1.Features.Auth;
 using WebApplication1.Features.Groups;
+using WebApplication1.Features.Recommendations;
 using WebApplication1.Infrastructure.Data.Entities;
 
 namespace WebApplication1.Tests;
@@ -110,6 +111,17 @@ public static class TestDataFactory
         {
             Email = email,
             Password = password
+        };
+    }
+
+    public static PostRecommendation.RecommendationRequestDto CreateRecommendationRequestDto(
+        string title, string content, string? category)
+    {
+        return new PostRecommendation.RecommendationRequestDto
+        {
+            Title = title,
+            Content = content,
+            Category = category
         };
     }
     

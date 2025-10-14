@@ -1,7 +1,5 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -17,7 +15,7 @@ public class RejectUserJoinRequestTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var claimsPrincipal = CreateClaimsPrincipal("u1");
         var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = new DefaultHttpContext();
+        var httpContext = CreateHttpContextWithUser("u1");
         
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"), 
@@ -39,7 +37,7 @@ public class RejectUserJoinRequestTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = new DefaultHttpContext();
+        var httpContext = CreateHttpContextWithUser("g1");
         
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
@@ -60,7 +58,7 @@ public class RejectUserJoinRequestTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = new DefaultHttpContext();
+        var httpContext = CreateHttpContextWithUser("g1");
 
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
@@ -78,12 +76,5 @@ public class RejectUserJoinRequestTest : TestBase
         
         var stillExists = await dbContext.GroupUsers.AnyAsync(gu => gu.GroupId == "g1" && gu.UserId == "u1");
         stillExists.Should().BeFalse();
-    }
-    
-    private static ClaimsPrincipal CreateClaimsPrincipal(string userId)
-    {
-        var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, userId) };
-        var identity = new ClaimsIdentity(claims, "TestAuthType");
-        return new ClaimsPrincipal(identity);
     }
 }

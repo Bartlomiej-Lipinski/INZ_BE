@@ -15,23 +15,19 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_Ok_When_User_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var mockHttpContext = new Mock<HttpContext>();
+        var httpContext = CreateHttpContextWithUser();
         var mockLogger = new Mock<ILogger<GetUserById>>();
-
-        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
-
+        
         dbContext.Users.Add(TestDataFactory.CreateUser(
             "user1", "Test", "test@test.com", "testUser", "User"));
         await dbContext.SaveChangesAsync();
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")])
-        );
+        var claimsPrincipal = CreateClaimsPrincipal("user1");
         
         var result = await GetUserById.Handle(
             "user1",
             claimsPrincipal,
             dbContext, 
-            mockHttpContext.Object, 
+            httpContext, 
             mockLogger.Object, 
             CancellationToken.None
         );
@@ -49,21 +45,17 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_Forbid_When_User_Does_Not_Exist_Or_Is_Not_CurrentUser()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var mockHttpContext = new Mock<HttpContext>();
+        var httpContext = CreateHttpContextWithUser();
         var mockLogger = new Mock<ILogger<GetUserById>>();
-
-        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
-
+        
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
-        );
-
+        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
+        
         var result = await GetUserById.Handle(
             "nonexistent",
             claimsPrincipal,
             dbContext,
-            mockHttpContext.Object,
+            httpContext,
             mockLogger.Object,
             CancellationToken.None
         );
@@ -75,16 +67,13 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_BadRequest_When_Id_Is_NullOrEmpty()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var mockHttpContext = new Mock<HttpContext>();
+        var httpContext = CreateHttpContextWithUser();
         var mockLogger = new Mock<ILogger<GetUserById>>();
 
-        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
-        );
+        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         var result = await GetUserById
-            .Handle("",claimsPrincipal ,dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
+            .Handle("",claimsPrincipal ,dbContext, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequest = result as BadRequest<ApiResponse<string>>;

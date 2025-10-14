@@ -1,5 +1,4 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
@@ -14,11 +13,9 @@ public class GetJoinRequestsForAdminsTest : TestBase
     public async Task Test_JoinRequest_For_Admins()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var mockHttpContext = new Mock<HttpContext>();
+        var httpContext = CreateHttpContextWithUser();
         var mockLogger = new Mock<ILogger<GetJoinRequestsForAdmins>>();
-
-        mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
-
+        
         var user1 = TestDataFactory.CreateUser("user1");
         var user2 = TestDataFactory.CreateUser("user2");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#FFFFFF", "CODE1");
@@ -39,7 +36,7 @@ public class GetJoinRequestsForAdminsTest : TestBase
         );
 
         var result = await GetJoinRequestsForAdmins
-            .Handle(claimsPrincipal, dbContext, mockHttpContext.Object, mockLogger.Object, CancellationToken.None);
+            .Handle(claimsPrincipal, dbContext, httpContext, mockLogger.Object, CancellationToken.None);
         result
             .Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.

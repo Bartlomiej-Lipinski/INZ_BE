@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -18,10 +17,8 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
-        var httpContext = new DefaultHttpContext();
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
-        );
+        var httpContext = CreateHttpContextWithUser(user.Id);
+        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         
         await GenerateCodeToJoinGroup
             .Handle("g1", dbContext, httpContext, NullLogger<GenerateCodeToJoinGroup>.Instance, CancellationToken.None);
@@ -46,9 +43,8 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-        var httpContext = new DefaultHttpContext();
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)]));
+        var httpContext = CreateHttpContextWithUser(user.Id);
+        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         
         var result = await JoinGroup.Handle(
             TestDataFactory.CreateJoinGroupRequest("INVALIDCODE"),
@@ -71,8 +67,7 @@ public class JoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenCodeIsExpired()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString()); 
-        var httpContext = new DefaultHttpContext();
-        
+        var httpContext = CreateHttpContextWithUser();
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
@@ -87,9 +82,7 @@ public class JoinGroupTest : TestBase
         var user1 = TestDataFactory.CreateUser(id: "user1");
         dbContext.Users.Add(user1);
         await dbContext.SaveChangesAsync();
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user1.Id)])
-        );
+        var claimsPrincipal = CreateClaimsPrincipal(user1.Id);
         
         var result = await JoinGroup.Handle(
             TestDataFactory.CreateJoinGroupRequest(existingGroup.Code),
@@ -116,10 +109,8 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
-        var httpContext = new DefaultHttpContext();
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
-        );
+        var httpContext = CreateHttpContextWithUser(user.Id);
+        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         
         await GenerateCodeToJoinGroup.Handle("g1", dbContext, httpContext, 
             NullLogger<GenerateCodeToJoinGroup>.Instance, CancellationToken.None);

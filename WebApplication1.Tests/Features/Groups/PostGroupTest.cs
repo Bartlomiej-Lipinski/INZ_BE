@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -11,21 +9,6 @@ namespace WebApplication1.Tests.Features.Groups;
 
 public class PostGroupTest : TestBase
 {
-    private static DefaultHttpContext CreateHttpContextWithUser(string? userId = null)
-    {
-        var context = new DefaultHttpContext
-        {
-            TraceIdentifier = "test-trace-id"
-        };
-
-        if (string.IsNullOrEmpty(userId)) return context;
-        var identity = new ClaimsIdentity([
-            new Claim(ClaimTypes.NameIdentifier, userId)
-        ], "TestAuth");
-        context.User = new ClaimsPrincipal(identity);
-        return context;
-    }
-    
     [Fact]
     public async Task Handle_Should_Return_BadRequest_When_Name_Is_Missing()
     {
