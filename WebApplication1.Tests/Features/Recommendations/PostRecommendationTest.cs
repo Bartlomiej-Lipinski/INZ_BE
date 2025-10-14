@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Recommendations;
-using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
@@ -49,7 +48,7 @@ public class PostRecommendationTest : TestBase
 
         var created = await dbContext.Recommendations.FirstOrDefaultAsync();
         created.Should().NotBeNull();
-        created!.Title.Should().Be("Great Book");
+        created.Title.Should().Be("Great Book");
         created.Content.Should().Contain("Clean Code");
         created.GroupId.Should().Be(group.Id);
         created.UserId.Should().Be(user.Id);

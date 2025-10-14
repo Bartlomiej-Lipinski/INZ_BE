@@ -2,6 +2,7 @@
 using WebApplication1.Features.Groups;
 using WebApplication1.Features.Recommendations;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
 namespace WebApplication1.Tests;
 
@@ -111,6 +112,44 @@ public static class TestDataFactory
         {
             Email = email,
             Password = password
+        };
+    }
+
+    public static Recommendation CreateRecommendation(
+        string id, string groupId, string userId, string title, string content, DateTime createdAt)
+    {
+        return new Recommendation
+        {
+            Id = id,
+            GroupId = groupId,
+            UserId = userId,
+            Title = title,
+            Content = content,
+            CreatedAt = createdAt
+        };
+    }
+
+    public static RecommendationComment CreateRecommendationComment(
+        string id, string recommendationId, string userId, string content, DateTime createdAt)
+    {
+        return new RecommendationComment
+        {
+            Id = id,
+            RecommendationId = recommendationId,
+            UserId = userId,
+            Content = content,
+            CreatedAt = createdAt
+        };
+    }
+
+    public static RecommendationReaction CreateRecommendationReaction(
+        string recommendationId, string userId, bool isLiked)
+    {
+        return new RecommendationReaction
+        {
+            RecommendationId = recommendationId,
+            UserId = userId,
+            IsLiked = isLiked
         };
     }
 
