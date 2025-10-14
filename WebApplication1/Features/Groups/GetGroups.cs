@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -22,7 +21,13 @@ public class GetGroups : IEndpoint
     
     public static async Task<IResult> Handle(AppDbContext context, CancellationToken dbc)
     {
-        var groups = await context.Groups.ToListAsync(dbc);
-        return Results.Ok(ApiResponse<List<Group>>.Ok(groups, "Groups retrieved successfully"));
+        var groups = await context.Groups.AsNoTracking()
+            .Select(g => new PostGroup.GroupResponseDto
+            {
+                Id = g.Id,
+                Name = g.Name,
+                Color = g.Color
+            }).ToListAsync(dbc);;
+        return Results.Ok(ApiResponse<List<PostGroup.GroupResponseDto>>.Ok(groups, "Groups retrieved successfully"));
     }
 }
