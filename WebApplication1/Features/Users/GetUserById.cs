@@ -29,10 +29,10 @@ public class GetUserById : IEndpoint
         HttpContext httpContext,
         ILogger<GetUserById> logger)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
         var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
-        
-        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -41,6 +41,7 @@ public class GetUserById : IEndpoint
         }
         if (currentUserId != id)
         {
+            logger.LogWarning("Unauthorized access attempt to user ID: {UserId}. TraceId: {TraceId}", id, traceId);
             return Results.Forbid();
         }
 

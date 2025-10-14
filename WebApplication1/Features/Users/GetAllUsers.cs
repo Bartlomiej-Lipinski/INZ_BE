@@ -19,7 +19,7 @@ public class GetAllUsers : IEndpoint
             .WithOpenApi();
     }
 
-    private static async Task<IResult> Handle(
+    public static async Task<IResult> Handle(
         AppDbContext dbContext,
         CancellationToken cancellationToken,
         HttpContext httpContext,

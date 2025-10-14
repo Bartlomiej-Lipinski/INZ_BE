@@ -7,7 +7,7 @@ public interface ICaptchaService
     Task<bool> ValidateCaptchaAsync(string captchaToken, string userIpAddress);
 }
 
-public class CaptchaService(HttpClient httpClient, IConfiguration configuration, ILogger<CaptchaService> logger)
+internal sealed class CaptchaService(HttpClient httpClient, IConfiguration configuration, ILogger<CaptchaService> logger) 
     : ICaptchaService
 {
     public async Task<bool> ValidateCaptchaAsync(string captchaToken, string userIpAddress)

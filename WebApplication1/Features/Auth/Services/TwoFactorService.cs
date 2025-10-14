@@ -14,7 +14,7 @@ public interface ITwoFactorService
     Task<TimeSpan> GetCodeExpiryTimeAsync(string userId);
 }
 
-public class TwoFactorService(AppDbContext context, ILogger<TwoFactorService> logger) : ITwoFactorService
+internal sealed class TwoFactorService(AppDbContext context, ILogger<TwoFactorService> logger) : ITwoFactorService
 {
     private readonly TimeSpan _codeValidityPeriod = TimeSpan.FromMinutes(5);
 

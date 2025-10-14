@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using WebApplication1.Features.Groups;
 using WebApplication1.Shared.Responses;
 
@@ -10,11 +12,15 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldGenerateUniqueCode()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
+        var httpContext = new DefaultHttpContext();
+
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
-        var result = await GenerateCodeToJoinGroup.Handle("g1", dbContext, CancellationToken.None);
+        var result = await GenerateCodeToJoinGroup.Handle("g1", dbContext, httpContext, logger, CancellationToken.None);
+        
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults
                 .Ok<ApiResponse<GenerateCodeToJoinGroup.GenerateCodeResponse>>>();
@@ -34,7 +40,11 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnNotFound_WhenGroupDoesNotExist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var result = await GenerateCodeToJoinGroup.Handle("non-existent", dbContext, CancellationToken.None);
+        var httpContext = new DefaultHttpContext();
+        var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
+        
+        var result = await GenerateCodeToJoinGroup.Handle("non-existent", dbContext, httpContext, logger, CancellationToken.None);
+        
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
        
         var notFoundResult = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
@@ -46,12 +56,15 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenGroupIdIsEmpty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var result = await GenerateCodeToJoinGroup.Handle("", dbContext, CancellationToken.None);
+        var httpContext = new DefaultHttpContext();
+        var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
+        
+        var result = await GenerateCodeToJoinGroup.Handle("", dbContext, httpContext, logger, CancellationToken.None);
+        
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         
         var badRequestResult = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
         badRequestResult!.Value?.Success.Should().BeFalse();
         badRequestResult.Value?.Message.Should().Be("Group ID cannot be null or empty.");
     }
-    
 }

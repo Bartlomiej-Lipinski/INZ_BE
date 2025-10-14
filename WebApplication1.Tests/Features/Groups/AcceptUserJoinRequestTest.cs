@@ -98,7 +98,7 @@ public class AcceptUserJoinRequestTest : TestBase
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
         okResult!.Value?.Success.Should().BeTrue();
-        okResult.Value?.Message.Should().Be("Join request accepted successfully.");
+        okResult.Value?.Data.Should().Be("Join request accepted successfully.");
         okResult.Value?.TraceId.Should().Be("test-trace-id");
         
         var updatedGroupUser = await dbContext.GroupUsers

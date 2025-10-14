@@ -24,8 +24,9 @@ public class GetUserByIdTest: TestBase
             "user1", "Test", "test@test.com", "testUser", "User"));
         await dbContext.SaveChangesAsync();
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "user1") })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, "user1")])
         );
+        
         var result = await GetUserById.Handle("user1",claimsPrincipal ,dbContext, CancellationToken.None,
             mockHttpContext.Object, mockLogger.Object);
 
@@ -39,24 +40,29 @@ public class GetUserByIdTest: TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_NotFound_When_User_Does_Not_Exist()
+    public async Task Handle_Should_Return_Forbid_When_User_Does_Not_Exist_Or_Is_Not_CurrentUser()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var mockHttpContext = new Mock<HttpContext>();
         var mockLogger = new Mock<ILogger<GetUserById>>();
 
         mockHttpContext.Setup(x => x.TraceIdentifier).Returns("test-trace-id");
+
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id) })
+            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user.Id)])
         );
-        var result = await GetUserById.Handle("nonexistent",claimsPrincipal ,dbContext, CancellationToken.None,
-            mockHttpContext.Object, mockLogger.Object);
-        result.Should().BeOfType<NotFound<ApiResponse<string>>>();
-        var notFound = result as NotFound<ApiResponse<string>>;
-        notFound!.Value!.Success.Should().BeFalse();
-        notFound.Value.Message.Should().Be("User not found.");
-        notFound.Value.TraceId.Should().Be("test-trace-id");
+
+        var result = await GetUserById.Handle(
+            "nonexistent",
+            claimsPrincipal,
+            dbContext,
+            CancellationToken.None,
+            mockHttpContext.Object,
+            mockLogger.Object
+        );
+
+        result.Should().BeOfType<ForbidHttpResult>();
     }
 
     [Fact]

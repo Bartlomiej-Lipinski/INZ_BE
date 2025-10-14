@@ -7,7 +7,7 @@ namespace WebApplication1.Infrastructure.Data.Entities;
 public class Group
 {
     [Key]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Id { get; init; } = Guid.NewGuid().ToString();
 
     [Required]
     public string Name { get; set; } = null!;

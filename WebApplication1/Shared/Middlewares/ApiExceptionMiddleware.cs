@@ -14,14 +14,14 @@ public class ApiExceptionMiddleware(RequestDelegate next, ILogger<ApiExceptionMi
         catch (Exception ex)
         {
             var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
-            int statusCode = ex switch
+            var statusCode = ex switch
             {
                 ArgumentException => 400,
                 UnauthorizedAccessException => 401,
                 KeyNotFoundException => 404,
                 _ => 500
             };
-            string errorMessage = statusCode switch
+            var errorMessage = statusCode switch
             {
                 400 => "Nieprawidłowe żądanie.",
                 401 => "Brak autoryzacji.",
