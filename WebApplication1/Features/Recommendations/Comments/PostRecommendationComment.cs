@@ -7,7 +7,7 @@ using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Recommendations;
+namespace WebApplication1.Features.Recommendations.Comments;
 
 public class PostRecommendationComment : IEndpoint
 {

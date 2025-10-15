@@ -1,6 +1,7 @@
 ﻿using WebApplication1.Features.Auth;
 using WebApplication1.Features.Groups;
 using WebApplication1.Features.Recommendations;
+using WebApplication1.Features.Recommendations.Comments;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
@@ -142,14 +143,12 @@ public static class TestDataFactory
         };
     }
 
-    public static RecommendationReaction CreateRecommendationReaction(
-        string recommendationId, string userId, bool isLiked)
+    public static RecommendationReaction CreateRecommendationReaction(string recommendationId, string userId)
     {
         return new RecommendationReaction
         {
             RecommendationId = recommendationId,
             UserId = userId,
-            IsLiked = isLiked
         };
     }
 

@@ -1,11 +1,10 @@
-﻿using System.Security.Claims;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using WebApplication1.Features.Recommendations;
+using WebApplication1.Features.Recommendations.Comments;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Tests.Features.Recommendations;
+namespace WebApplication1.Tests.Features.Recommendations.Comments;
 
 public class PostRecommendationCommentTest : TestBase
 {

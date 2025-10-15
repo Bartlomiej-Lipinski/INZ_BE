@@ -80,7 +80,6 @@ public class GetRecommendationById : IEndpoint
             Reactions = recommendation.Reactions.Select(r => new RecommendationReactionDto
             {
                 UserId = r.UserId,
-                IsLiked = r.IsLiked
             }).ToList()
         };
 
@@ -114,6 +113,5 @@ public class GetRecommendationById : IEndpoint
     public record RecommendationReactionDto
     {
         public string UserId { get; set; } = null!;
-        public bool IsLiked { get; set; }
     }
 }

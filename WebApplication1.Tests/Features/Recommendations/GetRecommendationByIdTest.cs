@@ -48,7 +48,7 @@ public class GetRecommendationByIdTest : TestBase
             .CreateRecommendationComment("c1", recommendation.Id, user.Id, "Nice!", DateTime.UtcNow);
         dbContext.RecommendationComments.Add(comment);
 
-        var reaction = TestDataFactory.CreateRecommendationReaction(recommendation.Id, user.Id, true);
+        var reaction = TestDataFactory.CreateRecommendationReaction(recommendation.Id, user.Id);
         dbContext.RecommendationReactions.Add(reaction);
 
         await dbContext.SaveChangesAsync();
@@ -83,6 +83,5 @@ public class GetRecommendationByIdTest : TestBase
 
         var reactionDto = okResult.Value.Data.Reactions.First();
         reactionDto.UserId.Should().Be("u1");
-        reactionDto.IsLiked.Should().BeTrue();
     }
 }
