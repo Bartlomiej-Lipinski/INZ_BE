@@ -176,6 +176,14 @@ public static class TestDataFactory
             LinkUrl = linkUrl
         };
     }
+
+    public static PostRecommendationComment.CommentRequestDto CreateCommentRequestDto(string content)
+    {
+        return new PostRecommendationComment.CommentRequestDto
+        {
+            Content = content
+        };
+    }
     
     private static string GenerateUniqueCode()
     {

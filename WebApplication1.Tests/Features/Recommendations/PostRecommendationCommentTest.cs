@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Security.Claims;
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Recommendations;
@@ -6,17 +7,18 @@ using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
 
-public class DeleteRecommendationTest : TestBase
+public class PostRecommendationCommentTest : TestBase
 {
     [Fact]
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var logger = NullLogger<DeleteRecommendation>.Instance;
+        var logger = NullLogger<PostRecommendationComment>.Instance;
 
-        var result = await DeleteRecommendation.Handle(
+        var result = await PostRecommendationComment.Handle(
             "rec1",
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
             CreateClaimsPrincipal(),
             httpContext,
@@ -36,10 +38,11 @@ public class DeleteRecommendationTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<DeleteRecommendation>.Instance;
+        var logger = NullLogger<PostRecommendationComment>.Instance;
 
-        var result = await DeleteRecommendation.Handle(
+        var result = await PostRecommendationComment.Handle(
             "nonexistent",
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             httpContext,
@@ -51,30 +54,27 @@ public class DeleteRecommendationTest : TestBase
     }
     
     [Fact]
-    public async Task Handle_Should_Return_Forbid_When_User_Is_Not_Author()
+    public async Task Handle_Should_Return_Forbid_When_User_Not_In_Group()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var author = TestDataFactory.CreateUser("author", "AuthorUser");
-        var other = TestDataFactory.CreateUser("other", "OtherUser");
+        var user = TestDataFactory.CreateUser("u1", "user");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var groupUserAuthor = TestDataFactory.CreateGroupUser(author.Id, group.Id);
-        var groupUser = TestDataFactory.CreateGroupUser(other.Id, group.Id);
         dbContext.Groups.Add(group);
-        dbContext.Users.AddRange(author, other);
-        dbContext.GroupUsers.AddRange(groupUserAuthor, groupUser);
+        dbContext.Users.Add(user);
 
         var recommendation = TestDataFactory.CreateRecommendation(
-            "rec1", group.Id, author.Id, "Title", "Content", DateTime.UtcNow);
+            "r1", group.Id, "author", "Title", "Content", DateTime.UtcNow);
         dbContext.Recommendations.Add(recommendation);
         await dbContext.SaveChangesAsync();
 
-        var httpContext = CreateHttpContext(other.Id);
-        var logger = NullLogger<DeleteRecommendation>.Instance;
+        var httpContext = CreateHttpContext(user.Id);
+        var logger = NullLogger<PostRecommendationComment>.Instance;
 
-        var result = await DeleteRecommendation.Handle(
-            "rec1",
+        var result = await PostRecommendationComment.Handle(
+            "r1",
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
-            CreateClaimsPrincipal(other.Id),
+            CreateClaimsPrincipal(user.Id),
             httpContext,
             logger,
             CancellationToken.None
@@ -84,7 +84,7 @@ public class DeleteRecommendationTest : TestBase
     }
     
     [Fact]
-    public async Task Handle_Should_Delete_Recommendation_Comments_And_Reactions()
+    public async Task Handle_Should_Create_Comment_When_User_Is_Member()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
@@ -95,21 +95,21 @@ public class DeleteRecommendationTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
 
         var recommendation = TestDataFactory.CreateRecommendation(
-            "rec1", group.Id, user.Id, "Title", "Content", DateTime.UtcNow);
+            "r1", group.Id, user.Id, "Title", "Content", DateTime.UtcNow);
+        recommendation.GroupId = "g1";
         dbContext.Recommendations.Add(recommendation);
 
-        var comment = TestDataFactory.CreateRecommendationComment("c1", "rec1", user.Id, "Comment", DateTime.UtcNow);
-        var reaction = TestDataFactory.CreateRecommendationReaction("rec1", user.Id, true);
-        dbContext.RecommendationComments.Add(comment);
-        dbContext.RecommendationReactions.Add(reaction);
+        var membership = TestDataFactory.CreateGroupUser("g1", "u1");
+        dbContext.GroupUsers.Add(membership);
 
         await dbContext.SaveChangesAsync();
 
         var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<DeleteRecommendation>.Instance;
+        var logger = NullLogger<PostRecommendationComment>.Instance;
 
-        var result = await DeleteRecommendation.Handle(
-            "rec1",
+        var result = await PostRecommendationComment.Handle(
+            "r1",
+            new PostRecommendationComment.CommentRequestDto { Content = "Super!" },
             dbContext,
             CreateClaimsPrincipal(user.Id),
             httpContext,
@@ -118,9 +118,10 @@ public class DeleteRecommendationTest : TestBase
         );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
-
-        (await dbContext.Recommendations.CountAsync()).Should().Be(0);
-        (await dbContext.RecommendationComments.CountAsync()).Should().Be(0);
-        (await dbContext.RecommendationReactions.CountAsync()).Should().Be(0);
+        (await dbContext.RecommendationComments.CountAsync()).Should().Be(1);
+        var comment = await dbContext.RecommendationComments.FirstAsync();
+        comment.Content.Should().Be("Super!");
+        comment.UserId.Should().Be("u1");
+        comment.RecommendationId.Should().Be("r1");
     }
 }
