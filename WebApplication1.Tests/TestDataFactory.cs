@@ -183,6 +183,14 @@ public static class TestDataFactory
             Content = content
         };
     }
+
+    public static UpdateRecommendationComment.UpdateCommentRequestDto CreateUpdateCommentRequestDto(string content)
+    {
+        return new UpdateRecommendationComment.UpdateCommentRequestDto
+        {
+            Content = content
+        };
+    }
     
     private static string GenerateUniqueCode()
     {

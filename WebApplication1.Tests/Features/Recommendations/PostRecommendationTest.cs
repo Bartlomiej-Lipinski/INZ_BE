@@ -16,7 +16,6 @@ public class PostRecommendationTest : TestBase
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var user = TestDataFactory.CreateUser("u1", "testUser");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
-
         dbContext.Groups.Add(group);
         dbContext.Users.Add(user);
         dbContext.GroupUsers.Add(groupUser);
