@@ -56,11 +56,6 @@ public class DeleteRecommendation : IEndpoint
             return Results.Forbid();
         }
         
-        var comments = dbContext.RecommendationComments.Where(c => c.RecommendationId == id);
-        var reactions = dbContext.RecommendationReactions.Where(r => r.RecommendationId == id);
-
-        dbContext.RecommendationComments.RemoveRange(comments);
-        dbContext.RecommendationReactions.RemoveRange(reactions);
         dbContext.Recommendations.Remove(recommendation);
         
         await dbContext.SaveChangesAsync(cancellationToken);
