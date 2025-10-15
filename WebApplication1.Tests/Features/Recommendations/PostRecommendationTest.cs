@@ -24,13 +24,12 @@ public class PostRecommendationTest : TestBase
 
         var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         var logger = NullLogger<PostRecommendation>.Instance;
-        var httpContext = CreateHttpContextWithUser(user.Id);
+        var httpContext = CreateHttpContext(user.Id);
 
         var dto = TestDataFactory.CreateRecommendationRequestDto(
-            "Great Book",
-            "You should read 'Clean Code'.",
-            "Books"
-        );
+            "Great Book", 
+            "You should read 'Clean Code'.", 
+            "Books");
         
         var result = await PostRecommendation.Handle(
             group.Id,
@@ -58,10 +57,10 @@ public class PostRecommendationTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Has_No_Claims()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var logger = NullLogger<PostRecommendation>.Instance;
 
-        var dto = TestDataFactory.CreateRecommendationRequestDto("Test", "Test content", null);
+        var dto = TestDataFactory.CreateRecommendationRequestDto("Test", "Test content");
 
         var result = await PostRecommendation.Handle(
             "g1",
@@ -80,11 +79,11 @@ public class PostRecommendationTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var logger = NullLogger<PostRecommendation>.Instance;
-        var httpContext = CreateHttpContextWithUser("u1");
+        var httpContext = CreateHttpContext("u1");
 
         var claims = CreateClaimsPrincipal("u1");
 
-        var dto = TestDataFactory.CreateRecommendationRequestDto("", "", null);
+        var dto = TestDataFactory.CreateRecommendationRequestDto("", "");
 
         var result = await PostRecommendation.Handle(
             "g1",
@@ -108,9 +107,9 @@ public class PostRecommendationTest : TestBase
 
         var claims = CreateClaimsPrincipal("u2");
         var logger = NullLogger<PostRecommendation>.Instance;
-        var httpContext = CreateHttpContextWithUser("u2");
+        var httpContext = CreateHttpContext("u2");
 
-        var dto = TestDataFactory.CreateRecommendationRequestDto("Test", "Some text", null);
+        var dto = TestDataFactory.CreateRecommendationRequestDto("Test", "Some text");
 
         var result = await PostRecommendation.Handle(
             "g1",

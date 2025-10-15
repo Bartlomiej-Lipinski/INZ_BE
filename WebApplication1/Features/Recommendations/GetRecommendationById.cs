@@ -8,7 +8,7 @@ using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Recommendations;
 
-public class GetRecommendationById :IEndpoint
+public class GetRecommendationById : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {

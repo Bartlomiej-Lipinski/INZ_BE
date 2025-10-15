@@ -11,7 +11,7 @@ public class GetRecommendationByIdTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Recommendation_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var logger = NullLogger<GetRecommendationById>.Instance;
         var claimsPrincipal = CreateClaimsPrincipal("test");
 
@@ -53,7 +53,7 @@ public class GetRecommendationByIdTest : TestBase
 
         await dbContext.SaveChangesAsync();
 
-        var httpContext = CreateHttpContextWithUser(user.Id);
+        var httpContext = CreateHttpContext(user.Id);
         var logger = NullLogger<GetRecommendationById>.Instance;
         var claimsPrincipal = CreateClaimsPrincipal(user.Id);
 

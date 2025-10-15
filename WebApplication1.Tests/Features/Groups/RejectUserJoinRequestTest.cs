@@ -15,7 +15,7 @@ public class RejectUserJoinRequestTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var claimsPrincipal = CreateClaimsPrincipal("u1");
         var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContextWithUser("u1");
+        var httpContext = CreateHttpContext("u1");
         
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"), 
@@ -37,7 +37,7 @@ public class RejectUserJoinRequestTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContextWithUser("g1");
+        var httpContext = CreateHttpContext("g1");
         
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
@@ -58,7 +58,7 @@ public class RejectUserJoinRequestTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContextWithUser("g1");
+        var httpContext = CreateHttpContext("g1");
 
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),

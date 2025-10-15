@@ -20,6 +20,8 @@ public class Recommendation
     
     public DateTime CreatedAt { get; set; }
     
+    public DateTime? UpdatedAt { get; set; }
+    
     public Group Group { get; set; } = null!;
     public User User { get; set; } = null!;
     public ICollection<RecommendationComment> Comments { get; set; } = new List<RecommendationComment>();

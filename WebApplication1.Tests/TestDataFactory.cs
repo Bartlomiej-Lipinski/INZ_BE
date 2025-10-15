@@ -154,13 +154,26 @@ public static class TestDataFactory
     }
 
     public static PostRecommendation.RecommendationRequestDto CreateRecommendationRequestDto(
-        string title, string content, string? category)
+        string title, string content, string? category = null)
     {
         return new PostRecommendation.RecommendationRequestDto
         {
             Title = title,
             Content = content,
             Category = category
+        };
+    }
+
+    public static UpdateRecommendation.UpdateRecommendationDto CreateUpdateRecommendationDto(
+        string title, string content, string? category = null, string? imageUrl = null, string? linkUrl = null)
+    {
+        return new UpdateRecommendation.UpdateRecommendationDto
+        {
+            Title = title,
+            Content = content,
+            Category = category,
+            ImageUrl = imageUrl,
+            LinkUrl = linkUrl
         };
     }
     

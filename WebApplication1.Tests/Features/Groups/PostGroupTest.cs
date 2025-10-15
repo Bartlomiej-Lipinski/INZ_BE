@@ -13,7 +13,7 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Name_Is_Missing()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser("user1");
+        var httpContext = CreateHttpContext("user1");
         var mockLogger = new Mock<ILogger<PostGroup>>();
 
         var result = await PostGroup.Handle(
@@ -32,7 +32,7 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_No_UserId()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<PostGroup>>();
         
         var result = 
@@ -47,7 +47,7 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Create_Group_And_Assign_User_As_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser("user1");
+        var httpContext = CreateHttpContext("user1");
         var mockLogger = new Mock<ILogger<PostGroup>>();
         var dto = TestDataFactory.CreateGroupRequestDto("My Group",  "#FFF");
         

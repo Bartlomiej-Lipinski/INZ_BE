@@ -17,7 +17,7 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
-        var httpContext = CreateHttpContextWithUser(user.Id);
+        var httpContext = CreateHttpContext(user.Id);
         var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         
         await GenerateCodeToJoinGroup
@@ -43,7 +43,7 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-        var httpContext = CreateHttpContextWithUser(user.Id);
+        var httpContext = CreateHttpContext(user.Id);
         var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         
         var result = await JoinGroup.Handle(
@@ -67,7 +67,7 @@ public class JoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenCodeIsExpired()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString()); 
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
@@ -109,7 +109,7 @@ public class JoinGroupTest : TestBase
         var user = TestDataFactory.CreateUser(id: "user1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
-        var httpContext = CreateHttpContextWithUser(user.Id);
+        var httpContext = CreateHttpContext(user.Id);
         var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         
         await GenerateCodeToJoinGroup.Handle("g1", dbContext, httpContext, 

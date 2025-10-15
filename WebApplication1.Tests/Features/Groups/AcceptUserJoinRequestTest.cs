@@ -15,7 +15,7 @@ public class AcceptUserJoinRequestTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = CreateClaimsPrincipal("admin1");
-        var httpContext = CreateHttpContextWithUser("admin1");
+        var httpContext = CreateHttpContext("admin1");
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
@@ -37,7 +37,7 @@ public class AcceptUserJoinRequestTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = CreateClaimsPrincipal("admin1");
-        var httpContext = CreateHttpContextWithUser("admin1");
+        var httpContext = CreateHttpContext("admin1");
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
@@ -62,7 +62,7 @@ public class AcceptUserJoinRequestTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = CreateClaimsPrincipal("admin1");
-        var httpContext = CreateHttpContextWithUser("admin1");
+        var httpContext = CreateHttpContext("admin1");
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
 
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
@@ -91,7 +91,7 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Is_Null()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
 
         var result = await AcceptUserJoinRequest.Handle(
@@ -106,7 +106,7 @@ public class AcceptUserJoinRequestTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = CreateClaimsPrincipal("user2");
-        var httpContext = CreateHttpContextWithUser("user2");
+        var httpContext = CreateHttpContext("user2");
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
 
         var nonAdminUser = TestDataFactory.CreateGroupUser("user2", "group1");

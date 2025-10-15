@@ -12,7 +12,7 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_Ok_With_Group_When_Group_Exists()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<GetGroupById>>();
         
         var group = TestDataFactory.CreateGroup("group1", "Test Group", "#FFFFFF", "CODE1");
@@ -39,7 +39,7 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<GetGroupById>>();
         
         var result = await GetGroupById
@@ -57,7 +57,7 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Id_Is_NullOrEmpty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<GetGroupById>>();
         
         var result = await GetGroupById
@@ -75,7 +75,7 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_Ok_With_Correct_Dto_Properties()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<GetGroupById>>();
         
         var group = TestDataFactory.CreateGroup("group2", "Another Group", "#000000", "CODE2");

@@ -13,7 +13,7 @@ public class GetJoinRequestsForAdminsTest : TestBase
     public async Task Test_JoinRequest_For_Admins()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<GetJoinRequestsForAdmins>>();
         
         var user1 = TestDataFactory.CreateUser("user1");

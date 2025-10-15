@@ -16,7 +16,7 @@ public class TestBase
         return new AppDbContext(options);
     }
     
-    protected static DefaultHttpContext CreateHttpContextWithUser(string? userId = null)
+    protected static DefaultHttpContext CreateHttpContext(string? userId = null)
     {
         var context = new DefaultHttpContext
         {

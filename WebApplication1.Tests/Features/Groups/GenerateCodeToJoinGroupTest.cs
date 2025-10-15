@@ -12,7 +12,7 @@ public class GenerateCodeToJoinGroupTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
 
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         dbContext.Groups.Add(group);
@@ -37,7 +37,7 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnNotFound_WhenGroupDoesNotExist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
         
         var result = await GenerateCodeToJoinGroup
@@ -54,7 +54,7 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenGroupIdIsEmpty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
         
         var result = await GenerateCodeToJoinGroup.Handle("", dbContext, httpContext, logger, CancellationToken.None);

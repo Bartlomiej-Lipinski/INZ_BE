@@ -15,7 +15,7 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_Ok_When_User_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<GetUserById>>();
         
         dbContext.Users.Add(TestDataFactory.CreateUser(
@@ -45,7 +45,7 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_Forbid_When_User_Does_Not_Exist_Or_Is_Not_CurrentUser()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<GetUserById>>();
         
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
@@ -67,7 +67,7 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_BadRequest_When_Id_Is_NullOrEmpty()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<GetUserById>>();
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");

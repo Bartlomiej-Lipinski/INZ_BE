@@ -11,7 +11,7 @@ public class GetUserGroupsTest : TestBase
         var user = TestDataFactory.CreateUser("user1", "Test User");
         var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser(user.Id);
+        var httpContext = CreateHttpContext(user.Id);
         
         var response = await GetUserGroups.Handle(claimsPrincipal, dbContext, httpContext, CancellationToken.None);
         
@@ -27,7 +27,7 @@ public class GetUserGroupsTest : TestBase
         var user = TestDataFactory.CreateUser("user1", "Test User");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#fff", "C1");
         var group2 = TestDataFactory.CreateGroup("group2", "Group 2", "#000", "C2");
-        var httpContext = CreateHttpContextWithUser(user.Id);
+        var httpContext = CreateHttpContext(user.Id);
         
         dbContext.Users.Add(user);
         dbContext.Groups.AddRange(group1, group2);
@@ -54,7 +54,7 @@ public class GetUserGroupsTest : TestBase
         var user2 = TestDataFactory.CreateUser("user2", "User Two");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#fff", "C1");
         var group2 = TestDataFactory.CreateGroup("group2", "Group 2", "#000", "C2");
-        var httpContext = CreateHttpContextWithUser(user1.Id);
+        var httpContext = CreateHttpContext(user1.Id);
         
         dbContext.Users.AddRange(user1, user2);
         dbContext.Groups.AddRange(group1, group2);
