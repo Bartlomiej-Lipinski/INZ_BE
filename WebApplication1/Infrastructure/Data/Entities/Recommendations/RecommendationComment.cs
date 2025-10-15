@@ -13,5 +13,6 @@ public class RecommendationComment
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public Recommendation Recommendation { get; set; } = null!;
+    
     public User User { get; set; } = null!;
 }

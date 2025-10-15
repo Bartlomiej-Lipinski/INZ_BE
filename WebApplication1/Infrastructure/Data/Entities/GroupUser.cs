@@ -22,6 +22,7 @@ public class GroupUser
     public AcceptanceStatus AcceptanceStatus { get; set; } 
     
     public Group Group { get; set; } = null!;
+    
     public User User { get; set; } = null!;
 }
 public enum AcceptanceStatus

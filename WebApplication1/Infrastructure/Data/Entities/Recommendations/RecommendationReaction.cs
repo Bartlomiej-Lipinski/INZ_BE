@@ -7,5 +7,6 @@ public class RecommendationReaction
     public string UserId { get; set; } = null!;
     
     public Recommendation Recommendation { get; set; } = null!;
+    
     public User User { get; set; } = null!;
 }

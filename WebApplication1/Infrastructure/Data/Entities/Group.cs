@@ -22,5 +22,6 @@ public class Group
     public DateTime? CodeExpirationTime { get; set; } 
     
     public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
+    
     public ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
 }

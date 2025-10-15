@@ -23,7 +23,10 @@ public class Recommendation
     public DateTime? UpdatedAt { get; set; }
     
     public Group Group { get; set; } = null!;
+    
     public User User { get; set; } = null!;
+    
     public ICollection<RecommendationComment> Comments { get; set; } = new List<RecommendationComment>();
+    
     public ICollection<RecommendationReaction> Reactions { get; set; } = new List<RecommendationReaction>();
 }
