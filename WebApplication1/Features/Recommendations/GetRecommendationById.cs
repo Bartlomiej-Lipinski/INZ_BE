@@ -66,7 +66,7 @@ public class GetRecommendationById : IEndpoint
             Category = recommendation.Category,
             ImageUrl = recommendation.ImageUrl,
             LinkUrl = recommendation.LinkUrl,
-            CreatedAt = recommendation.CreatedAt,
+            CreatedAt = recommendation.CreatedAt.ToLocalTime(),
             UserId = recommendation.UserId,
             UserName = recommendation.User.UserName,
             Comments = recommendation.Comments.Select(c => new RecommendationCommentDto
@@ -75,7 +75,7 @@ public class GetRecommendationById : IEndpoint
                 UserId = c.UserId,
                 UserName = c.User.UserName,
                 Content = c.Content,
-                CreatedAt = c.CreatedAt
+                CreatedAt = c.CreatedAt.ToLocalTime()
             }).ToList(),
             Reactions = recommendation.Reactions.Select(r => new RecommendationReactionDto
             {

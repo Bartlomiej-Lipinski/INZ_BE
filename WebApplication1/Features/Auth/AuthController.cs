@@ -48,7 +48,8 @@ public class AuthController(
         
         try
         {
-            var requiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
+            var requiresCaptcha = await loginAttemptService
+                .RequiresCaptchaAsync(request.Email, userIp, HttpContext.RequestAborted);
 
             switch (requiresCaptcha)
             {
@@ -75,7 +76,7 @@ public class AuthController(
             }
 
             var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
-            await loginAttemptService.ResetFailedAttemptsAsync(request.Email, userIp);
+            await loginAttemptService.ResetFailedAttemptsAsync(request.Email, userIp, HttpContext.RequestAborted);
             SetAuthCookies(token, refreshToken);
 
             return Ok(ApiResponse<string>.Ok(user.Id, "Login successful", traceId));
@@ -298,7 +299,8 @@ public class AuthController(
         }
 
         var userIp = GetUserIpAddress();
-        var requiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(email, userIp);
+        var requiresCaptcha = await loginAttemptService
+            .RequiresCaptchaAsync(email, userIp, HttpContext.RequestAborted);
 
         return Ok(ApiResponse<bool>.Ok(requiresCaptcha, traceId: traceId));
     }

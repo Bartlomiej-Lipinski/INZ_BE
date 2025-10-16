@@ -6,10 +6,11 @@ namespace WebApplication1.Features.Auth.Services;
 
 public interface ILoginAttemptService
 {
-    Task<int> GetFailedAttemptsCountAsync(string email, string ipAddress, TimeSpan timeWindow);
+    Task<int> GetFailedAttemptsCountAsync(
+        string email, string ipAddress, TimeSpan timeWindow, CancellationToken cancellationToken);
     Task RecordAttemptAsync(string email, string ipAddress, bool isSuccessful);
-    Task ResetFailedAttemptsAsync(string email, string ipAddress);
-    Task<bool> RequiresCaptchaAsync(string email, string ipAddress);
+    Task ResetFailedAttemptsAsync(string email, string ipAddress, CancellationToken cancellationToken);
+    Task<bool> RequiresCaptchaAsync(string email, string ipAddress, CancellationToken cancellationToken);
 }
 
 internal sealed class LoginAttemptService(AppDbContext context) : ILoginAttemptService
@@ -17,16 +18,17 @@ internal sealed class LoginAttemptService(AppDbContext context) : ILoginAttemptS
     private const int MaxFailedAttempts = 3;
     private readonly TimeSpan _timeWindow = TimeSpan.FromMinutes(30);
 
-    public async Task<int> GetFailedAttemptsCountAsync(string email, string ipAddress, TimeSpan timeWindow)
+    public async Task<int> GetFailedAttemptsCountAsync(
+        string email, string ipAddress, TimeSpan timeWindow, CancellationToken cancellationToken = default)
     {
         var cutoffTime = DateTime.UtcNow.Subtract(timeWindow);
         
         return await context.LoginAttempts
-           .Where(la => la.Email.Equals(email, StringComparison.CurrentCultureIgnoreCase)
-                 && la.IpAddress == ipAddress
-                 && !la.IsSuccessful 
-                 && la.AttemptTime >= cutoffTime)
-           .CountAsync();
+            .Where(l => EF.Functions.ILike(l.Email, email)
+                        && l.IpAddress == ipAddress
+                        && !l.IsSuccessful
+                        && l.AttemptTime >= cutoffTime)
+            .CountAsync(cancellationToken);
     }
 
     public async Task RecordAttemptAsync(string email, string ipAddress, bool isSuccessful)
@@ -44,21 +46,20 @@ internal sealed class LoginAttemptService(AppDbContext context) : ILoginAttemptS
         await context.SaveChangesAsync();
     }
 
-    public async Task ResetFailedAttemptsAsync(string email, string ipAddress)
+    public async Task ResetFailedAttemptsAsync(
+        string email, string ipAddress, CancellationToken cancellationToken = default)
     {
-        var failedAttempts = await context.LoginAttempts
-            .Where(la => la.Email.Equals(email, StringComparison.CurrentCultureIgnoreCase)
-                         && la.IpAddress == ipAddress
-                         && !la.IsSuccessful)
-            .ToListAsync();
-
-        context.LoginAttempts.RemoveRange(failedAttempts);
-        await context.SaveChangesAsync();
+        await context.LoginAttempts
+            .Where(l => EF.Functions.ILike(l.Email, email)
+                        && l.IpAddress == ipAddress
+                        && !l.IsSuccessful)
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
-    public async Task<bool> RequiresCaptchaAsync(string email, string ipAddress)
+    public async Task<bool> RequiresCaptchaAsync(
+        string email, string ipAddress, CancellationToken cancellationToken = default)
     {
-        var failedCount = await GetFailedAttemptsCountAsync(email, ipAddress, _timeWindow);
+        var failedCount = await GetFailedAttemptsCountAsync(email, ipAddress, _timeWindow, cancellationToken);
         return failedCount >= MaxFailedAttempts;
     }
 }

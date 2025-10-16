@@ -67,7 +67,6 @@ public class UpdateRecommendation : IEndpoint
         recommendation.LinkUrl = request.LinkUrl;
         recommendation.UpdatedAt = DateTime.UtcNow;
         
-        dbContext.Recommendations.Update(recommendation);
         await dbContext.SaveChangesAsync(cancellationToken);
         
         logger.LogInformation("User {UserId} updated recommendation {RecommendationId}. TraceId: {TraceId}",
