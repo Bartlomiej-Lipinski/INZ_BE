@@ -3,13 +3,14 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Recommendations.Reactions;
+namespace WebApplication1.Features.Comments;
 
-public class PostRecommendationReaction : IEndpoint
+public class PostReaction : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -26,7 +27,7 @@ public class PostRecommendationReaction : IEndpoint
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
-        ILogger<PostRecommendationReaction> logger,
+        ILogger<PostReaction> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
@@ -59,13 +60,13 @@ public class PostRecommendationReaction : IEndpoint
             return Results.Forbid();
         }
 
-        var existingReaction = await dbContext.RecommendationReactions
-            .FirstOrDefaultAsync(rr => rr.RecommendationId == recommendationId 
+        var existingReaction = await dbContext.Reactions
+            .FirstOrDefaultAsync(rr => rr.TargetId == recommendationId 
                                        && rr.UserId == currentUserId, cancellationToken);
 
         if (existingReaction != null)
         {
-            dbContext.RecommendationReactions.Remove(existingReaction);
+            dbContext.Reactions.Remove(existingReaction);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("User {UserId} removed reaction from recommendation {RecommendationId}. TraceId: {TraceId}",
@@ -74,13 +75,13 @@ public class PostRecommendationReaction : IEndpoint
             return Results.Ok(ApiResponse<string>.Ok("Reaction removed.", traceId));
         }
 
-        var reaction = new RecommendationReaction
+        var reaction = new Reaction
         {
-            RecommendationId = recommendationId,
+            TargetId = recommendationId,
             UserId = currentUserId,
         };
 
-        dbContext.RecommendationReactions.Add(reaction);
+        dbContext.Reactions.Add(reaction);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} added reaction to recommendation {RecommendationId}. TraceId: {TraceId}",

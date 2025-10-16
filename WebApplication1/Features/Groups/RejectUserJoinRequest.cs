@@ -7,6 +7,7 @@ using WebApplication1.Shared.Responses;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Security.Claims;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 
 namespace WebApplication1.Features.Groups;
 

@@ -45,11 +45,11 @@ public class GetRecommendationByIdTest : TestBase
         dbContext.Recommendations.Add(recommendation);
         
         var comment = TestDataFactory
-            .CreateRecommendationComment("c1", recommendation.Id, user.Id, "Nice!", DateTime.UtcNow);
-        dbContext.RecommendationComments.Add(comment);
+            .CreateComment("c1", recommendation.Id, user.Id, "Nice!", DateTime.UtcNow);
+        dbContext.Comments.Add(comment);
 
-        var reaction = TestDataFactory.CreateRecommendationReaction(recommendation.Id, user.Id);
-        dbContext.RecommendationReactions.Add(reaction);
+        var reaction = TestDataFactory.CreateReaction(recommendation.Id, user.Id);
+        dbContext.Reactions.Add(reaction);
 
         await dbContext.SaveChangesAsync();
 

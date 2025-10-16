@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Groups;

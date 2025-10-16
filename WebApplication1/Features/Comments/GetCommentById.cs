@@ -5,9 +5,9 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Recommendations.Comments;
+namespace WebApplication1.Features.Comments;
 
-public class GetRecommendationComments : IEndpoint
+public class GetCommentById : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -23,7 +23,7 @@ public class GetRecommendationComments : IEndpoint
         [FromRoute] string recommendationId,
         AppDbContext dbContext,
         HttpContext httpContext,
-        ILogger<GetRecommendationComments> logger,
+        ILogger<GetCommentById> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;

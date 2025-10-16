@@ -6,9 +6,9 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Recommendations.Comments;
+namespace WebApplication1.Features.Comments;
 
-public class DeleteRecommendationComment : IEndpoint
+public class DeleteComment : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -27,7 +27,7 @@ public class DeleteRecommendationComment : IEndpoint
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
-        ILogger<DeleteRecommendationComment> logger,
+        ILogger<DeleteComment> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
@@ -40,9 +40,9 @@ public class DeleteRecommendationComment : IEndpoint
             return Results.Unauthorized();
         }
 
-        var comment = await dbContext.RecommendationComments
+        var comment = await dbContext.Comments
             .Include(c => c.Recommendation)
-            .FirstOrDefaultAsync(c => c.Id == commentId && c.RecommendationId == recommendationId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.TargetId == recommendationId, cancellationToken);
 
         if (comment == null)
         {
@@ -58,7 +58,7 @@ public class DeleteRecommendationComment : IEndpoint
             return Results.Forbid();
         }
 
-        dbContext.RecommendationComments.Remove(comment);
+        dbContext.Comments.Remove(comment);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} deleted comment {CommentId} from recommendation {RecommendationId}." +

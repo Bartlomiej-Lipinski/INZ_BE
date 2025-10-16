@@ -1,8 +1,10 @@
 ﻿using WebApplication1.Features.Auth;
+using WebApplication1.Features.Comments;
 using WebApplication1.Features.Groups;
 using WebApplication1.Features.Recommendations;
-using WebApplication1.Features.Recommendations.Comments;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Comments;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
 namespace WebApplication1.Tests;
@@ -130,24 +132,24 @@ public static class TestDataFactory
         };
     }
 
-    public static RecommendationComment CreateRecommendationComment(
-        string id, string recommendationId, string userId, string content, DateTime createdAt)
+    public static Comment CreateComment(
+        string id, string targetId, string userId, string content, DateTime createdAt)
     {
-        return new RecommendationComment
+        return new Comment
         {
             Id = id,
-            RecommendationId = recommendationId,
+            TargetId = targetId,
             UserId = userId,
             Content = content,
             CreatedAt = createdAt
         };
     }
 
-    public static RecommendationReaction CreateRecommendationReaction(string recommendationId, string userId)
+    public static Reaction CreateReaction(string targetId, string userId)
     {
-        return new RecommendationReaction
+        return new Reaction
         {
-            RecommendationId = recommendationId,
+            TargetId = targetId,
             UserId = userId,
         };
     }
@@ -176,17 +178,17 @@ public static class TestDataFactory
         };
     }
 
-    public static PostRecommendationComment.CommentRequestDto CreateCommentRequestDto(string content)
+    public static PostComment.CommentRequestDto CreateCommentRequestDto(string content)
     {
-        return new PostRecommendationComment.CommentRequestDto
+        return new PostComment.CommentRequestDto
         {
             Content = content
         };
     }
 
-    public static UpdateRecommendationComment.UpdateCommentRequestDto CreateUpdateCommentRequestDto(string content)
+    public static UpdateComment.UpdateCommentRequestDto CreateUpdateCommentRequestDto(string content)
     {
-        return new UpdateRecommendationComment.UpdateCommentRequestDto
+        return new UpdateComment.UpdateCommentRequestDto
         {
             Content = content
         };

@@ -98,10 +98,10 @@ public class DeleteRecommendationTest : TestBase
             "rec1", group.Id, user.Id, "Title", "Content", DateTime.UtcNow);
         dbContext.Recommendations.Add(recommendation);
 
-        var comment = TestDataFactory.CreateRecommendationComment("c1", "rec1", user.Id, "Comment", DateTime.UtcNow);
-        var reaction = TestDataFactory.CreateRecommendationReaction("rec1", user.Id);
-        dbContext.RecommendationComments.Add(comment);
-        dbContext.RecommendationReactions.Add(reaction);
+        var comment = TestDataFactory.CreateComment("c1", "rec1", user.Id, "Comment", DateTime.UtcNow);
+        var reaction = TestDataFactory.CreateReaction("rec1", user.Id);
+        dbContext.Comments.Add(comment);
+        dbContext.Reactions.Add(reaction);
 
         await dbContext.SaveChangesAsync();
 
@@ -120,7 +120,7 @@ public class DeleteRecommendationTest : TestBase
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
 
         (await dbContext.Recommendations.CountAsync()).Should().Be(0);
-        (await dbContext.RecommendationComments.CountAsync()).Should().Be(0);
-        (await dbContext.RecommendationReactions.CountAsync()).Should().Be(0);
+        (await dbContext.Comments.CountAsync()).Should().Be(0);
+        (await dbContext.Reactions.CountAsync()).Should().Be(0);
     }
 }

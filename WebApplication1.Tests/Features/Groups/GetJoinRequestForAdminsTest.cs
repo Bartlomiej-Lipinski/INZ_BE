@@ -4,6 +4,7 @@ using Moq;
 using System.Security.Claims;
 using WebApplication1.Features.Groups;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 
 namespace WebApplication1.Tests.Features.Groups;
 

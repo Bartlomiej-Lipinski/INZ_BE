@@ -3,13 +3,14 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Recommendations.Comments;
+namespace WebApplication1.Features.Comments;
 
-public class PostRecommendationComment : IEndpoint
+public class PostComment : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -27,7 +28,7 @@ public class PostRecommendationComment : IEndpoint
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
-        ILogger<PostRecommendationComment> logger,
+        ILogger<PostComment> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
@@ -65,16 +66,16 @@ public class PostRecommendationComment : IEndpoint
             return Results.Forbid();
         }
 
-        var comment = new RecommendationComment
+        var comment = new Comment
         {
             Id = Guid.NewGuid().ToString(),
-            RecommendationId = recommendationId,
+            TargetId = recommendationId,
             UserId = currentUserId,
             Content = request.Content.Trim(),
             CreatedAt = DateTime.UtcNow
         };
 
-        dbContext.RecommendationComments.Add(comment);
+        dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} added comment {CommentId} to recommendation {RecommendationId}. " +

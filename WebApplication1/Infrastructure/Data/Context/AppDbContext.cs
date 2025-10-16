@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Comments;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 using WebApplication1.Infrastructure.Data.Entities.Tokens;
 
@@ -15,8 +17,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<LoginAttempt> LoginAttempts { get; set; }
     public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
     public DbSet<Recommendation> Recommendations { get; set; }
-    public DbSet<RecommendationComment> RecommendationComments { get; set; }
-    public DbSet<RecommendationReaction> RecommendationReactions { get; set; }
+    public DbSet<Comment> Comments { get; set; }
+    public DbSet<Reaction> Reactions { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -60,22 +62,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        modelBuilder.Entity<RecommendationComment>(entity =>
+        modelBuilder.Entity<Comment>(entity =>
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Content).IsRequired().HasMaxLength(1000);
-            entity.HasOne(c => c.Recommendation)
-                .WithMany(r => r.Comments)
-                .HasForeignKey(c => c.RecommendationId)
+            entity.HasIndex(c => c.TargetId);
+
+            entity.HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        modelBuilder.Entity<RecommendationReaction>(entity =>
+        modelBuilder.Entity<Reaction>(entity =>
         {
-            entity.HasKey(r => new { r.RecommendationId, r.UserId });
-            entity.HasOne(r => r.Recommendation)
-                .WithMany(r => r.Reactions)
-                .HasForeignKey(r => r.RecommendationId)
+            entity.HasKey(r => new { r.TargetId, r.UserId });
+            entity.HasIndex(r => r.TargetId);
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
