@@ -54,7 +54,7 @@ public class RejectUserJoinRequestTest : TestBase
     public async Task Handle_Should_Remove_GroupUser_When_Request_Is_Pending()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupUser = TestDataFactory.CreateGroupUser("g1", "u1", false, AcceptanceStatus.Pending);
+        var groupUser = TestDataFactory.CreateGroupUser("u1", "g1", true, AcceptanceStatus.Pending);
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         var logger = NullLogger<RejectUserJoinRequest>.Instance;

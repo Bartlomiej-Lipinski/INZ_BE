@@ -40,6 +40,17 @@ public class RejectUserJoinRequest : IEndpoint
             logger.LogWarning("Unauthorized attempt to reject join request. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
+        
+        var group = await dbContext.Groups
+            .FirstOrDefaultAsync(g => g.Id == request.GroupId, cancellationToken);
+
+        if (group == null)
+        {
+            logger.LogWarning("Group not found. GroupId: {GroupId}. TraceId: {TraceId}", 
+                request.GroupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+        
         var currentGroupUser = await dbContext.GroupUsers
             .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == currentUserId, cancellationToken);
 
