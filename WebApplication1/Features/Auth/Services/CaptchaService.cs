@@ -39,7 +39,8 @@ internal sealed class CaptchaService(HttpClient httpClient, IConfiguration confi
                 }
 
                 var jsonResponse = await response.Content.ReadAsStringAsync();
-                var captchaResponse = JsonSerializer.Deserialize<CaptchaValidationResponse>(jsonResponse, new JsonSerializerOptions
+                var captchaResponse = JsonSerializer.Deserialize<CaptchaValidationResponse>(jsonResponse,
+                    new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
                 });

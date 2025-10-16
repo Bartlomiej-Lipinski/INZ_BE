@@ -9,7 +9,8 @@ public interface IEmailService
     Task SendTwoFactorCodeAsync(string email, string code, string? userName = null);
 }
 
-internal sealed class SendGridEmailService(IConfiguration configuration, ILogger<SendGridEmailService> logger) : IEmailService
+internal sealed class SendGridEmailService(IConfiguration configuration, ILogger<SendGridEmailService> logger) 
+    : IEmailService
 {
     private readonly string? _apiKey = configuration["SendGrid:ApiKey"];
     private readonly string? _senderEmail = configuration["SendGrid:SenderEmail"];

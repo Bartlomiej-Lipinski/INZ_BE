@@ -25,9 +25,9 @@ public class GetUserById : IEndpoint
         [FromRoute] string id,
         ClaimsPrincipal currentUser,
         AppDbContext dbContext,
-        CancellationToken cancellationToken,
         HttpContext httpContext,
-        ILogger<GetUserById> logger)
+        ILogger<GetUserById> logger,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
@@ -74,7 +74,7 @@ public class GetUserById : IEndpoint
         return Results.Ok(ApiResponse<UserResponseDto>.Ok(user, null, traceId));
     }
 
-    public class UserResponseDto
+    public record UserResponseDto
     {
         public string Id { get; set; } = null!;
         public string Email { get; set; } = null!;

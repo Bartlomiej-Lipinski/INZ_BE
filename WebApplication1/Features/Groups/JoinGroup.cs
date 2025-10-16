@@ -26,13 +26,12 @@ public class JoinGroup : IEndpoint
         [FromBody] JoinGroupRequest request,
         AppDbContext dbContext,
         ClaimsPrincipal user,
-        CancellationToken cancellationToken,
-        HttpContext httpContext)
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? user.FindFirst("sub")?.Value;
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.FindFirst("sub")?.Value;
 
         if (string.IsNullOrEmpty(userId))
         {
@@ -64,14 +63,15 @@ public class JoinGroup : IEndpoint
         {
             GroupId = group.Id,
             UserId = userId,
-            IsAdmin = false, // Default to non-admin
+            IsAdmin = false,
             AcceptanceStatus = AcceptanceStatus.Pending
         };
 
         await dbContext.GroupUsers.AddAsync(groupUser, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group. Awaiting admin approval.", null, traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group. Awaiting admin approval.",
+            null, traceId));
     }
 
     public record JoinGroupRequest

@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -11,30 +9,19 @@ namespace WebApplication1.Tests.Features.Groups;
 
 public class PostGroupTest : TestBase
 {
-    private HttpContext CreateHttpContextWithUser(string? userId = null)
-    {
-        var context = new DefaultHttpContext();
-        context.TraceIdentifier = "test-trace-id";
-        
-        if (string.IsNullOrEmpty(userId)) return context;
-        var identity = new ClaimsIdentity([
-            new Claim(ClaimTypes.NameIdentifier, userId)
-        ], "TestAuth");
-        context.User = new ClaimsPrincipal(identity);
-        return context;
-    }
-    
     [Fact]
     public async Task Handle_Should_Return_BadRequest_When_Name_Is_Missing()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser("user1");
+        var httpContext = CreateHttpContext("user1");
         var mockLogger = new Mock<ILogger<PostGroup>>();
 
-        var result = 
-            await PostGroup.Handle(
-                httpContext, TestDataFactory.CreateGroupRequestDto("",  "#FFF"), dbContext, 
-                CancellationToken.None, mockLogger.Object);
+        var result = await PostGroup.Handle(
+                httpContext,
+                TestDataFactory.CreateGroupRequestDto("",  "#FFF"),
+                dbContext,
+                mockLogger.Object,
+                CancellationToken.None);
                 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
@@ -45,13 +32,13 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_No_UserId()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<PostGroup>>();
         
         var result = 
             await PostGroup.Handle(
                 httpContext, TestDataFactory.CreateGroupRequestDto(
-                    "Test Group",  "#FFF"), dbContext, CancellationToken.None, mockLogger.Object);
+                    "Test Group",  "#FFF"), dbContext, mockLogger.Object, CancellationToken.None);
                     
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
@@ -60,11 +47,11 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Create_Group_And_Assign_User_As_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContextWithUser("user1");
+        var httpContext = CreateHttpContext("user1");
         var mockLogger = new Mock<ILogger<PostGroup>>();
         var dto = TestDataFactory.CreateGroupRequestDto("My Group",  "#FFF");
         
-        var result = await PostGroup.Handle(httpContext, dto, dbContext, CancellationToken.None, mockLogger.Object);
+        var result = await PostGroup.Handle(httpContext, dto, dbContext, mockLogger.Object, CancellationToken.None);
         
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Created<ApiResponse<PostGroup.GroupResponseDto>>>();

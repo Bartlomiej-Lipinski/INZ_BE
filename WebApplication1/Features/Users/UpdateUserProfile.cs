@@ -10,7 +10,7 @@ using System.Security.Claims;
 
 namespace WebApplication1.Features.Users;
 
-public class UpdateUserProfile:IEndpoint
+public class UpdateUserProfile : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -26,9 +26,9 @@ public class UpdateUserProfile:IEndpoint
         ClaimsPrincipal currentUser,
         [FromBody] UpdateUserProfileRequest request,
         AppDbContext dbContext,
-        CancellationToken cancellationToken,
         HttpContext httpContext,
-        ILogger<UpdateUserProfile> logger)
+        ILogger<UpdateUserProfile> logger,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
@@ -62,11 +62,13 @@ public class UpdateUserProfile:IEndpoint
 
         if (updated > 0)
         {
-            logger.LogInformation("User profile successfully updated for ID: {UserId}. TraceId: {TraceId}", userId, traceId);
+            logger.LogInformation("User profile successfully updated for ID: {UserId}. TraceId: {TraceId}",
+                userId, traceId);
             return Results.Ok(ApiResponse<string>.Ok("User profile updated successfully.", traceId));
         }
 
-        logger.LogError("No changes were saved for user profile update. UserId: {UserId}, TraceId: {TraceId}", userId, traceId);
+        logger.LogError("No changes were saved for user profile update. UserId: {UserId}, TraceId: {TraceId}", 
+            userId, traceId);
         return Results.Json(ApiResponse<string>.Fail("No changes were saved.", traceId), statusCode: 500);
     }
     

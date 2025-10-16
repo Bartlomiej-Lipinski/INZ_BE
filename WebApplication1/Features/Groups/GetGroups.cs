@@ -28,6 +28,7 @@ public class GetGroups : IEndpoint
                 Name = g.Name,
                 Color = g.Color
             }).ToListAsync(dbc);;
+        
         return Results.Ok(ApiResponse<List<PostGroup.GroupResponseDto>>.Ok(groups, "Groups retrieved successfully"));
     }
 }

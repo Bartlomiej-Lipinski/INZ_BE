@@ -23,8 +23,8 @@ public class GetUserGroups : IEndpoint
     public static async Task<ApiResponse<IEnumerable<GroupResponse>>> Handle(
         ClaimsPrincipal currentUser,
         AppDbContext dbContext,
-        CancellationToken cancellationToken,
-        HttpContext httpContext)
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         

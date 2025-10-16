@@ -48,7 +48,8 @@ public class AuthController(
         
         try
         {
-            var requiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(request.Email, userIp);
+            var requiresCaptcha = await loginAttemptService
+                .RequiresCaptchaAsync(request.Email, userIp, HttpContext.RequestAborted);
 
             switch (requiresCaptcha)
             {
@@ -75,7 +76,7 @@ public class AuthController(
             }
 
             var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
-            await loginAttemptService.ResetFailedAttemptsAsync(request.Email, userIp);
+            await loginAttemptService.ResetFailedAttemptsAsync(request.Email, userIp, HttpContext.RequestAborted);
             SetAuthCookies(token, refreshToken);
 
             return Ok(ApiResponse<string>.Ok(user.Id, "Login successful", traceId));
@@ -240,7 +241,8 @@ public class AuthController(
     public IActionResult Secret()
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-        return Ok(ApiResponse<string>.Ok("This is a secret message only for authenticated users.", traceId: traceId));
+        return Ok(ApiResponse<string>
+            .Ok("This is a secret message only for authenticated users.", traceId: traceId));
     }
     
     [AllowAnonymous]
@@ -256,10 +258,13 @@ public class AuthController(
             return Ok(ApiResponse<string>.Ok("If the email exists, a reset link has been sent.", traceId: traceId));
         await userManager.UpdateSecurityStampAsync(user);
         var tokens = dbContext.RefreshTokens.Where(t => t.UserId == user.Id && !t.IsRevoked);
+        
         foreach (var token in tokens)
         {
             token.IsRevoked = true;
+            
         }
+        
         await dbContext.SaveChangesAsync();
 
         return Ok(ApiResponse<string>.Ok("If the email exists, a reset link has been sent.", traceId: traceId));
@@ -294,7 +299,8 @@ public class AuthController(
         }
 
         var userIp = GetUserIpAddress();
-        var requiresCaptcha = await loginAttemptService.RequiresCaptchaAsync(email, userIp);
+        var requiresCaptcha = await loginAttemptService
+            .RequiresCaptchaAsync(email, userIp, HttpContext.RequestAborted);
 
         return Ok(ApiResponse<bool>.Ok(requiresCaptcha, traceId: traceId));
     }
@@ -378,8 +384,7 @@ public class AuthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error during 2FA code resend. TraceId: {TraceId}", traceId);
-            return StatusCode(500, ApiResponse<string>
-                .Fail("An error occurred during 2FA code resend", traceId));
+            return StatusCode(500, ApiResponse<string>.Fail("An error occurred during 2FA code resend", traceId));
         }
     }
     
@@ -408,6 +413,7 @@ public class AuthController(
             Expires = DateTime.UtcNow.AddDays(2)
         });
     }
+    
     private static string ValidatePassword(string password)
     {
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
@@ -422,9 +428,7 @@ public class AuthController(
         if (!password.Any(char.IsDigit))
             return "Hasło musi zawierać co najmniej jedną cyfrę.";
 
-        if (password.All(char.IsLetterOrDigit))
-            return "Hasło musi zawierać co najmniej jeden znak specjalny.";
-        return string.Empty;
+        return password.All(char.IsLetterOrDigit) ? "Hasło musi zawierać co najmniej jeden znak specjalny." : string.Empty;
     }
     
     public class UserRequestDto

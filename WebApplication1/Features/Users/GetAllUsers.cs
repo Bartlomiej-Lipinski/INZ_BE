@@ -21,9 +21,9 @@ public class GetAllUsers : IEndpoint
 
     public static async Task<IResult> Handle(
         AppDbContext dbContext,
-        CancellationToken cancellationToken,
         HttpContext httpContext,
-        ILogger<GetAllUsers> logger)
+        ILogger<GetAllUsers> logger,
+        CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
@@ -55,7 +55,7 @@ public class GetAllUsers : IEndpoint
         return Results.Ok(ApiResponse<List<UserResponseDto>>.Ok(users, null, traceId));
     }
 
-    private class UserResponseDto
+    private record UserResponseDto
     {
         public string Id { get; set; } = null!;
         public string Email { get; set; } = null!;

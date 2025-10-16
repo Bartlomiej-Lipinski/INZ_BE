@@ -104,9 +104,13 @@ public class AuthControllerTest : TestBase
         userManagerMock.Setup(u => u.FindByEmailAsync("test@test.com")).ReturnsAsync(user);
         userManagerMock.Setup(u => u.CheckPasswordAsync(user, "wrong")).ReturnsAsync(false);
         loginAttemptMock.Setup(
-            l => l.RequiresCaptchaAsync("test@test.com", It.IsAny<string>())).ReturnsAsync(false);
+            l => 
+                l.RequiresCaptchaAsync("test@test.com", It.IsAny<string>(), CancellationToken.None))
+            .ReturnsAsync(false);
         loginAttemptMock.Setup(
-            l => l.RecordAttemptAsync("test@test.com", It.IsAny<string>(), false)).Returns(Task.CompletedTask);
+            l => 
+                l.RecordAttemptAsync("test@test.com", It.IsAny<string>(), false))
+            .Returns(Task.CompletedTask);
         
         var result = await controller.Login(
             TestDataFactory.CreateExtendedLoginRequest("test@test.com", "wrong"));
@@ -131,12 +135,16 @@ public class AuthControllerTest : TestBase
         userManagerMock.Setup(u => u.CheckPasswordAsync(user, "password123")).ReturnsAsync(true);
         userManagerMock.Setup(u => u.GetTwoFactorEnabledAsync(user)).ReturnsAsync(true);
         loginAttemptMock.Setup(
-            l => l.RequiresCaptchaAsync(user.Email!, It.IsAny<string>())).ReturnsAsync(false);
+            l => 
+                l.RequiresCaptchaAsync(user.Email!, It.IsAny<string>(), CancellationToken.None))
+            .ReturnsAsync(false);
         loginAttemptMock.Setup(
-            l => l.RecordAttemptAsync(user.Email!, It.IsAny<string>(), true)).Returns(Task.CompletedTask);
+            l => l.RecordAttemptAsync(user.Email!, It.IsAny<string>(), true))
+            .Returns(Task.CompletedTask);
         
         twoFactorMock.Setup(
-            t => t.GenerateCodeAsync(user.Id, It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync("123456");
+            t => t.GenerateCodeAsync(user.Id, It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync("123456");
         twoFactorMock.Setup(
             t => t.GetCodeExpiryTimeAsync(user.Id)).ReturnsAsync(TimeSpan.FromMinutes(5));
         

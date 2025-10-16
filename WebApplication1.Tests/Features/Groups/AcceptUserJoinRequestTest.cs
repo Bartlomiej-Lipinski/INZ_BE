@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -12,29 +10,12 @@ namespace WebApplication1.Tests.Features.Groups;
 
 public class AcceptUserJoinRequestTest : TestBase
 {
-    private ClaimsPrincipal CreateUser(string userId)
-    {
-        var identity = new ClaimsIdentity([
-            new Claim(ClaimTypes.NameIdentifier, userId)
-        ], "TestAuth");
-        return new ClaimsPrincipal(identity);
-    }
-
-    private HttpContext CreateMockHttpContext()
-    {
-        var context = new DefaultHttpContext
-        {
-            TraceIdentifier = "test-trace-id"
-        };
-        return context;
-    }
-
     [Fact]
     public async Task Handle_Should_Return_NotFound_When_Request_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateUser("admin1");
-        var httpContext = CreateMockHttpContext();
+        var user = CreateClaimsPrincipal("admin1");
+        var httpContext = CreateHttpContext("admin1");
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
@@ -42,7 +23,7 @@ public class AcceptUserJoinRequestTest : TestBase
 
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, user, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, user, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
         var notFound = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
@@ -55,8 +36,8 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Request_Is_Not_Pending()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateUser("admin1");
-        var httpContext = CreateMockHttpContext();
+        var user = CreateClaimsPrincipal("admin1");
+        var httpContext = CreateHttpContext("admin1");
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
@@ -67,7 +48,7 @@ public class AcceptUserJoinRequestTest : TestBase
         
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, user, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, user, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
@@ -80,8 +61,8 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Accept_Request_When_It_Is_Pending()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateUser("admin1");
-        var httpContext = CreateMockHttpContext();
+        var user = CreateClaimsPrincipal("admin1");
+        var httpContext = CreateHttpContext("admin1");
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
 
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
@@ -93,7 +74,7 @@ public class AcceptUserJoinRequestTest : TestBase
         
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, user, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, user, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
@@ -110,12 +91,12 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Is_Null()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateMockHttpContext();
+        var httpContext = CreateHttpContext();
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
 
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, null, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, null, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
@@ -124,8 +105,8 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_User_Is_Not_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateUser("user2");
-        var httpContext = CreateMockHttpContext();
+        var user = CreateClaimsPrincipal("user2");
+        var httpContext = CreateHttpContext("user2");
         var mockLogger = new Mock<ILogger<AcceptUserJoinRequest>>();
 
         var nonAdminUser = TestDataFactory.CreateGroupUser("user2", "group1");
@@ -137,7 +118,7 @@ public class AcceptUserJoinRequestTest : TestBase
 
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext, user, CancellationToken.None, httpContext, mockLogger.Object);
+            dbContext, user, httpContext, mockLogger.Object, CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
