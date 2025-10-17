@@ -1,4 +1,7 @@
-﻿namespace WebApplication1.Infrastructure.Data.Entities.Recommendations;
+﻿using WebApplication1.Infrastructure.Data.Entities.Comments;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
+
+namespace WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
 public class Recommendation
 {
@@ -25,8 +28,4 @@ public class Recommendation
     public Group Group { get; set; } = null!;
     
     public User User { get; set; } = null!;
-    
-    public ICollection<RecommendationComment> Comments { get; set; } = new List<RecommendationComment>();
-    
-    public ICollection<RecommendationReaction> Reactions { get; set; } = new List<RecommendationReaction>();
 }

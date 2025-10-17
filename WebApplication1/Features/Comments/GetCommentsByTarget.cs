@@ -5,43 +5,34 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Recommendations.Comments;
+namespace WebApplication1.Features.Comments;
 
-public class GetRecommendationComments : IEndpoint
+public class GetCommentsByTarget : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/recommendations/{recommendationId}/comments", Handle)
-            .WithName("GetRecommendationComments")
-            .WithDescription("Retrieves comments for a recommendation")
-            .WithTags("Recommendation Comments")
+        app.MapGet("/comments/{targetId}", Handle)
+            .WithName("GetCommentsByTarget")
+            .WithDescription("Retrieves comments for a target")
+            .WithTags("Comments")
             .RequireAuthorization()
             .WithOpenApi();
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string recommendationId,
+        [FromRoute] string targetId,
         AppDbContext dbContext,
         HttpContext httpContext,
-        ILogger<GetRecommendationComments> logger,
+        ILogger<GetCommentsByTarget> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
 
-        var recommendation = await dbContext.Recommendations
+        var comments = await dbContext.Comments
             .AsNoTracking()
-            .Include(r => r.Comments)
-            .ThenInclude(c => c.User)
-            .FirstOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
-
-        if (recommendation == null)
-        {
-            logger.LogWarning("Recommendation {RecommendationId} not found. TraceId: {TraceId}", recommendationId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Recommendation not found.", traceId));
-        }
-
-        var commentsDto = recommendation.Comments
-            .OrderBy(c => c.CreatedAt)
+            .Where(c => c.TargetId == targetId)
+            .Include(c => c.User)
+            .OrderByDescending(c => c.CreatedAt)
             .Select(c => new CommentResponseDto
             {
                 Id = c.Id,
@@ -50,10 +41,13 @@ public class GetRecommendationComments : IEndpoint
                 UserName = c.User.UserName,
                 CreatedAt = c.CreatedAt
             })
-            .ToList();
+            .ToListAsync(cancellationToken);
+
+        logger.LogInformation("Fetched {Count} comments for {TargetId}. TraceId: {TraceId}", 
+            comments.Count, targetId, traceId);
 
         return Results.Ok(ApiResponse<List<CommentResponseDto>>
-            .Ok(commentsDto, "Comments retrieved successfully", traceId));
+            .Ok(comments, "Comments retrieved successfully.", traceId));
     }
 
     public record CommentResponseDto
@@ -61,7 +55,7 @@ public class GetRecommendationComments : IEndpoint
         public string Id { get; set; } = null!;
         public string Content { get; set; } = null!;
         public string UserId { get; set; } = null!;
-        public string? UserName { get; set; } = null!;
+        public string? UserName { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

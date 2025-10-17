@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
-namespace WebApplication1.Infrastructure.Data.Entities;
+namespace WebApplication1.Infrastructure.Data.Entities.Groups;
 
 [Index(nameof(Code), IsUnique = true)]
 public class Group

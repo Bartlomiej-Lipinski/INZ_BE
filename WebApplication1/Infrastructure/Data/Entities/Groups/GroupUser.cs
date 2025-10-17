@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace WebApplication1.Infrastructure.Data.Entities;
+namespace WebApplication1.Infrastructure.Data.Entities.Groups;
 
 public class GroupUser
 {
