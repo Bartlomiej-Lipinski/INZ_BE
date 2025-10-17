@@ -63,7 +63,7 @@ public class GetRecommendationById : IEndpoint
 
         var reactions = await dbContext.Reactions
             .AsNoTracking()
-            .Where(r => r.TargetId == id)
+            .Where(r => r.TargetId == id && r.TargetType == "Recommendation")
             .ToListAsync(cancellationToken);
 
         var response = new RecommendationResponseDto
