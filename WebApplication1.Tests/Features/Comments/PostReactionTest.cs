@@ -30,6 +30,7 @@ public class PostReactionTest : TestBase
 
         var result = await PostReaction.Handle(
             target.Id,
+            "Recommendation",
             dbContext,
             claimsPrincipal,
             httpContext,
@@ -53,7 +54,7 @@ public class PostReactionTest : TestBase
         var target = TestDataFactory.CreateRecommendation(
             "r1", group.Id, user.Id, "Title", "Content", DateTime.UtcNow);
 
-        var existingReaction = TestDataFactory.CreateReaction(target.Id, user.Id);
+        var existingReaction = TestDataFactory.CreateReaction(target.Id, "Recommendation", user.Id);
 
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);
@@ -68,6 +69,7 @@ public class PostReactionTest : TestBase
 
         var result = await PostReaction.Handle(
             target.Id,
+            "Recommendation",
             dbContext,
             claimsPrincipal,
             httpContext,
@@ -87,6 +89,7 @@ public class PostReactionTest : TestBase
 
         var result = await PostReaction.Handle(
             "nonexistent",
+            "Recommendation",
             dbContext,
             CreateClaimsPrincipal("u1"),
             httpContext,
@@ -105,6 +108,7 @@ public class PostReactionTest : TestBase
 
         var result = await PostReaction.Handle(
             "r1",
+            "Recommendation",
             dbContext,
             CreateClaimsPrincipal(),
             httpContext,
@@ -134,6 +138,7 @@ public class PostReactionTest : TestBase
 
         var result = await PostReaction.Handle(
             target.Id,
+            "Recommendation",
             dbContext,
             claimsPrincipal,
             httpContext,

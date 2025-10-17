@@ -12,16 +12,16 @@ public class UpdateComment : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/recommendations/{recommendationId}/comments/{commentId}", Handle)
-            .WithName("UpdateRecommendationComment")
-            .WithDescription("Updates an existing comment for a recommendation")
-            .WithTags("Recommendation Comments")
+        app.MapPut("/comments/{targetId}/{commentId}", Handle)
+            .WithName("UpdateComment")
+            .WithDescription("Updates an existing comment for a target")
+            .WithTags("Comments")
             .RequireAuthorization()
             .WithOpenApi();
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string recommendationId,
+        [FromRoute] string targetId,
         [FromRoute] string commentId,
         [FromBody] UpdateCommentRequestDto request,
         AppDbContext dbContext,
@@ -47,13 +47,12 @@ public class UpdateComment : IEndpoint
         }
 
         var comment = await dbContext.Comments
-            .Include(c => c.Recommendation)
-            .FirstOrDefaultAsync(c => c.Id == commentId && c.TargetId == recommendationId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.TargetId == targetId, cancellationToken);
 
         if (comment == null)
         {
-            logger.LogWarning("Comment {CommentId} not found in recommendation {RecommendationId}. TraceId: {TraceId}",
-                commentId, recommendationId, traceId);
+            logger.LogWarning("Comment {CommentId} not found in target {TargetId}. TraceId: {TraceId}",
+                commentId, targetId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Comment not found.", traceId));
         }
 

@@ -40,15 +40,21 @@ public class GetRecommendationByIdTest : TestBase
         var member = TestDataFactory.CreateGroupUser(group.Id, user.Id);
         dbContext.GroupUsers.Add(member);
 
-        var recommendation = TestDataFactory
-            .CreateRecommendation("r1", group.Id, user.Id, "Test Recommendation", "Test content", DateTime.UtcNow);
+        var recommendation = TestDataFactory.CreateRecommendation(
+            "r1",
+            group.Id,
+            user.Id,
+            "Test Recommendation",
+            "Test content",
+            DateTime.UtcNow
+        );
         dbContext.Recommendations.Add(recommendation);
         
         var comment = TestDataFactory
-            .CreateComment("c1", recommendation.Id, user.Id, "Nice!", DateTime.UtcNow);
+            .CreateComment("c1", recommendation.Id, "Recommendation", user.Id, "Nice!", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
 
-        var reaction = TestDataFactory.CreateReaction(recommendation.Id, user.Id);
+        var reaction = TestDataFactory.CreateReaction(recommendation.Id, "Recommendation", user.Id);
         dbContext.Reactions.Add(reaction);
 
         await dbContext.SaveChangesAsync();

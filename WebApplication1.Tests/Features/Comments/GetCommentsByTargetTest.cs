@@ -5,7 +5,7 @@ using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Comments;
 
-public class GetCommentByIdTest : TestBase
+public class GetCommentsByTargetTest : TestBase
 {
     [Fact]
     public async Task Handle_Should_Return_Comments_For_Target()
@@ -24,17 +24,17 @@ public class GetCommentByIdTest : TestBase
         dbContext.Recommendations.Add(target);
 
         var comment1 = TestDataFactory.CreateComment(
-            "c1", target.Id, user.Id, "First comment", DateTime.UtcNow);
+            "c1", target.Id, "Recommendation", user.Id, "First comment", DateTime.UtcNow);
         var comment2 = TestDataFactory.CreateComment(
-            "c2", target.Id, user.Id, "Second comment", DateTime.UtcNow);
+            "c2", target.Id, "Recommendation", user.Id, "Second comment", DateTime.UtcNow);
         dbContext.Comments.AddRange(comment1, comment2);
 
         await dbContext.SaveChangesAsync();
 
         var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetCommentById>.Instance;
+        var logger = NullLogger<GetCommentsByTarget>.Instance;
 
-        var result = await GetCommentById.Handle(
+        var result = await GetCommentsByTarget.Handle(
             target.Id,
             dbContext,
             httpContext,
@@ -43,10 +43,11 @@ public class GetCommentByIdTest : TestBase
         );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults
-            .Ok<ApiResponse<List<GetCommentById.CommentResponseDto>>>>();
+            .Ok<ApiResponse<List<GetCommentsByTarget.CommentResponseDto>>>>();
         var ok = result as Microsoft.AspNetCore.Http.HttpResults
-            .Ok<ApiResponse<List<GetCommentById.CommentResponseDto>>>;
+            .Ok<ApiResponse<List<GetCommentsByTarget.CommentResponseDto>>>;
         ok!.Value!.Data.Should().HaveCount(2);
-        ok.Value.Data.First().Content.Should().Be("First comment");
+        ok.Value.Data.Should().ContainSingle(c => c.Content == "First comment");
+        ok.Value.Data.Should().ContainSingle(c => c.Content == "Second comment");
     }
 }

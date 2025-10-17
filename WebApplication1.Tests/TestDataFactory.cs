@@ -133,23 +133,25 @@ public static class TestDataFactory
     }
 
     public static Comment CreateComment(
-        string id, string targetId, string userId, string content, DateTime createdAt)
+        string id, string targetId, string targetType, string userId, string content, DateTime createdAt)
     {
         return new Comment
         {
             Id = id,
             TargetId = targetId,
+            TargetType = targetType,
             UserId = userId,
             Content = content,
             CreatedAt = createdAt
         };
     }
 
-    public static Reaction CreateReaction(string targetId, string userId)
+    public static Reaction CreateReaction(string targetId, string targetType, string userId)
     {
         return new Reaction
         {
             TargetId = targetId,
+            TargetType = targetType,
             UserId = userId,
         };
     }
@@ -178,10 +180,11 @@ public static class TestDataFactory
         };
     }
 
-    public static PostComment.CommentRequestDto CreateCommentRequestDto(string content)
+    public static PostComment.CommentRequestDto CreateCommentRequestDto(string targetType, string content)
     {
         return new PostComment.CommentRequestDto
         {
+            TargetType = targetType,
             Content = content
         };
     }

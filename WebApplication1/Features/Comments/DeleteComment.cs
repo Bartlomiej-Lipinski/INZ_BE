@@ -12,17 +12,16 @@ public class DeleteComment : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/recommendations/{recommendationId}/comments/{commentId}", Handle)
-            .WithName("DeleteRecommendationComment")
-            .WithDescription("Deletes a comment from a recommendation. " +
-                             "Allowed for comment author or recommendation author.")
-            .WithTags("Recommendation Comments")
+        app.MapDelete("/comments/{targetId}/{commentId}", Handle)
+            .WithName("DeleteComment")
+            .WithDescription("Deletes a comment from a target. Allowed for comment author and target author.")
+            .WithTags("Comments")
             .RequireAuthorization()
             .WithOpenApi();
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string recommendationId,
+        [FromRoute] string targetId,
         [FromRoute] string commentId,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
@@ -41,17 +40,24 @@ public class DeleteComment : IEndpoint
         }
 
         var comment = await dbContext.Comments
-            .Include(c => c.Recommendation)
-            .FirstOrDefaultAsync(c => c.Id == commentId && c.TargetId == recommendationId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.TargetId == targetId, cancellationToken);
 
         if (comment == null)
         {
-            logger.LogWarning("Comment {CommentId} not found for recommendation {RecommendationId}. TraceId: {TraceId}",
-                commentId, recommendationId, traceId);
+            logger.LogWarning("Comment {CommentId} not found for target {TargetId}. TraceId: {TraceId}",
+                commentId, targetId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Comment not found.", traceId));
         }
 
-        if (comment.UserId != currentUserId && comment.Recommendation.UserId != currentUserId)
+        var isTargetOwner = comment.TargetType switch
+        {
+            "Recommendation" => await dbContext.Recommendations
+                .AnyAsync(r => r.Id == targetId && r.UserId == currentUserId, cancellationToken),
+
+            _ => false
+        };
+        
+        if (comment.UserId != currentUserId && !isTargetOwner)
         {
             logger.LogWarning("User {UserId} attempted to delete comment {CommentId} without permission. TraceId: {TraceId}",
                 currentUserId, commentId, traceId);
@@ -61,8 +67,8 @@ public class DeleteComment : IEndpoint
         dbContext.Comments.Remove(comment);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("User {UserId} deleted comment {CommentId} from recommendation {RecommendationId}." +
-                              " TraceId: {TraceId}", currentUserId, commentId, recommendationId, traceId);
+        logger.LogInformation("User {UserId} deleted comment {CommentId} from target {TargetId}." +
+                              " TraceId: {TraceId}", currentUserId, commentId, targetId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Comment deleted successfully.", comment.Id, traceId));
     }

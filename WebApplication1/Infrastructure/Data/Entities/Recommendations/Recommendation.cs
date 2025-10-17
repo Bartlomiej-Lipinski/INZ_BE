@@ -28,8 +28,4 @@ public class Recommendation
     public Group Group { get; set; } = null!;
     
     public User User { get; set; } = null!;
-    
-    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
-    
-    public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
 }

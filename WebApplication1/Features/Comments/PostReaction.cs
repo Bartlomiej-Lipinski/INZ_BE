@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
-using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -14,16 +13,17 @@ public class PostReaction : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/recommendations/{recommendationId}/reactions", Handle)
-            .WithName("PostRecommendationReaction")
-            .WithDescription("Adds or removes a like reaction to a recommendation by a group member")
-            .WithTags("Recommendation Reactions")
+        app.MapPost("/reactions/{targetId}/{targetType}", Handle)
+            .WithName("PostReaction")
+            .WithDescription("Adds or removes a like reaction to a target by a group member")
+            .WithTags("Reactions")
             .RequireAuthorization()
             .WithOpenApi();
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string recommendationId,
+        [FromRoute] string targetId,
+        [FromRoute] string targetType,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -36,32 +36,37 @@ public class PostReaction : IEndpoint
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
-            logger.LogWarning("Unauthorized attempt to react to recommendation. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to react to target. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
-        var recommendation = await dbContext.Recommendations
-            .Include(r => r.Group)
-            .FirstOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
-
-        if (recommendation == null)
+        var target = targetType switch
         {
-            logger.LogWarning("Recommendation {RecommendationId} not found. TraceId: {TraceId}", recommendationId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Recommendation not found.", traceId));
+            "Recommendation" => await dbContext.Recommendations
+                .Include(r => r.Group)
+                .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
+            
+            _ => null
+        };
+
+        if (target == null)
+        {
+            logger.LogWarning("Target {TargetId} not found. TraceId: {TraceId}", targetId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Target not found.", traceId));
         }
 
         var isMember = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == recommendation.GroupId && gu.UserId == currentUserId, cancellationToken);
+            .AnyAsync(gu => gu.GroupId == target.GroupId && gu.UserId == currentUserId, cancellationToken);
 
         if (!isMember)
         {
             logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
-                currentUserId, recommendation.GroupId, traceId);
+                currentUserId, target.GroupId, traceId);
             return Results.Forbid();
         }
 
         var existingReaction = await dbContext.Reactions
-            .FirstOrDefaultAsync(rr => rr.TargetId == recommendationId 
+            .FirstOrDefaultAsync(rr => rr.TargetId == targetId 
                                        && rr.UserId == currentUserId, cancellationToken);
 
         if (existingReaction != null)
@@ -69,23 +74,24 @@ public class PostReaction : IEndpoint
             dbContext.Reactions.Remove(existingReaction);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            logger.LogInformation("User {UserId} removed reaction from recommendation {RecommendationId}. TraceId: {TraceId}",
-                currentUserId, recommendationId, traceId);
+            logger.LogInformation("User {UserId} removed reaction from target {TargetId}. TraceId: {TraceId}",
+                currentUserId, targetId, traceId);
 
             return Results.Ok(ApiResponse<string>.Ok("Reaction removed.", traceId));
         }
 
         var reaction = new Reaction
         {
-            TargetId = recommendationId,
+            TargetId = targetId,
+            TargetType = targetType,
             UserId = currentUserId,
         };
 
         dbContext.Reactions.Add(reaction);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("User {UserId} added reaction to recommendation {RecommendationId}. TraceId: {TraceId}",
-            currentUserId, recommendationId, traceId);
+        logger.LogInformation("User {UserId} added reaction to target {TargetId}. TraceId: {TraceId}",
+            currentUserId, targetId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Reaction added.", traceId));
     }

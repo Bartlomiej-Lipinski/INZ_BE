@@ -47,9 +47,6 @@ public class GetRecommendationById : IEndpoint
             .AsNoTracking()
             .Include(r => r.User)
             .Include(r => r.Group)
-            .Include(r => r.Comments)
-                .ThenInclude(c => c.User)
-            .Include(r => r.Reactions)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
         if (recommendation == null)
@@ -57,6 +54,17 @@ public class GetRecommendationById : IEndpoint
             logger.LogWarning("Recommendation not found: {RecommendationId}. TraceId: {TraceId}", id, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Recommendation not found.", traceId));
         }
+        
+        var comments = await dbContext.Comments
+            .AsNoTracking()
+            .Include(c => c.User)
+            .Where(c => c.TargetId == id && c.TargetType == "Recommendation")
+            .ToListAsync(cancellationToken);
+
+        var reactions = await dbContext.Reactions
+            .AsNoTracking()
+            .Where(r => r.TargetId == id)
+            .ToListAsync(cancellationToken);
 
         var response = new RecommendationResponseDto
         {
@@ -69,7 +77,7 @@ public class GetRecommendationById : IEndpoint
             CreatedAt = recommendation.CreatedAt.ToLocalTime(),
             UserId = recommendation.UserId,
             UserName = recommendation.User.UserName,
-            Comments = recommendation.Comments.Select(c => new RecommendationCommentDto
+            Comments = comments.Select(c => new RecommendationCommentDto
             {
                 Id = c.Id,
                 UserId = c.UserId,
@@ -77,9 +85,9 @@ public class GetRecommendationById : IEndpoint
                 Content = c.Content,
                 CreatedAt = c.CreatedAt.ToLocalTime()
             }).ToList(),
-            Reactions = recommendation.Reactions.Select(r => new RecommendationReactionDto
+            Reactions = reactions.Select(r => new RecommendationReactionDto
             {
-                UserId = r.UserId,
+                UserId = r.UserId
             }).ToList()
         };
 

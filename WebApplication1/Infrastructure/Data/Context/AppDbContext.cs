@@ -66,8 +66,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Content).IsRequired().HasMaxLength(1000);
-            entity.HasIndex(c => c.TargetId);
-
+            entity.HasIndex(c => new { c.TargetType, c.TargetId });
+            
             entity.HasOne(c => c.User)
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
@@ -77,7 +77,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         modelBuilder.Entity<Reaction>(entity =>
         {
             entity.HasKey(r => new { r.TargetId, r.UserId });
-            entity.HasIndex(r => r.TargetId);
+            entity.HasIndex(c => new { c.TargetType, c.TargetId });
 
             entity.HasOne(r => r.User)
                 .WithMany()

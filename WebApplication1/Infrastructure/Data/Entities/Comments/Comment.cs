@@ -6,6 +6,8 @@ public class Comment
     
     public string TargetId { get; set; } = null!;
     
+    public string TargetType { get; set; } = null!;
+    
     public string UserId { get; set; } = null!;
     
     public string Content { get; set; } = null!;

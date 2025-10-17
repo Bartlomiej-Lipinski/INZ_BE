@@ -39,8 +39,6 @@ public class DeleteRecommendation : IEndpoint
         }
         
         var recommendation = await dbContext.Recommendations
-            .Include(r => r.Comments)
-            .Include(r => r.Reactions)
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
         if (recommendation == null)
@@ -54,6 +52,28 @@ public class DeleteRecommendation : IEndpoint
             logger.LogWarning("User {UserId} tried to delete recommendation {RecommendationId} not owned by them. " +
                               "TraceId: {TraceId}", currentUserId, id, traceId);
             return Results.Forbid();
+        }
+        
+        var relatedComments = await dbContext.Comments
+            .Where(c => c.TargetId == id)
+            .ToListAsync(cancellationToken);
+
+        var relatedReactions = await dbContext.Reactions
+            .Where(r => r.TargetId == id)
+            .ToListAsync(cancellationToken);
+        
+        if (relatedComments.Count > 0)
+        {
+            dbContext.Comments.RemoveRange(relatedComments);
+            logger.LogInformation("Deleted {Count} comments linked to recommendation {RecommendationId}. TraceId: {TraceId}",
+                relatedComments.Count, id, traceId);
+        }
+
+        if (relatedReactions.Count > 0)
+        {
+            dbContext.Reactions.RemoveRange(relatedReactions);
+            logger.LogInformation("Deleted {Count} reactions linked to recommendation {RecommendationId}. TraceId: {TraceId}",
+                relatedReactions.Count, id, traceId);
         }
         
         dbContext.Recommendations.Remove(recommendation);
