@@ -1,5 +1,6 @@
 ﻿using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments;
+using WebApplication1.Features.Events;
 using WebApplication1.Features.Groups;
 using WebApplication1.Features.Recommendations;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -194,6 +195,19 @@ public static class TestDataFactory
         return new UpdateComment.UpdateCommentRequestDto
         {
             Content = content
+        };
+    }
+
+    public static PostEvent.EventRequestDto CreateEventRequestDto(
+        string title, DateTime startDate, DateTime? endDate = null, string? description = null, string? location = null)
+    {
+        return new PostEvent.EventRequestDto
+        {
+            Title = title,
+            StartDate = startDate,
+            EndDate = endDate,
+            Description = description,
+            Location = location
         };
     }
     

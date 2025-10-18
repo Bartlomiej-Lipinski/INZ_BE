@@ -19,6 +19,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Recommendation> Recommendations { get; set; }
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Reaction> Reactions { get; set; }
+    public DbSet<Event> Events { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -83,6 +84,25 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<Event>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.Location).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Events)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

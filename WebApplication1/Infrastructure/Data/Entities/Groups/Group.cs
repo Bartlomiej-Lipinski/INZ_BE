@@ -24,4 +24,6 @@ public class Group
     public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
     
     public ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
+    
+    public ICollection<Event> Events { get; set; } = new List<Event>();
 }
