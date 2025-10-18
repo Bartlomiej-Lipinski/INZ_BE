@@ -6,7 +6,6 @@ using WebApplication1.Features.Recommendations;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
-using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
 namespace WebApplication1.Tests;
 
@@ -198,6 +197,18 @@ public static class TestDataFactory
         };
     }
 
+    public static Event CreateEvent(string id, string groupId, string userId, string title, DateTime createdAt)
+    {
+        return new Event
+        {
+            Id = id,
+            GroupId = groupId,
+            UserId = userId,
+            Title = title,
+            CreatedAt = createdAt  
+        };
+    }
+
     public static PostEvent.EventRequestDto CreateEventRequestDto(
         string title, DateTime startDate, DateTime? endDate = null, string? description = null, string? location = null)
     {
@@ -208,6 +219,15 @@ public static class TestDataFactory
             EndDate = endDate,
             Description = description,
             Location = location
+        };
+    }
+
+    public static UpdateEvent.UpdateEventRequestDto CreateUpdateEventRequestDto(string title, string? description = null)
+    {
+        return new UpdateEvent.UpdateEventRequestDto
+        {
+            Title = title,
+            Description = description
         };
     }
     

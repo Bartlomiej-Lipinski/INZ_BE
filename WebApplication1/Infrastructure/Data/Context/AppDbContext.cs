@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
-using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 using WebApplication1.Infrastructure.Data.Entities.Tokens;
 
 namespace WebApplication1.Infrastructure.Data.Context;

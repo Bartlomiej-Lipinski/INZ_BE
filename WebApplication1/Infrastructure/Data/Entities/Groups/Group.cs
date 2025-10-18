@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
-using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
 namespace WebApplication1.Infrastructure.Data.Entities.Groups;
 
