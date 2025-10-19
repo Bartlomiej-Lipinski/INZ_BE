@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
-using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
 namespace WebApplication1.Infrastructure.Data.Entities.Groups;
 
@@ -24,4 +23,6 @@ public class Group
     public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
     
     public ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
+    
+    public ICollection<Event> Events { get; set; } = new List<Event>();
 }

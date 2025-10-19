@@ -1,7 +1,6 @@
-﻿using WebApplication1.Infrastructure.Data.Entities.Comments;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
+﻿using WebApplication1.Infrastructure.Data.Entities.Groups;
 
-namespace WebApplication1.Infrastructure.Data.Entities.Recommendations;
+namespace WebApplication1.Infrastructure.Data.Entities;
 
 public class Recommendation
 {

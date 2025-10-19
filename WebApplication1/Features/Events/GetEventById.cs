@@ -1,0 +1,94 @@
+﻿using System.Diagnostics;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Responses;
+
+namespace WebApplication1.Features.Events;
+
+public class GetEventById : IEndpoint
+{
+    public void RegisterEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/groups/{groupId}/events/{eventId}", Handle)
+            .WithName("GetEventById")
+            .WithDescription("Retrieves a single event by its ID within a group")
+            .WithTags("Events")
+            .RequireAuthorization()
+            .WithOpenApi();
+    }
+    
+    public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
+        [FromRoute] string eventId,
+        AppDbContext dbContext,
+        ClaimsPrincipal currentUser,
+        HttpContext httpContext,
+        ILogger<GetEventById> logger,
+        CancellationToken cancellationToken)
+    {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                     ?? currentUser.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            logger.LogWarning("Unauthorized attempt to get event. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
+        }
+
+        var group = await dbContext.Groups
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (group == null)
+        {
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        if (group.GroupUsers.All(gu => gu.UserId != userId))
+        {
+            return Results.Forbid();
+        }
+
+        var evt = await dbContext.Events
+            .Include(e => e.User)
+            .Include(e => e.Group)
+            .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
+
+        if (evt == null)
+        {
+            return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
+        }
+
+        var response = new EventResponseDto
+        {
+            Id = evt.Id,
+            GroupId = evt.GroupId,
+            UserId = evt.UserId,
+            Title = evt.Title,
+            Description = evt.Description,
+            Location = evt.Location,
+            StartDate = evt.StartDate,
+            EndDate = evt.EndDate,
+            CreatedAt = evt.CreatedAt,
+        };
+
+        return Results.Ok(ApiResponse<EventResponseDto>.Ok(response, null, traceId));
+    }
+
+    public record EventResponseDto
+    {
+        public string Id { get; set; } = null!;
+        public string GroupId { get; set; } = null!;
+        public string UserId { get; set; } = null!;
+        public string Title { get; set; } = null!;
+        public string? Description { get; set; }
+        public string? Location { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+}

@@ -1,11 +1,11 @@
 ﻿using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments;
+using WebApplication1.Features.Events;
 using WebApplication1.Features.Groups;
 using WebApplication1.Features.Recommendations;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
-using WebApplication1.Infrastructure.Data.Entities.Recommendations;
 
 namespace WebApplication1.Tests;
 
@@ -194,6 +194,43 @@ public static class TestDataFactory
         return new UpdateComment.UpdateCommentRequestDto
         {
             Content = content
+        };
+    }
+
+    public static Event CreateEvent(
+        string id, string groupId, string userId, string title, string? description, string? location, DateTime createdAt)
+    {
+        return new Event
+        {
+            Id = id,
+            GroupId = groupId,
+            UserId = userId,
+            Title = title,
+            Description = description,
+            Location = location,
+            CreatedAt = createdAt  
+        };
+    }
+
+    public static PostEvent.EventRequestDto CreateEventRequestDto(
+        string title, DateTime startDate, DateTime? endDate = null, string? description = null, string? location = null)
+    {
+        return new PostEvent.EventRequestDto
+        {
+            Title = title,
+            StartDate = startDate,
+            EndDate = endDate,
+            Description = description,
+            Location = location
+        };
+    }
+
+    public static UpdateEvent.UpdateEventRequestDto CreateUpdateEventRequestDto(string title, string? description = null)
+    {
+        return new UpdateEvent.UpdateEventRequestDto
+        {
+            Title = title,
+            Description = description
         };
     }
     
