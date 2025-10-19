@@ -18,7 +18,7 @@ public class Comment
     
     public string Content { get; set; } = null!;
     
-    [Required]
+    
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public User User { get; set; } = null!;
