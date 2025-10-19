@@ -63,6 +63,8 @@ public class PostEvent : IEndpoint
         if (request.StartDate == default)
             return Results.BadRequest(ApiResponse<string>.Fail("Start date is required.", traceId));
 
+        if (request.EndDate.HasValue && request.EndDate < request.StartDate)
+            return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.", traceId));
         var newEvent = new Event
         {
             Id = Guid.NewGuid().ToString(),
