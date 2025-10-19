@@ -81,12 +81,18 @@ public class UpdateEvent : IEndpoint
         if (!string.IsNullOrWhiteSpace(request.Location))
             existingEvent.Location = request.Location;
 
-        if (request.StartDate.HasValue)
-            existingEvent.StartDate = request.StartDate.Value.ToUniversalTime();
+        // Compute effective new start and end dates
+        var newStartDate = request.StartDate?.ToUniversalTime() ?? existingEvent.StartDate;
+        var newEndDate = request.EndDate?.ToUniversalTime() ?? existingEvent.EndDate;
 
-        if (request.EndDate.HasValue)
-            existingEvent.EndDate = request.EndDate.Value.ToUniversalTime();
+        // Validate that end date is not earlier than start date
+        if (newEndDate.HasValue && newEndDate < newStartDate)
+        {
+            return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.", traceId));
+        }
 
+        existingEvent.StartDate = newStartDate;
+        existingEvent.EndDate = newEndDate;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} updated event {EventId} in group {GroupId}. TraceId: {TraceId}",
