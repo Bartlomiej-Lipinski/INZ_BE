@@ -197,7 +197,8 @@ public static class TestDataFactory
         };
     }
 
-    public static Event CreateEvent(string id, string groupId, string userId, string title, DateTime createdAt)
+    public static Event CreateEvent(
+        string id, string groupId, string userId, string title, string? description, string? location, DateTime createdAt)
     {
         return new Event
         {
@@ -205,6 +206,8 @@ public static class TestDataFactory
             GroupId = groupId,
             UserId = userId,
             Title = title,
+            Description = description,
+            Location = location,
             CreatedAt = createdAt  
         };
     }

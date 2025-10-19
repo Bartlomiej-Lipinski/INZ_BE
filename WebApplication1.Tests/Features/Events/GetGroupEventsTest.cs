@@ -21,10 +21,11 @@ public class GetGroupEventsTest : TestBase
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);
         group.GroupUsers.Add(groupUser);
-        
-        var evt1 = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Event 1", DateTime.UtcNow );
+
+        var evt1 = TestDataFactory.CreateEvent(
+            "e1", group.Id, user.Id, "Event 1", null, null, DateTime.UtcNow);
         var evt2 = TestDataFactory.CreateEvent(
-            "e2", group.Id, user.Id, "Event 2", DateTime.UtcNow.AddHours(1));
+            "e2", group.Id, user.Id, "Event 2", null, null, DateTime.UtcNow.AddHours(1));
         dbContext.Events.AddRange(evt1, evt2);
         await dbContext.SaveChangesAsync();
 

@@ -20,7 +20,8 @@ public class UpdateEventTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
 
-        var existingEvent = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Old Title", DateTime.UtcNow);
+        var existingEvent = TestDataFactory.CreateEvent(
+            "e1", group.Id, user.Id, "Old Title", null, null, DateTime.UtcNow);
         dbContext.Events.Add(existingEvent);
         await dbContext.SaveChangesAsync();
 
@@ -57,7 +58,8 @@ public class UpdateEventTest : TestBase
         dbContext.Users.AddRange(owner, otherUser);
         dbContext.GroupUsers.AddRange(groupUserOwner, groupUserOther);
         
-        var existingEvent = TestDataFactory.CreateEvent("e1", group.Id, owner.Id, "Old Title", DateTime.UtcNow);
+        var existingEvent = TestDataFactory.CreateEvent(
+            "e1", group.Id, owner.Id, "Old Title", null, null, DateTime.UtcNow);
         dbContext.Events.Add(existingEvent);
         await dbContext.SaveChangesAsync();
 
