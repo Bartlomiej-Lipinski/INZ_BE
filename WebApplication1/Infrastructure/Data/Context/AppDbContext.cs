@@ -102,6 +102,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.GroupId, e.StartDate });
         });
     }
 }
