@@ -39,8 +39,6 @@ public class GetIsAdminTest : TestBase
         var isAdmin = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<bool>>;
         isAdmin.Should().NotBeNull();
         isAdmin?.Value.Data.Should().BeTrue();
-
-
     }
 
     [Fact]
