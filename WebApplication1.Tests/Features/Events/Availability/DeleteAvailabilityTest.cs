@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events.Availability;

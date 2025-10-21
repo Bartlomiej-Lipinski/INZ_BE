@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using WebApplication1.Features.Auth;
+﻿using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments;
 using WebApplication1.Features.Events;
 using WebApplication1.Features.Events.Availability;
