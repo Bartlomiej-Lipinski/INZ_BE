@@ -35,7 +35,7 @@ public class DeleteAvailability : IEndpoint
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
-            logger.LogWarning("Unauthorized attempt to delete event. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to delete availability. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         
