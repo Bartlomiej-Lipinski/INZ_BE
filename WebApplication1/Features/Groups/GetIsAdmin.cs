@@ -49,6 +49,5 @@ public class GetIsAdmin : IEndpoint
             userId, userIsAdmin, traceId);
 
         return Results.Ok(ApiResponse<bool>.Ok(userIsAdmin));
-        
     }
 }
