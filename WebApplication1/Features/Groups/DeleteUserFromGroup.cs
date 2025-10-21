@@ -39,6 +39,7 @@ public class DeleteUserFromGroup : IEndpoint
         if (string.IsNullOrEmpty(currentUserId))
         {
             logger.LogWarning("Unauthorized attempt to delete user from group. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
         }
         var isCurrentUserAdmin = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId && gu.IsAdmin, cancellationToken);
