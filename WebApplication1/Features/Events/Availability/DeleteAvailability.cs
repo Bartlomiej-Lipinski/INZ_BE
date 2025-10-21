@@ -12,7 +12,7 @@ public class DeleteAvailability : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/groups/{groupId}/events/{eventId}/availability", Handle)
+        app.MapDelete("/groups/{groupId}/events/{eventId}/availability", Handle)
             .WithName("DeleteAvailability")
             .WithDescription("Deletes user's availability for an event")
             .WithTags("Availabilities")
@@ -35,7 +35,7 @@ public class DeleteAvailability : IEndpoint
 
         if (string.IsNullOrWhiteSpace(currentUserId))
         {
-            logger.LogWarning("Unauthorized attempt to delete event. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to delete availability. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         
