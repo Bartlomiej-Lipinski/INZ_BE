@@ -103,7 +103,7 @@ public class GetEventById : IEndpoint
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<EventAvailabilityResponseDto> Availabilities = [];
+        public List<EventAvailabilityResponseDto> Availabilities { get; set; } = [];
     }
 
     public record EventAvailabilityResponseDto
