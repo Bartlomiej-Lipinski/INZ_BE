@@ -13,8 +13,8 @@ public class GrantAdminPrivlages : IEndpoint
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/groups/grant-admin-privileges", Handle)
-            .WithName("GrantAdminPrivlages")
-            .WithDescription("Grants admin privileges to a user in a group")
+            .WithName("GrantAdminPrivileges")
+            .WithDescription("Grants admin Privileges to a user in a group")
             .WithTags("Groups")
             .RequireAuthorization()
             .WithOpenApi();
@@ -49,7 +49,7 @@ public class GrantAdminPrivlages : IEndpoint
             request.GroupId, request.UserId, currentUserId, traceId);
         
         var isCurrentUserAdmin = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId.Equals(request.GroupId)  && gu.UserId == currentUserId && gu.IsAdmin,
+            .AnyAsync(gu => gu.GroupId == request.GroupId  && gu.UserId == currentUserId && gu.IsAdmin,
                 cancellationToken);
         if (!isCurrentUserAdmin)
         {
