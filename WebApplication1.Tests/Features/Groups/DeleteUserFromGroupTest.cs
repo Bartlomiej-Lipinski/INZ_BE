@@ -37,6 +37,6 @@ public class DeleteUserFromGroupTest : TestBase
         var groupUserInDb = await dbContext.GroupUsers
             .FirstOrDefaultAsync(gu => gu.UserId == userTwoId.Id && gu.GroupId == group.Id);
         groupUserInDb.Should().BeNull();
-        result.As<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>().Value.Data .Should().Be("User removed from group successfully.");
+        result.As<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>().Value.Data.Should().Be("User removed from group successfully.");
     }
 }
