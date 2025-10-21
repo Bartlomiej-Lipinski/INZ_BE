@@ -58,7 +58,7 @@ public class GrantAdminPrivlages : IEndpoint
             return Results.Forbid();
         }
         var groupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId.Equals(request.GroupId) && gu.UserId == request.UserId,
+            .FirstOrDefaultAsync(gu => gu.GroupId==request.GroupId && gu.UserId == request.UserId,
                 cancellationToken);
 
         if (groupUser == null)
