@@ -12,7 +12,7 @@ public class DeleteAvailability : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/groups/{groupId}/events/{eventId}/availability", Handle)
+        app.MapDelete("/groups/{groupId}/events/{eventId}/availability", Handle)
             .WithName("DeleteAvailability")
             .WithDescription("Deletes user's availability for an event")
             .WithTags("Availabilities")
