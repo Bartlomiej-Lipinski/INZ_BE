@@ -1,10 +1,13 @@
-﻿using WebApplication1.Features.Auth;
+﻿using Microsoft.AspNetCore.SignalR;
+using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments;
 using WebApplication1.Features.Events;
+using WebApplication1.Features.Events.Availability;
 using WebApplication1.Features.Groups;
 using WebApplication1.Features.Recommendations;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
+using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 
 namespace WebApplication1.Tests;
@@ -231,6 +234,27 @@ public static class TestDataFactory
         {
             Title = title,
             Description = description
+        };
+    }
+
+    public static EventAvailability CreateEventAvailability(
+        string eventId, string userId, EventAvailabilityStatus status, DateTime createdAt)
+    {
+        return new EventAvailability
+        {
+            EventId = eventId,
+            UserId = userId,
+            Status = status,
+            CreatedAt = createdAt
+        };
+    }
+
+    public static PostAvailability.EventAvailabilityRequestDto CreateEventAvailabilityRequestDto(
+        EventAvailabilityStatus status)
+    {
+        return new PostAvailability.EventAvailabilityRequestDto
+        {
+            Status = status
         };
     }
     

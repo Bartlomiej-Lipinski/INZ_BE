@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -62,6 +63,12 @@ public class GetEventById : IEndpoint
         {
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
         }
+        
+        var availabilities = await dbContext.EventAvailabilities
+            .AsNoTracking()
+            .Include(c => c.User)
+            .Where(ea => ea.EventId == eventId)
+            .ToListAsync(cancellationToken);
 
         var response = new EventResponseDto
         {
@@ -74,6 +81,12 @@ public class GetEventById : IEndpoint
             StartDate = evt.StartDate,
             EndDate = evt.EndDate,
             CreatedAt = evt.CreatedAt,
+            Availabilities = availabilities.Select(ea => new EventAvailabilityResponseDto
+            {
+                UserId = ea.UserId,
+                Status = ea.Status,
+                CreatedAt = ea.CreatedAt.ToLocalTime()
+            }).ToList(),
         };
 
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(response, null, traceId));
@@ -89,6 +102,14 @@ public class GetEventById : IEndpoint
         public string? Location { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<EventAvailabilityResponseDto> Availabilities = [];
+    }
+
+    public record EventAvailabilityResponseDto
+    {
+        public string UserId { get; set; } = null!;
+        public EventAvailabilityStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

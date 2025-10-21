@@ -1,6 +1,6 @@
 ﻿using WebApplication1.Infrastructure.Data.Entities.Groups;
 
-namespace WebApplication1.Infrastructure.Data.Entities;
+namespace WebApplication1.Infrastructure.Data.Entities.Events;
 
 public class Event
 {
@@ -25,4 +25,6 @@ public class Event
     public Group Group { get; set; } = null!;
     
     public User User { get; set; } = null!;
+
+    public ICollection<EventAvailability> Availabilities { get; set; } = new List<EventAvailability>();
 }

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
+using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Tokens;
 
@@ -19,7 +20,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Reaction> Reactions { get; set; }
     public DbSet<Event> Events { get; set; }
-    
+    public DbSet<EventAvailability> EventAvailabilities { get; set; }
+     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -104,6 +106,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => new { e.GroupId, e.StartDate });
+        });
+
+        modelBuilder.Entity<EventAvailability>(entity =>
+        {
+            entity.HasKey(e => new { e.EventId, e.UserId });
+            
+            entity.Property(ea => ea.Status).IsRequired();
+
+            entity.HasOne(e => e.Event)
+                .WithMany(e => e.Availabilities)
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

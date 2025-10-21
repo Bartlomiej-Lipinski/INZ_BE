@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Infrastructure.Data.Entities.Events;
 
 namespace WebApplication1.Infrastructure.Data.Entities.Groups;
 
