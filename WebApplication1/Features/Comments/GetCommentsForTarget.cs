@@ -7,7 +7,7 @@ using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Comments;
 
-public class GetCommentsByTarget : IEndpoint
+public class GetCommentsForTarget : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -23,7 +23,7 @@ public class GetCommentsByTarget : IEndpoint
         [FromRoute] string targetId,
         AppDbContext dbContext,
         HttpContext httpContext,
-        ILogger<GetCommentsByTarget> logger,
+        ILogger<GetCommentsForTarget> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;

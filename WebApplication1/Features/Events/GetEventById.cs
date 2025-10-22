@@ -86,7 +86,7 @@ public class GetEventById : IEndpoint
                 UserId = ea.UserId,
                 Status = ea.Status,
                 CreatedAt = ea.CreatedAt.ToLocalTime()
-            }).ToList(),
+            }).ToList()
         };
 
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(response, null, traceId));

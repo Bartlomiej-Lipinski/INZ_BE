@@ -5,7 +5,7 @@ using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Comments;
 
-public class GetCommentsByTargetTest : TestBase
+public class GetCommentsForTargetTest : TestBase
 {
     [Fact]
     public async Task Handle_Should_Return_Comments_For_Target()
@@ -32,9 +32,9 @@ public class GetCommentsByTargetTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetCommentsByTarget>.Instance;
+        var logger = NullLogger<GetCommentsForTarget>.Instance;
 
-        var result = await GetCommentsByTarget.Handle(
+        var result = await GetCommentsForTarget.Handle(
             target.Id,
             dbContext,
             httpContext,
@@ -43,9 +43,9 @@ public class GetCommentsByTargetTest : TestBase
         );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults
-            .Ok<ApiResponse<List<GetCommentsByTarget.CommentResponseDto>>>>();
+            .Ok<ApiResponse<List<GetCommentsForTarget.CommentResponseDto>>>>();
         var ok = result as Microsoft.AspNetCore.Http.HttpResults
-            .Ok<ApiResponse<List<GetCommentsByTarget.CommentResponseDto>>>;
+            .Ok<ApiResponse<List<GetCommentsForTarget.CommentResponseDto>>>;
         ok!.Value!.Data.Should().HaveCount(2);
         ok.Value.Data.Should().ContainSingle(c => c.Content == "First comment");
         ok.Value.Data.Should().ContainSingle(c => c.Content == "Second comment");
