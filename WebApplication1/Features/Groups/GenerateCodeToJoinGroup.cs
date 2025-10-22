@@ -53,8 +53,7 @@ public class GenerateCodeToJoinGroup : IEndpoint
         {
             logger.LogInformation("New join code generated. GroupId: {GroupId}, TraceId: {TraceId}", id, traceId);
             return Results.Ok(ApiResponse<GenerateCodeResponse>.Ok(
-                new GenerateCodeResponse("New code generated successfully. The code is valid for 5 minutes."),
-                null, traceId));
+                new GenerateCodeResponse("New code generated successfully. The code is valid for 5 minutes."+ $" Code: {group.Code}"), "Code Generated", traceId));
         }
         
         logger.LogError("Failed to generate code. GroupId: {GroupId}, TraceId: {TraceId}", id, traceId);
