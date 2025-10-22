@@ -80,21 +80,21 @@ public class GetEventById : IEndpoint
             Title = evt.Title,
             Description = evt.Description,
             Location = evt.Location,
-            StartDate = evt.StartDate,
-            EndDate = evt.EndDate,
-            CreatedAt = evt.CreatedAt,
+            StartDate = evt.StartDate?.ToLocalTime(),
+            EndDate = evt.EndDate?.ToLocalTime(),
+            CreatedAt = evt.CreatedAt.ToLocalTime(),
             Availabilities = availabilities.Select(ea => new EventAvailabilityResponseDto
             {
                 UserId = ea.UserId,
                 Status = ea.Status,
                 CreatedAt = ea.CreatedAt.ToLocalTime()
             }).ToList(),
-            Suggestions = evt.Suggestions.Select(s => new EventSuggestionResponseDto
+            Suggestions = evt.Suggestions?.Select(s => new EventSuggestionResponseDto
                 {
-                    StartTime = s.StartTime,
-                    EndTime = s.EndTime,
+                    StartTime = s.StartTime.ToLocalTime(),
+                    EndTime = s.EndTime.ToLocalTime(),
                     AvailableUserCount = s.AvailableUserCount
-                }).ToList()
+                }).ToList() ?? []
         };
 
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(response, null, traceId));
