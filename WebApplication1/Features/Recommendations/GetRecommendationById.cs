@@ -76,12 +76,10 @@ public class GetRecommendationById : IEndpoint
             LinkUrl = recommendation.LinkUrl,
             CreatedAt = recommendation.CreatedAt.ToLocalTime(),
             UserId = recommendation.UserId,
-            UserName = recommendation.User.UserName,
             Comments = comments.Select(c => new RecommendationCommentDto
             {
                 Id = c.Id,
                 UserId = c.UserId,
-                UserName = c.User.UserName,
                 Content = c.Content,
                 CreatedAt = c.CreatedAt.ToLocalTime()
             }).ToList(),
@@ -104,7 +102,6 @@ public class GetRecommendationById : IEndpoint
         public string? LinkUrl { get; set; }
         public DateTime CreatedAt { get; set; }
         public string UserId { get; set; } = null!;
-        public string? UserName { get; set; } = null!;
         public List<RecommendationCommentDto> Comments { get; set; } = [];
         public List<RecommendationReactionDto> Reactions { get; set; } = [];
     }
@@ -113,7 +110,6 @@ public class GetRecommendationById : IEndpoint
     {
         public string Id { get; set; } = null!;
         public string UserId { get; set; } = null!;
-        public string? UserName { get; set; } = null!;
         public string Content { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
     }

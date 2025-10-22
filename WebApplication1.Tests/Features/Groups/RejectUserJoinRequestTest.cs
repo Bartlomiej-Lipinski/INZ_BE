@@ -34,29 +34,57 @@ public class RejectUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Request_Is_Not_Pending()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupUser = TestDataFactory.CreateGroupUser("g1", "u1");
-        dbContext.GroupUsers.Add(groupUser);
+        
+                // Add group
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        dbContext.Groups.Add(group);
+        
+        // Add group administrator
+        var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "g1", true);
+        dbContext.GroupUsers.Add(adminGroupUser);
+        
+        // Add user with accepted request (not pending)
+        var acceptedUser = TestDataFactory.CreateGroupUser("u1", "g1", false, AcceptanceStatus.Accepted);
+        dbContext.GroupUsers.Add(acceptedUser);
+        
         await dbContext.SaveChangesAsync();
+        
         var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContext("g1");
+        var httpContext = CreateHttpContext();
         
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
             dbContext, 
-            CreateClaimsPrincipal("u1"), 
+            CreateClaimsPrincipal("admin1"), 
             logger, 
             httpContext, 
             CancellationToken.None
-            );
+        );
+        
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
+        var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
+        badRequest!.Value!.Success.Should().BeFalse();
+        badRequest.Value.Message.Should().Be("Join request is not pending.");
+        badRequest.Value.TraceId.Should().Be("test-trace-id");
     }
 
     [Fact]
     public async Task Handle_Should_Remove_GroupUser_When_Request_Is_Pending()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupUser = TestDataFactory.CreateGroupUser("u1", "g1", true, AcceptanceStatus.Pending);
-        dbContext.GroupUsers.Add(groupUser);
+        
+        // Dodaj grupę
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        dbContext.Groups.Add(group);
+        
+        // Dodaj administratora grupy
+        var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "g1", true, AcceptanceStatus.Accepted);
+        dbContext.GroupUsers.Add(adminGroupUser);
+        
+        // Dodaj użytkownika z pending request
+        var pendingUser = TestDataFactory.CreateGroupUser("u1", "g1", false, AcceptanceStatus.Pending);
+        dbContext.GroupUsers.Add(pendingUser);
+        
         await dbContext.SaveChangesAsync();
         var logger = NullLogger<RejectUserJoinRequest>.Instance;
         var httpContext = CreateHttpContext("g1");
@@ -64,7 +92,7 @@ public class RejectUserJoinRequestTest : TestBase
         var result = await RejectUserJoinRequest.Handle(
             TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
             dbContext, 
-            CreateClaimsPrincipal("u1"), 
+            CreateClaimsPrincipal("admin1"), 
             logger, 
             httpContext, 
             CancellationToken.None

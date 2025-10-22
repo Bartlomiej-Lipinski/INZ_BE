@@ -12,9 +12,12 @@ public interface IEmailService
 internal sealed class SendGridEmailService(IConfiguration configuration, ILogger<SendGridEmailService> logger) 
     : IEmailService
 {
-    private readonly string? _apiKey = configuration["SendGrid:ApiKey"];
+    // private readonly string? _apiKey = configuration["SendGrid:ApiKey"];
     private readonly string? _senderEmail = configuration["SendGrid:SenderEmail"];
     private readonly string? _senderName = configuration["SendGrid:SenderName"];
+private readonly string _apiKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY") 
+        ?? throw new InvalidOperationException("SENDGRID_API_KEY not configured");
+    
 
     public async Task SendAsync(string to, string subject, string body)
     {
