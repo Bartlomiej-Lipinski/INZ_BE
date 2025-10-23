@@ -68,7 +68,7 @@ public class PostEvent : IEndpoint
                     traceId));
         }
 
-        if (request.EndDate.HasValue && request.EndDate < request.StartDate)
+        if (!request.IsAutoScheduled && request.EndDate.HasValue && request.StartDate != default && request.EndDate < request.StartDate)
             return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.",
                 traceId));
 
