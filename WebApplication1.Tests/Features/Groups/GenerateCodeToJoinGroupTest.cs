@@ -26,7 +26,7 @@ public class GenerateCodeToJoinGroupTest : TestBase
         var okResult = 
             result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GenerateCodeToJoinGroup.GenerateCodeResponse>>;
         okResult!.Value?.Success.Should().BeTrue();
-        okResult.Value?.Data?.Message.Should().Be("New code generated successfully. The code is valid for 5 minutes.");
+        okResult.Value?.Data?.Message.Should().Be($"New code generated successfully. The code is valid for 5 minutes. Code: {group.Code}");
         
         var updatedGroup = await dbContext.Groups.FindAsync("g1");
         updatedGroup.Should().NotBeNull();
