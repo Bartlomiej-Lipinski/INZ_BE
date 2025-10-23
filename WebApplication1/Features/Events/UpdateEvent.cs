@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -80,17 +81,36 @@ public class UpdateEvent : IEndpoint
 
         if (!string.IsNullOrWhiteSpace(request.Location))
             existingEvent.Location = request.Location;
-
-        var newStartDate = request.StartDate?.ToUniversalTime() ?? existingEvent.StartDate;
-        var newEndDate = request.EndDate?.ToUniversalTime() ?? existingEvent.EndDate;
-
-        if (newEndDate < newStartDate)
+        
+        existingEvent.IsAutoScheduled = request.IsAutoScheduled;
+        
+        if (existingEvent.IsAutoScheduled)
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.", traceId));
+            if (!request.RangeStart.HasValue || !request.RangeEnd.HasValue || !request.DurationMinutes.HasValue)
+            {
+                return Results.BadRequest(ApiResponse<string>
+                    .Fail("For automatic scheduling, range start, range end, and duration are required.", traceId));
+            }
+        }
+        
+        switch (request)
+        {
+            case { RangeStart: not null, RangeEnd: not null } when
+                request.RangeEnd.Value < request.RangeStart.Value:
+                return Results.BadRequest(ApiResponse<string>
+                    .Fail("Range end date cannot be earlier than start date.", traceId));
+            case { StartDate: not null, EndDate: not null } when
+                request.EndDate.Value < request.StartDate.Value:
+                return Results.BadRequest(ApiResponse<string>
+                    .Fail("End date cannot be earlier than start date.", traceId));
         }
 
-        existingEvent.StartDate = newStartDate;
-        existingEvent.EndDate = newEndDate;
+        existingEvent.RangeStart = request.RangeStart;
+        existingEvent.RangeEnd = request.RangeEnd;
+        existingEvent.DurationMinutes = request.DurationMinutes;
+        existingEvent.StartDate = request.StartDate;
+        existingEvent.EndDate = request.EndDate;
+        existingEvent.Status = request.Status;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} updated event {EventId} in group {GroupId}. TraceId: {TraceId}",
@@ -104,8 +124,13 @@ public class UpdateEvent : IEndpoint
             Title = existingEvent.Title,
             Description = existingEvent.Description,
             Location = existingEvent.Location,
+            IsAutoScheduled = existingEvent.IsAutoScheduled,
+            RangeStart = existingEvent.RangeStart,
+            RangeEnd = existingEvent.RangeEnd,
+            DurationMinutes = existingEvent.DurationMinutes,
             StartDate = existingEvent.StartDate,
             EndDate = existingEvent.EndDate,
+            Status = existingEvent.Status,
             CreatedAt = existingEvent.CreatedAt
         };
 
@@ -117,8 +142,13 @@ public class UpdateEvent : IEndpoint
         public string? Title { get; set; }
         public string? Description { get; set; }
         public string? Location { get; set; }
+        public bool IsAutoScheduled { get; set; }
+        public DateTime? RangeStart { get; set; }
+        public DateTime? RangeEnd { get; set; }
+        public int? DurationMinutes { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public EventStatus Status { get; set; }
     }
 
     public record EventResponseDto
@@ -129,8 +159,13 @@ public class UpdateEvent : IEndpoint
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public string? Location { get; set; }
-        public DateTime StartDate { get; set; }
+        public bool IsAutoScheduled { get; set; }
+        public DateTime? RangeStart { get; set; }
+        public DateTime? RangeEnd { get; set; }
+        public int? DurationMinutes { get; set; }
+        public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public EventStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

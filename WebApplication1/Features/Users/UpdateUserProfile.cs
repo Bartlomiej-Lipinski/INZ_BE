@@ -43,7 +43,7 @@ public class UpdateUserProfile : IEndpoint
 
         logger.LogInformation("Attempting to update profile for user ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 
-        var user = await dbContext.Users.FindAsync(new object[] { userId }, cancellationToken);
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
         if (user == null)
         {
             logger.LogWarning("User not found for profile update with ID: {UserId}. TraceId: {TraceId}", userId, traceId);

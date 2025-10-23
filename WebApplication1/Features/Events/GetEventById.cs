@@ -55,8 +55,10 @@ public class GetEventById : IEndpoint
         }
 
         var evt = await dbContext.Events
+            .AsNoTracking()
             .Include(e => e.User)
             .Include(e => e.Group)
+            .Include(e => e.Suggestions)
             .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
         if (evt == null)
@@ -78,15 +80,21 @@ public class GetEventById : IEndpoint
             Title = evt.Title,
             Description = evt.Description,
             Location = evt.Location,
-            StartDate = evt.StartDate,
-            EndDate = evt.EndDate,
-            CreatedAt = evt.CreatedAt,
+            StartDate = evt.StartDate?.ToLocalTime(),
+            EndDate = evt.EndDate?.ToLocalTime(),
+            CreatedAt = evt.CreatedAt.ToLocalTime(),
             Availabilities = availabilities.Select(ea => new EventAvailabilityResponseDto
             {
                 UserId = ea.UserId,
                 Status = ea.Status,
                 CreatedAt = ea.CreatedAt.ToLocalTime()
-            }).ToList()
+            }).ToList(),
+            Suggestions = evt.Suggestions?.Select(s => new EventSuggestionResponseDto
+                {
+                    StartTime = s.StartTime.ToLocalTime(),
+                    EndTime = s.EndTime.ToLocalTime(),
+                    AvailableUserCount = s.AvailableUserCount
+                }).ToList() ?? []
         };
 
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(response, null, traceId));
@@ -100,10 +108,11 @@ public class GetEventById : IEndpoint
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public string? Location { get; set; }
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<EventAvailabilityResponseDto> Availabilities { get; set; } = [];
+        public ICollection<EventSuggestionResponseDto> Suggestions { get; set; } = [];
     }
 
     public record EventAvailabilityResponseDto
@@ -111,5 +120,12 @@ public class GetEventById : IEndpoint
         public string UserId { get; set; } = null!;
         public EventAvailabilityStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
+    }
+    
+    public record EventSuggestionResponseDto
+    {
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public int AvailableUserCount { get; set; }
     }
 }

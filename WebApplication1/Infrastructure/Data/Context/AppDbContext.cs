@@ -21,6 +21,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Reaction> Reactions { get; set; }
     public DbSet<Event> Events { get; set; }
     public DbSet<EventAvailability> EventAvailabilities { get; set; }
+    public DbSet<EventAvailabilityRange> EventAvailabilityRanges { get; set; }
+    public DbSet<EventSuggestion> EventSuggestions { get; set; }
      
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -94,6 +96,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.Location).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.IsAutoScheduled).IsRequired();
+            entity.Property(e => e.Status).IsRequired();
 
             entity.HasOne(e => e.Group)
                 .WithMany(g => g.Events)
@@ -111,7 +115,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         modelBuilder.Entity<EventAvailability>(entity =>
         {
             entity.HasKey(e => new { e.EventId, e.UserId });
-            
             entity.Property(ea => ea.Status).IsRequired();
 
             entity.HasOne(e => e.Event)
@@ -122,6 +125,36 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasOne(e => e.User)
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<EventAvailabilityRange>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AvailableFrom).IsRequired();
+            entity.Property(e => e.AvailableTo).IsRequired();
+
+            entity.HasOne(e => e.Event)
+                .WithMany(e => e.AvailabilityRanges)
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        modelBuilder.Entity<EventSuggestion>(entity =>
+        {
+            entity.HasKey(es => es.Id);
+            entity.Property(es => es.StartTime).IsRequired();
+            entity.Property(es => es.EndTime).IsRequired();
+            entity.Property(es => es.AvailableUserCount).IsRequired();
+
+            entity.HasOne(es => es.Event)
+                .WithMany(e => e.Suggestions)
+                .HasForeignKey(es => es.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

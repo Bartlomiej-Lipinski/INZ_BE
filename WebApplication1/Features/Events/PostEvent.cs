@@ -45,26 +45,33 @@ public class PostEvent : IEndpoint
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
-        {
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-        }
 
-        var isMember = group.GroupUsers.Any(gu => gu.UserId == userId);
-        if (!isMember)
-        {
-            logger.LogWarning("User {UserId} attempted to create event in group {GroupId} they are not a member of." +
-                              " TraceId: {TraceId}", userId, groupId, traceId);
+        if (group.GroupUsers.All(gu => gu.UserId != userId))
             return Results.Forbid();
-        }
 
         if (string.IsNullOrWhiteSpace(request.Title))
             return Results.BadRequest(ApiResponse<string>.Fail("Event title is required.", traceId));
 
-        if (request.StartDate == default)
-            return Results.BadRequest(ApiResponse<string>.Fail("Start date is required.", traceId));
+        if (request.StartDate == default && !request.IsAutoScheduled)
+            return Results.BadRequest(ApiResponse<string>.Fail("Start date is required for manual events.",
+                traceId));
+        
+        if (request.IsAutoScheduled)
+        {
+            if (!request.RangeStart.HasValue || !request.RangeEnd.HasValue || !request.DurationMinutes.HasValue)
+                return Results.BadRequest(ApiResponse<string>.Fail(
+                    "For automatic scheduling, range start, range end, and duration are required.", traceId));
 
-        if (request.EndDate.HasValue && request.EndDate < request.StartDate)
-            return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.", traceId));
+            if (request.RangeEnd < request.RangeStart)
+                return Results.BadRequest(ApiResponse<string>.Fail("Range end cannot be earlier than range start.",
+                    traceId));
+        }
+
+        if (!request.IsAutoScheduled && request.EndDate.HasValue && request.StartDate != default && request.EndDate < request.StartDate)
+            return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.",
+                traceId));
+
         var newEvent = new Event
         {
             Id = Guid.NewGuid().ToString(),
@@ -73,28 +80,38 @@ public class PostEvent : IEndpoint
             Title = request.Title,
             Description = request.Description,
             Location = request.Location,
+            IsAutoScheduled = request.IsAutoScheduled,
+            RangeStart = request.RangeStart?.ToUniversalTime(),
+            RangeEnd = request.RangeEnd?.ToUniversalTime(),
+            DurationMinutes = request.DurationMinutes,
             StartDate = request.StartDate.ToUniversalTime(),
             EndDate = request.EndDate?.ToUniversalTime(),
+            Status = request.Status,
             CreatedAt = DateTime.UtcNow
         };
 
         dbContext.Events.Add(newEvent);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("User {UserId} created event {EventId} in group {GroupId}. TraceId: {TraceId}",
+        logger.LogInformation("[PostEvent] User {UserId} created event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, newEvent.Id, groupId, traceId);
 
         var responseDto = new EventResponseDto
         {
             Id = newEvent.Id,
+            GroupId = newEvent.GroupId,
+            UserId = newEvent.UserId,
             Title = newEvent.Title,
             Description = newEvent.Description,
             Location = newEvent.Location,
+            IsAutoScheduled = newEvent.IsAutoScheduled,
+            RangeStart = newEvent.RangeStart,
+            RangeEnd = newEvent.RangeEnd,
+            DurationMinutes = newEvent.DurationMinutes,
             StartDate = newEvent.StartDate,
             EndDate = newEvent.EndDate,
-            CreatedAt = newEvent.CreatedAt,
-            UserId = newEvent.UserId,
-            GroupId = newEvent.GroupId
+            Status = newEvent.Status,
+            CreatedAt = newEvent.CreatedAt
         };
 
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(responseDto, "Event created successfully.", traceId));
@@ -105,8 +122,13 @@ public class PostEvent : IEndpoint
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public string? Location { get; set; }
+        public bool IsAutoScheduled { get; set; }
+        public DateTime? RangeStart { get; set; }
+        public DateTime? RangeEnd { get; set; }
+        public int? DurationMinutes { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public EventStatus Status { get; set; }
     }
 
     public record EventResponseDto
@@ -117,8 +139,13 @@ public class PostEvent : IEndpoint
         public string Title { get; set; } = null!;
         public string? Description { get; set; }
         public string? Location { get; set; }
-        public DateTime StartDate { get; set; }
+        public bool IsAutoScheduled { get; set; }
+        public DateTime? RangeStart { get; set; }
+        public DateTime? RangeEnd { get; set; }
+        public int? DurationMinutes { get; set; }
+        public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public EventStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }
