@@ -1,0 +1,205 @@
+﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using WebApplication1.Features.Events.Availability;
+using WebApplication1.Infrastructure.Data.Entities.Events;
+using WebApplication1.Shared.Responses;
+
+namespace WebApplication1.Tests.Features.Events.Availability;
+
+public class PostAvailabilityRangeTest :TestBase
+{
+    [Fact]
+    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var logger = NullLogger<PostAvailabilityRange>.Instance;
+
+        var result = await PostAvailabilityRange.Handle(
+            "g1",
+            "e1",
+            [],
+            dbContext,
+            CreateClaimsPrincipal(),
+            CreateHttpContext(),
+            logger,
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
+    }
+    
+    [Fact]
+    public async Task Handle_Should_Return_NotFound_When_Group_Not_Exist()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var logger = NullLogger<PostAvailabilityRange>.Instance;
+        var user = TestDataFactory.CreateUser("u1", "TestUser");
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+
+        var request = TestDataFactory.CreateAvailabilityRangeRequestDto(
+            DateTime.UtcNow.Date.AddHours(10),
+            numberOfRanges: 1,
+            rangeLengthHours: 2,
+            gapBetweenRangesHours: 1);
+
+        var result = await PostAvailabilityRange.Handle(
+            "g1",
+            "e1",
+            request,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            logger,
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Return_Forbidden_When_User_Not_Member_Of_Group()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var logger = NullLogger<PostAvailabilityRange>.Instance;
+        var user = TestDataFactory.CreateUser("u1", "TestUser");
+        var group = TestDataFactory.CreateGroup("g1", "TestGroup");
+        dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        await dbContext.SaveChangesAsync();
+
+        var request = TestDataFactory.CreateAvailabilityRangeRequestDto(
+            DateTime.UtcNow.Date.AddHours(10),
+            numberOfRanges: 1,
+            rangeLengthHours: 2,
+            gapBetweenRangesHours: 1);
+
+        var result = await PostAvailabilityRange.Handle(
+            group.Id,
+            "e1",
+            request,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            logger,
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Return_NotFound_When_Event_Not_Exist()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var logger = NullLogger<PostAvailabilityRange>.Instance;
+        var user = TestDataFactory.CreateUser("u1", "TestUser");
+        var group = TestDataFactory.CreateGroup("g1", "TestGroup");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
+        dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
+        await dbContext.SaveChangesAsync();
+
+        var request = TestDataFactory.CreateAvailabilityRangeRequestDto(
+            DateTime.UtcNow.Date.AddHours(10),
+            numberOfRanges: 1,
+            rangeLengthHours: 2,
+            gapBetweenRangesHours: 1);
+
+        var result = await PostAvailabilityRange.Handle(
+            group.Id,
+            "e1",
+            request,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            logger,
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Create_New_Ranges_When_Valid()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var logger = NullLogger<PostAvailabilityRange>.Instance;
+        var user = TestDataFactory.CreateUser("u1", "TestUser");
+        var group = TestDataFactory.CreateGroup("g1", "TestGroup");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
+        var evt = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Test Event", null, null, DateTime.UtcNow);
+        dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
+        dbContext.Events.Add(evt);
+        await dbContext.SaveChangesAsync();
+        
+        var request = TestDataFactory.CreateAvailabilityRangeRequestDto(
+            DateTime.UtcNow.Date.AddHours(10),
+            numberOfRanges: 1,
+            rangeLengthHours: 2,
+            gapBetweenRangesHours: 1);
+
+        var result = await PostAvailabilityRange.Handle(
+            group.Id,
+            evt.Id,
+            request,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            logger,
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<PostAvailabilityRange.AvailabilityRangeResponseDto>>>>();
+        (await dbContext.EventAvailabilityRanges.CountAsync()).Should().Be(1);
+    }
+
+    [Fact]
+    public async Task Handle_Should_Return_BadRequest_When_Overlapping_Ranges_Exist()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var logger = NullLogger<PostAvailabilityRange>.Instance;
+        var user = TestDataFactory.CreateUser("u1", "TestUser");
+        var group = TestDataFactory.CreateGroup("g1", "TestGroup");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
+        var evt = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Test Event", null, null, DateTime.UtcNow);
+
+        var existing = new EventAvailabilityRange
+        {
+            Id = Guid.NewGuid().ToString(),
+            EventId = evt.Id,
+            UserId = user.Id,
+            AvailableFrom = DateTime.UtcNow,
+            AvailableTo = DateTime.UtcNow.AddHours(2)
+        };
+
+        dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
+        dbContext.Events.Add(evt);
+        dbContext.EventAvailabilityRanges.Add(existing);
+        await dbContext.SaveChangesAsync();
+
+        var overlapping = new List<PostAvailabilityRange.AvailabilityRangeRequestDto>
+        {
+            new() { AvailableFrom = existing.AvailableFrom.AddMinutes(30), AvailableTo = existing.AvailableTo.AddHours(1) }
+        };
+
+        var result = await PostAvailabilityRange.Handle(
+            group.Id,
+            evt.Id,
+            overlapping,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            logger,
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
+    }
+}

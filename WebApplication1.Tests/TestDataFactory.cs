@@ -256,6 +256,42 @@ public static class TestDataFactory
             Status = status
         };
     }
+
+    public static EventAvailabilityRange CreateEventAvailabilityRange(
+        string eventId, string userId, DateTime availableFrom, DateTime availableTo)
+    {
+        return new EventAvailabilityRange
+        {
+            Id = Guid.NewGuid().ToString(),
+            EventId = eventId,
+            UserId = userId,
+            AvailableFrom = availableFrom,
+            AvailableTo = availableTo
+        };
+    }
+
+    public static List<PostAvailabilityRange.AvailabilityRangeRequestDto> CreateAvailabilityRangeRequestDto(
+        DateTime startTime,
+        int numberOfRanges = 1,
+        int rangeLengthHours = 2,
+        int gapBetweenRangesHours = 1)
+    {
+        var list = new List<PostAvailabilityRange.AvailabilityRangeRequestDto>();
+
+        for (var i = 0; i < numberOfRanges; i++)
+        {
+            var from = startTime.AddHours(i * (rangeLengthHours + gapBetweenRangesHours));
+            var to = from.AddHours(rangeLengthHours);
+
+            list.Add(new PostAvailabilityRange.AvailabilityRangeRequestDto
+            {
+                AvailableFrom = from,
+                AvailableTo = to
+            });
+        }
+
+        return list;
+    }
     
     private static string GenerateUniqueCode()
     {
