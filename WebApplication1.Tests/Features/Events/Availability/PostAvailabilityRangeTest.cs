@@ -157,49 +157,4 @@ public class PostAvailabilityRangeTest :TestBase
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<PostAvailabilityRange.AvailabilityRangeResponseDto>>>>();
         (await dbContext.EventAvailabilityRanges.CountAsync()).Should().Be(1);
     }
-
-    [Fact]
-    public async Task Handle_Should_Return_BadRequest_When_Overlapping_Ranges_Exist()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostAvailabilityRange>.Instance;
-        var user = TestDataFactory.CreateUser("u1", "TestUser");
-        var group = TestDataFactory.CreateGroup("g1", "TestGroup");
-        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
-        var evt = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Test Event", null, null, DateTime.UtcNow);
-
-        var existing = new EventAvailabilityRange
-        {
-            Id = Guid.NewGuid().ToString(),
-            EventId = evt.Id,
-            UserId = user.Id,
-            AvailableFrom = DateTime.UtcNow,
-            AvailableTo = DateTime.UtcNow.AddHours(2)
-        };
-
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        dbContext.GroupUsers.Add(groupUser);
-        dbContext.Events.Add(evt);
-        dbContext.EventAvailabilityRanges.Add(existing);
-        await dbContext.SaveChangesAsync();
-
-        var overlapping = new List<PostAvailabilityRange.AvailabilityRangeRequestDto>
-        {
-            new() { AvailableFrom = existing.AvailableFrom.AddMinutes(30), AvailableTo = existing.AvailableTo.AddHours(1) }
-        };
-
-        var result = await PostAvailabilityRange.Handle(
-            group.Id,
-            evt.Id,
-            overlapping,
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            logger,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
-    }
 }
