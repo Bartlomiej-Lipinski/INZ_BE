@@ -130,7 +130,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         
         modelBuilder.Entity<EventAvailabilityRange>(entity =>
         {
-            entity.HasKey(e => new { e.EventId, e.UserId, e.AvailableFrom });
+            entity.HasKey(e => e.Id);
             entity.Property(e => e.AvailableFrom).IsRequired();
             entity.Property(e => e.AvailableTo).IsRequired();
 
