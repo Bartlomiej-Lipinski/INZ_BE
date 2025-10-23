@@ -94,24 +94,21 @@ public class PostAvailabilityRange : IEndpoint
                     return Results.BadRequest(ApiResponse<string>.Fail("Availability ends after event range.", traceId));
             }
 
-            var hasOverlap = await dbContext.EventAvailabilityRanges
-                .AnyAsync(ar =>
-                        ar.EventId == eventId &&
-                        ar.UserId == currentUserId &&
-                        ar.AvailableFrom < r.AvailableTo &&
-                        ar.AvailableTo > r.AvailableFrom,
-                    cancellationToken);
-
+            var hasOverlap = addedRanges.Any(ar =>
+                ar.AvailableFrom < r.AvailableTo &&
+                ar.AvailableTo > r.AvailableFrom);
+            
             if (hasOverlap)
-                return Results.BadRequest(ApiResponse<string>.Fail("One or more ranges overlap with existing availability.", traceId));
-
+                return Results.BadRequest(ApiResponse<string>
+                    .Fail("One or more ranges in the request overlap with each other.", traceId));
+            
             addedRanges.Add(new EventAvailabilityRange
             {
                 Id = Guid.NewGuid().ToString(),
                 EventId = eventId,
                 UserId = currentUserId,
-                AvailableFrom = r.AvailableFrom.ToUniversalTime(),
-                AvailableTo = r.AvailableTo.ToUniversalTime()
+                AvailableFrom = r.AvailableFrom,
+                AvailableTo = r.AvailableTo
             });
         }
         
