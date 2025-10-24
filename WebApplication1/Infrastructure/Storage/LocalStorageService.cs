@@ -14,7 +14,7 @@ namespace WebApplication1.Infrastructure.Storage
             var folder = config["Storage:UploadsFolder"] ?? "uploads";
             _uploadsRoot = Path.IsPathRooted(folder) 
                 ? folder 
-                                : Path.Combine(_env.ContentRootPath, folder); // Use ContentRootPath instead of wwwroot
+                                : Path.Combine(_env.ContentRootPath, folder);
             _baseRequestPath = config["Storage:BaseRequestPath"] ?? "/api/storage";
             Directory.CreateDirectory(_uploadsRoot);
         }
