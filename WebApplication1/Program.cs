@@ -222,7 +222,7 @@ if (!Directory.Exists(uploadsPath))
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/uploads",
+    RequestPath = "/api/storage",
     OnPrepareResponse = ctx =>
     {
         if (!ctx.Context.User.Identity?.IsAuthenticated ?? true)
