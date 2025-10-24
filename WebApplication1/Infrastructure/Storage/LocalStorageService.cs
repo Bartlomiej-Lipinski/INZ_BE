@@ -55,7 +55,7 @@ namespace WebApplication1.Infrastructure.Storage
                 return null;
             }
 
-            // Normalizuj ścieżki dla porównania
+            // Normalize paths for comparison
             var normalizedRoot = Path.GetFullPath(_uploadsRoot);
             if (!fullPath.StartsWith(normalizedRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
                 !fullPath.Equals(normalizedRoot, StringComparison.OrdinalIgnoreCase))
