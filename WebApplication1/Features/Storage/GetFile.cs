@@ -44,9 +44,8 @@ namespace WebApplication1.Features.Storage
 
             logger.LogInformation("Serving file {Id} to request. TraceId: {TraceId}", id, traceId);
 
-            // Results.File(stream, contentType, fileDownloadName)
             var contentType = string.IsNullOrWhiteSpace(record.ContentType) ? "application/octet-stream" : record.ContentType;
-            return Results.File(stream, contentType, record.FileName);
+            return Results.File(stream, contentType, record.FileName, enableRangeProcessing: true);
         }
     }
 }

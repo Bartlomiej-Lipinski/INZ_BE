@@ -18,6 +18,7 @@ namespace WebApplication1.Features.Storage
                 .WithDescription("Upload file and link it to an entity")
                 .WithTags("Storage")
                 .RequireAuthorization()
+                .DisableAntiforgery()
                 .Accepts<IFormFile>("multipart/form-data")
                 .WithOpenApi();
         }

@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApplication1.Extensions;
@@ -197,7 +198,6 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
 builder.Services.AddEndpoints();
 builder.Services.AddOpenApi();
 
@@ -205,13 +205,31 @@ var app = builder.Build();
 app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseRateLimiter();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads",
+    OnPrepareResponse = ctx =>
+    {
+        if (!ctx.Context.User.Identity?.IsAuthenticated ?? true)
+        {
+            ctx.Context.Response.StatusCode = 401;
+            ctx.Context.Response.ContentLength = 0;
+            ctx.Context.Response.Body = Stream.Null;
+        }
+    }
+});
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
