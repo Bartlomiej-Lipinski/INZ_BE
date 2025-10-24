@@ -1,4 +1,4 @@
-﻿using WebApplication1.Features.Auth;
+﻿﻿using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments;
 using WebApplication1.Features.Events;
 using WebApplication1.Features.Events.Availability;
@@ -8,6 +8,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Storage;
 
 namespace WebApplication1.Tests;
 
@@ -73,12 +74,6 @@ public static class TestDataFactory
             Surname = surname
         };
     }
-    
-    // public static GetUserGroups.GetUserGroupsRequest CreateGetUserGroupsRequest(string? userId = null)
-    // {
-    //     ArgumentNullException.ThrowIfNull(userId, nameof(userId));
-    //     return new GetUserGroups.GetUserGroupsRequest(userId);
-    // }
 
     public static RejectUserJoinRequest.RejectUserJoinRequestDto CreateRejectUserJoinRequestDto(
         string groupId, string userId)

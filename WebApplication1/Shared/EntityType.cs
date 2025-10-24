@@ -1,0 +1,1 @@
+﻿// TODO: Define EntityType enum here when needed.

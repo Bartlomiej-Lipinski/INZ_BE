@@ -10,6 +10,7 @@ using WebApplication1.Features.Auth.Services;
 using WebApplication1.Infrastructure.Configuration;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Storage;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Middlewares;
 
@@ -21,6 +22,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<IStorageService, LocalStorageService>();
 builder.Services.AddScoped<IEmailService, SendGridEmailService>();
 builder.Services.AddLoginSecurity();
 builder.Services.AddEndpointsApiExplorer();
@@ -200,7 +202,6 @@ builder.Services.AddEndpoints();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-
 app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseRateLimiter();

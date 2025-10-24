@@ -4,6 +4,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Entities.Tokens;
 
 namespace WebApplication1.Infrastructure.Data.Context;
@@ -23,11 +24,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<EventAvailability> EventAvailabilities { get; set; }
     public DbSet<EventAvailabilityRange> EventAvailabilityRanges { get; set; }
     public DbSet<EventSuggestion> EventSuggestions { get; set; }
+    public DbSet<StoredFile> StoredFiles { get; set; } = null!;
      
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<LoginAttempt>(entity =>
+        base.OnModelCreating(builder);
+        builder.Entity<LoginAttempt>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
@@ -36,7 +38,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasIndex(e => e.AttemptTime);
         });
 
-        modelBuilder.Entity<TwoFactorCode>(entity =>
+        builder.Entity<TwoFactorCode>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserId).IsRequired();
@@ -48,7 +50,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasIndex(e => e.UserId);
         });
         
-        modelBuilder.Entity<Recommendation>(entity =>
+        builder.Entity<Recommendation>(entity =>
         {
             entity.HasKey(r => r.Id);
             entity.Property(r => r.Title).IsRequired().HasMaxLength(200);
@@ -66,7 +68,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        modelBuilder.Entity<Comment>(entity =>
+        builder.Entity<Comment>(entity =>
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Content).IsRequired().HasMaxLength(1000);
@@ -78,7 +80,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        modelBuilder.Entity<Reaction>(entity =>
+        builder.Entity<Reaction>(entity =>
         {
             entity.HasKey(r => new { r.TargetId, r.UserId });
             entity.HasIndex(c => new { c.TargetType, c.TargetId });
@@ -89,7 +91,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        modelBuilder.Entity<Event>(entity =>
+        builder.Entity<Event>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(150);
@@ -112,7 +114,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasIndex(e => new { e.GroupId, e.StartDate });
         });
 
-        modelBuilder.Entity<EventAvailability>(entity =>
+        builder.Entity<EventAvailability>(entity =>
         {
             entity.HasKey(e => new { e.EventId, e.UserId });
             entity.Property(ea => ea.Status).IsRequired();
@@ -128,7 +130,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        modelBuilder.Entity<EventAvailabilityRange>(entity =>
+        builder.Entity<EventAvailabilityRange>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.AvailableFrom).IsRequired();
@@ -145,7 +147,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        modelBuilder.Entity<EventSuggestion>(entity =>
+        builder.Entity<EventSuggestion>(entity =>
         {
             entity.HasKey(es => es.Id);
             entity.Property(es => es.StartTime).IsRequired();
