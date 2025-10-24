@@ -51,7 +51,7 @@ namespace WebApplication1.Features.Storage
             if (file == null || file.Length == 0)
                 return Results.BadRequest(ApiResponse<string>.Fail("No file uploaded.", traceId));
 
-                                    // remove old physical file
+            // remove old physical file
             await storage.DeleteFileAsync(record.Url, cancellationToken);
 
             // save new file
