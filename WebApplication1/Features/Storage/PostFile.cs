@@ -26,7 +26,6 @@ namespace WebApplication1.Features.Storage
         public static async Task<IResult> Handle(
             [FromRoute] string entityType,
             [FromRoute] string entityId,
-            HttpRequest request,
             IFormFile file,
             AppDbContext dbContext,
             IStorageService storage,
