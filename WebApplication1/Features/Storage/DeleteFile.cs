@@ -46,10 +46,10 @@ namespace WebApplication1.Features.Storage
                 return Results.NotFound(ApiResponse<string>.Fail("File not found.", traceId));
             }
 
-                        // remove physical file
+            // remove physical file
             await storage.DeleteFileAsync(record.Url, cancellationToken);
 
-                        // remove record from database
+            // remove record from database
             dbContext.StoredFiles.Remove(record);
             await dbContext.SaveChangesAsync(cancellationToken);
 
