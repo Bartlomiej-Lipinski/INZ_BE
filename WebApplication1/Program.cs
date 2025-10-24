@@ -225,7 +225,7 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/api/storage",
     OnPrepareResponse = ctx =>
     {
-        if (!ctx.Context.User.Identity?.IsAuthenticated ?? true)
+        if (!(ctx.Context.User.Identity?.IsAuthenticated ?? false))
         {
             ctx.Context.Response.StatusCode = 401;
             ctx.Context.Response.ContentLength = 0;
