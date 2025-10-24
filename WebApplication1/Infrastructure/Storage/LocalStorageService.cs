@@ -34,7 +34,7 @@ namespace WebApplication1.Infrastructure.Storage
                 return null;
             }
 
-            // Sprawdź nieprawidłowe znaki w nazwie pliku
+            // Check for invalid characters in filename
             var invalidChars = Path.GetInvalidFileNameChars();
             if (fileName.IndexOfAny(invalidChars) >= 0)
             {
