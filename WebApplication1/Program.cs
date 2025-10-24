@@ -210,7 +210,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+var uploadsFolder = builder.Configuration["Storage:UploadsFolder"] ?? Path.Combine("wwwroot", "uploads");
+var uploadsPath = Path.IsPathRooted(uploadsFolder)
+    ? uploadsFolder
+    : Path.Combine(Directory.GetCurrentDirectory(), uploadsFolder);
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
