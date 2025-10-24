@@ -42,7 +42,7 @@ namespace WebApplication1.Infrastructure.Storage
                 return null;
             }
 
-            // Zbuduj pełną ścieżkę i sprawdź, czy znajduje się w dozwolonym katalogu
+            // Build full path and verify it is within the allowed directory
             var filePath = Path.Combine(_uploadsRoot, fileName);
             string fullPath;
             try
