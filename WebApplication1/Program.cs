@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApplication1.Extensions;
@@ -10,6 +11,7 @@ using WebApplication1.Features.Auth.Services;
 using WebApplication1.Infrastructure.Configuration;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Storage;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Middlewares;
 
@@ -21,6 +23,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<IStorageService, LocalStorageService>();
 builder.Services.AddScoped<IEmailService, SendGridEmailService>();
 builder.Services.AddLoginSecurity();
 builder.Services.AddEndpointsApiExplorer();
@@ -195,22 +198,41 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
 builder.Services.AddEndpoints();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-
 app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseRateLimiter();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+var uploadsFolder = builder.Configuration["Storage:UploadsFolder"] ?? Path.Combine("wwwroot", "uploads");
+var uploadsPath = Path.IsPathRooted(uploadsFolder)
+    ? uploadsFolder
+    : Path.Combine(Directory.GetCurrentDirectory(), uploadsFolder);
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/api/storage",
+    OnPrepareResponse = ctx =>
+    {
+        if (!(ctx.Context.User.Identity?.IsAuthenticated ?? false))
+        {
+            ctx.Context.Response.StatusCode = 401;
+            ctx.Context.Response.ContentLength = 0;
+            ctx.Context.Response.Body = Stream.Null;
+        }
+    }
+});
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
