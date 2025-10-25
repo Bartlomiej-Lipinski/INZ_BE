@@ -23,7 +23,6 @@ public class PostFileTest : TestBase
         var result = await PostFile.Handle(
             "testEntity",
             "entity-123",
-            httpContext.Request,
             file,
             dbContext,
             mockStorageService.Object,
@@ -47,7 +46,6 @@ public class PostFileTest : TestBase
         var result = await PostFile.Handle(
             "testEntity",
             "entity-123",
-            httpContext.Request,
             null,
             dbContext,
             mockStorageService.Object,
@@ -81,7 +79,6 @@ public class PostFileTest : TestBase
         var result = await PostFile.Handle(
             "testEntity",
             "entity-123",
-            httpContext.Request,
             file,
             dbContext,
             mockStorageService.Object,
