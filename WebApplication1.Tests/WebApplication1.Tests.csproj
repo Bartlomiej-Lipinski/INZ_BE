@@ -26,4 +26,8 @@
     <ProjectReference Include="..\WebApplication1\WebApplication1.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Settlements\" />
+  </ItemGroup>
+
 </Project>

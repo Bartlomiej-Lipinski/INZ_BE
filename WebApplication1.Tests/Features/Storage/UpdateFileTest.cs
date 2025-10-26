@@ -1,10 +1,7 @@
 ﻿using FluentAssertions;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using Moq;
-using System.Security.Claims;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Storage;
-using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Storage;
 using WebApplication1.Shared.Responses;
 
@@ -17,18 +14,18 @@ public class UpdateFileTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<UpdateFile>>();
+        var logger = NullLogger<UpdateFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
-        var file = CreateFormFile("test.jpg", "content"u8.ToArray());
+        var file = TestDataFactory.CreateFormFile("test.jpg", "content"u8.ToArray());
 
         var result = await UpdateFile.Handle(
             "test-id",
             file,
             dbContext,
             mockStorageService.Object,
-            new ClaimsPrincipal(),
+            CreateClaimsPrincipal(),
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
@@ -40,21 +37,21 @@ public class UpdateFileTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = CreateClaimsPrincipal("user1");
         var httpContext = CreateHttpContext("user1");
-        var mockLogger = new Mock<ILogger<UpdateFile>>();
+        var logger = NullLogger<UpdateFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
-        var existingFile = new StoredFile
-        {
-            Id = "test-id",
-            FileName = "old.jpg",
-            ContentType = "image/jpeg",
-            Size = 100,
-            Url = "/uploads/old.jpg",
-            UploadedAt = DateTime.UtcNow,
-            EntityId = "entity-123",
-            EntityType = "testEntity",
-            UploadedBy = "user1"
-        };
+        var existingFile = TestDataFactory.CreateStoredFile(
+            "test-id",
+            "old.jpg",
+            "image/jpeg",
+            100,
+            "/uploads/old.jpg",
+            DateTime.UtcNow,
+            "entity-123",
+            "testEntity",
+            "user1"
+        );
+
         dbContext.StoredFiles.Add(existingFile);
         await dbContext.SaveChangesAsync();
 
@@ -65,7 +62,7 @@ public class UpdateFileTest : TestBase
             mockStorageService.Object,
             user,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
@@ -81,9 +78,9 @@ public class UpdateFileTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = CreateClaimsPrincipal("user1");
         var httpContext = CreateHttpContext("user1");
-        var mockLogger = new Mock<ILogger<UpdateFile>>();
+        var logger = NullLogger<UpdateFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
-        var file = CreateFormFile("test.jpg", "content"u8.ToArray());
+        var file = TestDataFactory.CreateFormFile("test.jpg", "content"u8.ToArray());
 
         var result = await UpdateFile.Handle(
             "non-existent-id",
@@ -92,7 +89,7 @@ public class UpdateFileTest : TestBase
             mockStorageService.Object,
             user,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -108,26 +105,26 @@ public class UpdateFileTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = CreateClaimsPrincipal("user1");
         var httpContext = CreateHttpContext("user1");
-        var mockLogger = new Mock<ILogger<UpdateFile>>();
+        var logger = NullLogger<UpdateFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
-        var existingFile = new StoredFile
-        {
-            Id = "test-id",
-            FileName = "old.jpg",
-            ContentType = "image/jpeg",
-            Size = 100,
-            Url = "/uploads/old.jpg",
-            UploadedAt = DateTime.UtcNow.AddDays(-1),
-            EntityId = "entity-123",
-            EntityType = "testEntity",
-            UploadedBy = "user1"
-        };
+        var existingFile = TestDataFactory.CreateStoredFile(
+            "test-id",
+            "old.jpg",
+            "image/jpeg",
+            100,
+            "/uploads/old.jpg",
+            DateTime.UtcNow.AddDays(-1),
+            "entity-123",
+            "testEntity",
+            "user1"
+        );
+
         dbContext.StoredFiles.Add(existingFile);
         await dbContext.SaveChangesAsync();
 
-        var newUrl = "/uploads/new.jpg";
-        var file = CreateFormFile("new.jpg", "new content"u8.ToArray());
+        const string newUrl = "/uploads/new.jpg";
+        var file = TestDataFactory.CreateFormFile("new.jpg", "new content"u8.ToArray());
 
         mockStorageService
             .Setup(x => x.SaveFileAsync(It.IsAny<Stream>(), file.FileName, file.ContentType, CancellationToken.None))
@@ -140,7 +137,7 @@ public class UpdateFileTest : TestBase
             mockStorageService.Object,
             user,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostFile.StoredFileResponseDto>>>();
@@ -157,15 +154,5 @@ public class UpdateFileTest : TestBase
         mockStorageService.Verify(
             x => x.SaveFileAsync(It.IsAny<Stream>(), file.FileName, file.ContentType, CancellationToken.None),
             Times.Once);
-    }
-
-    private static IFormFile CreateFormFile(string fileName, byte[] content)
-    {
-        var stream = new MemoryStream(content);
-        return new FormFile(stream, 0, content.Length, "file", fileName)
-        {
-            Headers = new HeaderDictionary(),
-            ContentType = "image/jpeg"
-        };
     }
 }

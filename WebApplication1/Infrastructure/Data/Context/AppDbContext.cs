@@ -4,6 +4,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Entities.Tokens;
 
@@ -25,6 +26,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<EventAvailabilityRange> EventAvailabilityRanges { get; set; }
     public DbSet<EventSuggestion> EventSuggestions { get; set; }
     public DbSet<StoredFile> StoredFiles { get; set; } = null!;
+    public DbSet<Expense> Expenses { get; set; } = null!;
+    public DbSet<ExpensePayer> ExpensePayers { get; set; } = null!;
+    public DbSet<ExpenseBeneficiary> ExpenseBeneficiaries { get; set; } = null!;
+    public DbSet<Settlement> Settlements { get; set; } = null!;
      
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -158,6 +163,72 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithMany(e => e.Suggestions)
                 .HasForeignKey(es => es.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<Expense>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Amount).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Expenses)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<ExpensePayer>(entity =>
+        {
+            entity.HasKey(ep => new { ep.ExpenseId, ep.UserId });
+            entity.Property(ep => ep.AmountPaid).IsRequired();
+
+            entity.HasOne(ep => ep.Expense)
+                .WithMany(e => e.Payers)
+                .HasForeignKey(ep => ep.ExpenseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ep => ep.User)
+                .WithMany()
+                .HasForeignKey(ep => ep.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        builder.Entity<ExpenseBeneficiary>(entity =>
+        {
+            entity.HasKey(eb => new { eb.ExpenseId, eb.UserId });
+            entity.Property(eb => eb.Share).IsRequired();
+
+            entity.HasOne(eb => eb.Expense)
+                .WithMany(e => e.Beneficiaries)
+                .HasForeignKey(eb => eb.ExpenseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(eb => eb.User)
+                .WithMany()
+                .HasForeignKey(eb => eb.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        builder.Entity<Settlement>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Amount).IsRequired();
+
+            entity.HasOne(s => s.Group)
+                .WithMany()
+                .HasForeignKey(s => s.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.FromUser)
+                .WithMany()
+                .HasForeignKey(s => s.FromUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(s => s.ToUser)
+                .WithMany()
+                .HasForeignKey(s => s.ToUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments;
 using WebApplication1.Features.Events;
@@ -286,6 +287,41 @@ public static class TestDataFactory
         }
 
         return list;
+    }
+
+    public static StoredFile CreateStoredFile(
+        string id,
+        string fileName, 
+        string contentType, 
+        int size, 
+        string url,
+        DateTime uploadedAt,
+        string entityId,
+        string entityType,
+        string uploadedBy)
+    {
+        return new StoredFile
+        {
+            Id = id,
+            FileName = fileName,
+            ContentType = contentType,
+            Size = size,
+            Url = url,
+            UploadedAt = uploadedAt,
+            EntityId = entityId,
+            EntityType = entityType,
+            UploadedBy = uploadedBy
+        };
+    }
+    
+    public static IFormFile CreateFormFile(string fileName, byte[] content)
+    {
+        var stream = new MemoryStream(content);
+        return new FormFile(stream, 0, content.Length, "file", fileName)
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "application/octet-stream"
+        };
     }
     
     private static string GenerateUniqueCode()

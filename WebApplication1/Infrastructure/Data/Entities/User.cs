@@ -23,5 +23,4 @@ public class User : IdentityUser
     public string? Description { get; set; }
     
     public string? Photo { get; set; }
-    //public ICollection<GroupUser> GroupUsers { get; set; } = new List<GroupUser>();
 }
