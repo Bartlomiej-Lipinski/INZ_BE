@@ -27,7 +27,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<EventSuggestion> EventSuggestions { get; set; }
     public DbSet<StoredFile> StoredFiles { get; set; } = null!;
     public DbSet<Expense> Expenses { get; set; } = null!;
-    public DbSet<ExpensePayer> ExpensePayers { get; set; } = null!;
     public DbSet<ExpenseBeneficiary> ExpenseBeneficiaries { get; set; } = null!;
     public DbSet<Settlement> Settlements { get; set; } = null!;
      
@@ -171,27 +170,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Amount).IsRequired();
             entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.IsEvenSplit).IsRequired();
+            entity.Property(e => e.PaidByUserId).IsRequired();
 
             entity.HasOne(e => e.Group)
                 .WithMany(g => g.Expenses)
                 .HasForeignKey(e => e.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
-        });
-        
-        builder.Entity<ExpensePayer>(entity =>
-        {
-            entity.HasKey(ep => new { ep.ExpenseId, ep.UserId });
-            entity.Property(ep => ep.AmountPaid).IsRequired();
-
-            entity.HasOne(ep => ep.Expense)
-                .WithMany(e => e.Payers)
-                .HasForeignKey(ep => ep.ExpenseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(ep => ep.User)
-                .WithMany()
-                .HasForeignKey(ep => ep.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
         
         builder.Entity<ExpenseBeneficiary>(entity =>
@@ -203,11 +188,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithMany(e => e.Beneficiaries)
                 .HasForeignKey(eb => eb.ExpenseId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(eb => eb.User)
-                .WithMany()
-                .HasForeignKey(eb => eb.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
         
         builder.Entity<Settlement>(entity =>
@@ -216,19 +196,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.Property(s => s.Amount).IsRequired();
 
             entity.HasOne(s => s.Group)
-                .WithMany()
+                .WithMany(g => g.Settlements)
                 .HasForeignKey(s => s.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(s => s.FromUser)
-                .WithMany()
-                .HasForeignKey(s => s.FromUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(s => s.ToUser)
-                .WithMany()
-                .HasForeignKey(s => s.ToUserId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

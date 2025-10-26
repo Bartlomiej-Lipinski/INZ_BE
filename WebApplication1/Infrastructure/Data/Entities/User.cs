@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using WebApplication1.Infrastructure.Data.Entities.Settlements;
 
 namespace WebApplication1.Infrastructure.Data.Entities;
 
@@ -13,14 +14,14 @@ public class User : IdentityUser
      *
      */
     public string? Name { get; set; }
-    
+
     public string? Surname { get; set; }
-    
+
     public DateOnly? BirthDate { get; set; }
-    
+
     public string? Status { get; set; }
-    
+
     public string? Description { get; set; }
-    
+
     public string? Photo { get; set; }
 }
