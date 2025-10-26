@@ -1,10 +1,16 @@
 using Microsoft.AspNetCore.Http;
 using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments;
+using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Events;
 using WebApplication1.Features.Events.Availability;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Features.Groups;
+using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Features.Groups.GroupCRUD;
+using WebApplication1.Features.Groups.JoinGroupFeatures;
 using WebApplication1.Features.Recommendations;
+using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
@@ -41,21 +47,39 @@ public static class TestDataFactory
         };
     }
     
-    public static PostGroup.GroupRequestDto CreateGroupRequestDto(string? name = null, string? color = null)
+    public static GroupRequestDto CreateGroupRequestDto(string? name = null, string? color = null)
     {
-        return new PostGroup.GroupRequestDto
+        return new GroupRequestDto
         {
             Name = name ?? "TestGroup",
             Color = color ?? "Red"
         };
     }
 
-    public static AcceptUserJoinRequest.AcceptUserJoinRequestDto CreateAcceptUserJoinRequestDto(
+    public static GroupResponseDto CreateGroupResponseDto(string groupId, string name)
+    {
+        return new GroupResponseDto
+        {
+            Id = groupId, 
+            Name = name
+        };
+    }
+
+    public static AcceptUserJoinRequestDto CreateAcceptUserJoinRequestDto(
         string? groupId, string? userId)
     {
         ArgumentNullException.ThrowIfNull(groupId, nameof(groupId));
         ArgumentNullException.ThrowIfNull(userId, nameof(userId));
-        return new AcceptUserJoinRequest.AcceptUserJoinRequestDto
+        return new AcceptUserJoinRequestDto
+        {
+            GroupId = groupId,
+            UserId = userId
+        };
+    }
+
+    public static GrantAdminPrivilegesDto CreateGrantAdminPrivilegesDto(string groupId, string userId)
+    {
+        return new GrantAdminPrivilegesDto
         {
             GroupId = groupId,
             UserId = userId
@@ -76,19 +100,17 @@ public static class TestDataFactory
         };
     }
 
-    public static RejectUserJoinRequest.RejectUserJoinRequestDto CreateRejectUserJoinRequestDto(
-        string groupId, string userId)
+    public static RejectUserJoinRequestDto CreateRejectUserJoinRequestDto(string userId)
     {
-        return new RejectUserJoinRequest.RejectUserJoinRequestDto
+        return new RejectUserJoinRequestDto
         {
-            GroupId = groupId,
             UserId = userId
         };
     }
     
-    public static JoinGroup.JoinGroupRequest CreateJoinGroupRequest(string groupCode)
+    public static JoinGroupRequestDto CreateJoinGroupRequest(string groupCode)
     {
-        return new JoinGroup.JoinGroupRequest
+        return new JoinGroupRequestDto
         {
             GroupCode = groupCode,
         };
@@ -154,21 +176,10 @@ public static class TestDataFactory
         };
     }
 
-    public static PostRecommendation.RecommendationRequestDto CreateRecommendationRequestDto(
-        string title, string content, string? category = null)
-    {
-        return new PostRecommendation.RecommendationRequestDto
-        {
-            Title = title,
-            Content = content,
-            Category = category
-        };
-    }
-
-    public static UpdateRecommendation.UpdateRecommendationDto CreateUpdateRecommendationDto(
+    public static RecommendationRequestDto CreateRecommendationRequestDto(
         string title, string content, string? category = null, string? imageUrl = null, string? linkUrl = null)
     {
-        return new UpdateRecommendation.UpdateRecommendationDto
+        return new RecommendationRequestDto
         {
             Title = title,
             Content = content,
@@ -178,19 +189,11 @@ public static class TestDataFactory
         };
     }
 
-    public static PostComment.CommentRequestDto CreateCommentRequestDto(string targetType, string content)
+    public static CommentRequestDto CreateCommentRequestDto(string content, string? targetType = "Recommendation")
     {
-        return new PostComment.CommentRequestDto
+        return new CommentRequestDto
         {
             TargetType = targetType,
-            Content = content
-        };
-    }
-
-    public static UpdateComment.UpdateCommentRequestDto CreateUpdateCommentRequestDto(string content)
-    {
-        return new UpdateComment.UpdateCommentRequestDto
-        {
             Content = content
         };
     }
@@ -210,25 +213,20 @@ public static class TestDataFactory
         };
     }
 
-    public static PostEvent.EventRequestDto CreateEventRequestDto(
-        string title, DateTime startDate, DateTime? endDate = null, string? description = null, string? location = null)
+    public static EventRequestDto CreateEventRequestDto(
+        string title, 
+        DateTime? startDate = null,
+        DateTime? endDate = null, 
+        string? description = null,
+        string? location = null)
     {
-        return new PostEvent.EventRequestDto
+        return new EventRequestDto
         {
             Title = title,
             StartDate = startDate,
             EndDate = endDate,
             Description = description,
             Location = location
-        };
-    }
-
-    public static UpdateEvent.UpdateEventRequestDto CreateUpdateEventRequestDto(string title, string? description = null)
-    {
-        return new UpdateEvent.UpdateEventRequestDto
-        {
-            Title = title,
-            Description = description
         };
     }
 
@@ -244,10 +242,10 @@ public static class TestDataFactory
         };
     }
 
-    public static PostAvailability.EventAvailabilityRequestDto CreateEventAvailabilityRequestDto(
+    public static EventAvailabilityRequestDto CreateEventAvailabilityRequestDto(
         EventAvailabilityStatus status)
     {
-        return new PostAvailability.EventAvailabilityRequestDto
+        return new EventAvailabilityRequestDto
         {
             Status = status
         };
@@ -266,20 +264,20 @@ public static class TestDataFactory
         };
     }
 
-    public static List<PostAvailabilityRange.AvailabilityRangeRequestDto> CreateAvailabilityRangeRequestDto(
+    public static List<AvailabilityRangeRequestDto> CreateAvailabilityRangeRequestDto(
         DateTime startTime,
         int numberOfRanges = 1,
         int rangeLengthHours = 2,
         int gapBetweenRangesHours = 1)
     {
-        var list = new List<PostAvailabilityRange.AvailabilityRangeRequestDto>();
+        var list = new List<AvailabilityRangeRequestDto>();
 
         for (var i = 0; i < numberOfRanges; i++)
         {
             var from = startTime.AddHours(i * (rangeLengthHours + gapBetweenRangesHours));
             var to = from.AddHours(rangeLengthHours);
 
-            list.Add(new PostAvailabilityRange.AvailabilityRangeRequestDto
+            list.Add(new AvailabilityRangeRequestDto
             {
                 AvailableFrom = from,
                 AvailableTo = to

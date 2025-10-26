@@ -5,7 +5,7 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.JoinGroupFeatures;
 
 public class GenerateCodeToJoinGroup : IEndpoint
 {
@@ -52,8 +52,10 @@ public class GenerateCodeToJoinGroup : IEndpoint
         if (updated > 0)
         {
             logger.LogInformation("New join code generated. GroupId: {GroupId}, TraceId: {TraceId}", id, traceId);
-            return Results.Ok(ApiResponse<GenerateCodeResponse>.Ok(
-                new GenerateCodeResponse("New code generated successfully. The code is valid for 5 minutes."+ $" Code: {group.Code}"), "Code Generated", traceId));
+            return Results
+                .Ok(ApiResponse<string>
+                    .Ok("New code generated successfully. The code is valid for 5 minutes."+ $" Code: {group.Code}",
+                        "Code Generated", traceId));
         }
         
         logger.LogError("Failed to generate code. GroupId: {GroupId}, TraceId: {TraceId}", id, traceId);
@@ -68,11 +70,7 @@ public class GenerateCodeToJoinGroup : IEndpoint
             var random = new Random();
             code = random.Next(10000, 99999).ToString();
         } while (dbContext.Groups.Any(g => g.Code == code && g.Id != groupId) 
-                 || dbContext.Groups.Any(g => g.CodeExpirationTime > DateTime.UtcNow && g.Code == code)
-                 );
-
+                 || dbContext.Groups.Any(g => g.CodeExpirationTime > DateTime.UtcNow && g.Code == code));
         return code;
     }
-    
-    public record GenerateCodeResponse(string Message);
 }

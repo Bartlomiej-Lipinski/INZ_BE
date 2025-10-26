@@ -1,11 +1,12 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.GroupCRUD;
 
 public class UpdateGroup : IEndpoint
 {
@@ -21,7 +22,7 @@ public class UpdateGroup : IEndpoint
     
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
-        [FromBody] UpdateGroupRequest request,
+        [FromBody] GroupRequestDto request,
         AppDbContext dbContext,
         HttpContext httpContext,
         ILogger<UpdateGroup> logger,
@@ -38,8 +39,8 @@ public class UpdateGroup : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
  
-        group.Name = request.Name ?? group.Name;
-        group.Color = request.Color ?? group.Color;
+        group.Name = request.Name;
+        group.Color = request.Color;
 
         dbContext.Groups.Update(group);
         var updated = await dbContext.SaveChangesAsync(cancellationToken);
@@ -52,11 +53,5 @@ public class UpdateGroup : IEndpoint
 
         logger.LogError("Failed to update group. GroupId: {GroupId}, TraceId: {TraceId}", groupId, traceId);
         return Results.Json(ApiResponse<string>.Fail("Failed to update group.", traceId), statusCode: 500);
-    }
-    
-    public record UpdateGroupRequest
-    {
-        public string? Name { get; init; }
-        public string? Color { get; init; }
     }
 }

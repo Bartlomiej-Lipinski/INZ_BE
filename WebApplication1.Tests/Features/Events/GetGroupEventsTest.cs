@@ -3,8 +3,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events;
-using WebApplication1.Infrastructure.Data.Entities;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Events;
@@ -36,8 +35,8 @@ public class GetGroupEventsTest : TestBase
         var result = await GetGroupEvents.Handle(
             group.Id, dbContext, claimsPrincipal, httpContext, logger, CancellationToken.None);
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GetGroupEvents.EventDto>>>>();
-        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GetGroupEvents.EventDto>>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<EventResponseDto>>>>();
+        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<EventResponseDto>>>;
         ok!.Value!.Data.Should().HaveCount(2);
         ok.Value.Data.Select(e => e.Id).Should().Contain(["e1", "e2"]);
     }

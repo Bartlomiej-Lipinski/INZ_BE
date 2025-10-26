@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -49,10 +50,5 @@ public class GetReactionsForTarget: IEndpoint
 
         return Results.Ok(ApiResponse<List<ReactionDto>>
             .Ok(reactions, "Reactions retrieved successfully.", traceId));
-    }
-
-    public record ReactionDto
-    {
-        public string UserId { get; set; } = null!;
     }
 }

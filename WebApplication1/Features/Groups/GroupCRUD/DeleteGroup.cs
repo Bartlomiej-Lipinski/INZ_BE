@@ -6,7 +6,7 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.GroupCRUD;
 
 public class DeleteGroup : IEndpoint
 {

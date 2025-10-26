@@ -1,7 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Users;
 using WebApplication1.Shared.Responses;
 
@@ -14,7 +13,7 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<UpdateUserTwoFactorVerificationStatus>>();
+        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         user.TwoFactorEnabled = false;
@@ -28,14 +27,14 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
             claimsPrincipal,
             dbContext,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<Ok<ApiResponse<string>>>();
         var okResult = result as Ok<ApiResponse<string>>;
-        okResult!.Value.Success.Should().BeTrue();
-        okResult.Value.Data.Should().Be("Two-factor verification status updated successfully.");
-        okResult.Value.TraceId.Should().Be("test-trace-id");
+        okResult!.Value?.Success.Should().BeTrue();
+        okResult.Value?.Data.Should().Be("Two-factor verification status updated successfully.");
+        okResult.Value?.TraceId.Should().Be("test-trace-id");
 
         var updatedUser = await dbContext.Users.FindAsync(user.Id);
         updatedUser!.TwoFactorEnabled.Should().BeTrue();
@@ -46,7 +45,7 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<UpdateUserTwoFactorVerificationStatus>>();
+        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
 
         var claimsPrincipal = CreateClaimsPrincipal("");
 
@@ -55,7 +54,7 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
             claimsPrincipal,
             dbContext,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<UnauthorizedHttpResult>();
@@ -66,7 +65,7 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<UpdateUserTwoFactorVerificationStatus>>();
+        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
 
         var claimsPrincipal = CreateClaimsPrincipal("nonexistent-id");
 
@@ -75,14 +74,14 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
             claimsPrincipal,
             dbContext,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<NotFound<ApiResponse<string>>>();
         var notFoundResult = result as NotFound<ApiResponse<string>>;
-        notFoundResult!.Value.Success.Should().BeFalse();
-        notFoundResult.Value.Message.Should().Be("User not found.");
-        notFoundResult.Value.TraceId.Should().Be("test-trace-id");
+        notFoundResult!.Value?.Success.Should().BeFalse();
+        notFoundResult.Value?.Message.Should().Be("User not found.");
+        notFoundResult.Value?.TraceId.Should().Be("test-trace-id");
     }
 
     [Fact]
@@ -90,7 +89,7 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<UpdateUserTwoFactorVerificationStatus>>();
+        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         user.TwoFactorEnabled = true;
@@ -104,14 +103,14 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
             claimsPrincipal,
             dbContext,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequestResult = result as BadRequest<ApiResponse<string>>;
-        badRequestResult!.Value.Success.Should().BeFalse();
-        badRequestResult.Value.Message.Should().Be("Two-factor verification status is already set to the specified value.");
-        badRequestResult.Value.TraceId.Should().Be("test-trace-id");
+        badRequestResult!.Value?.Success.Should().BeFalse();
+        badRequestResult.Value?.Message.Should().Be("Two-factor verification status is already set to the specified value.");
+        badRequestResult.Value?.TraceId.Should().Be("test-trace-id");
     }
 
     [Fact]
@@ -119,7 +118,7 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<UpdateUserTwoFactorVerificationStatus>>();
+        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         user.TwoFactorEnabled = true;
@@ -133,13 +132,13 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
             claimsPrincipal,
             dbContext,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None);
 
         result.Should().BeOfType<Ok<ApiResponse<string>>>();
         var okResult = result as Ok<ApiResponse<string>>;
-        okResult!.Value.Success.Should().BeTrue();
-        okResult.Value.TraceId.Should().Be("test-trace-id");
+        okResult!.Value?.Success.Should().BeTrue();
+        okResult.Value?.TraceId.Should().Be("test-trace-id");
 
         var updatedUser = await dbContext.Users.FindAsync(user.Id);
         updatedUser!.TwoFactorEnabled.Should().BeFalse();

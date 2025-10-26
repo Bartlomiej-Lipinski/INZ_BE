@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
@@ -63,7 +64,8 @@ public class PostAvailabilityRange : IEndpoint
 
         if (evt == null)
         {
-            logger.LogWarning("Event {EventId} not found in group {GroupId}. TraceId: {TraceId}", eventId, groupId, traceId);
+            logger.LogWarning("Event {EventId} not found in group {GroupId}. TraceId: {TraceId}",
+                eventId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
         }
         
@@ -74,8 +76,8 @@ public class PostAvailabilityRange : IEndpoint
         if (existingRanges.Count != 0)
         {
             dbContext.EventAvailabilityRanges.RemoveRange(existingRanges);
-            logger.LogInformation("Removed {Count} old availability ranges for user {UserId} in event {EventId}. TraceId: {TraceId}",
-                existingRanges.Count, currentUserId, eventId, traceId);
+            logger.LogInformation("Removed {Count} old availability ranges for user {UserId} in event {EventId}." +
+                                  " TraceId: {TraceId}", existingRanges.Count, currentUserId, eventId, traceId);
         }
         
         var addedRanges = new List<EventAvailabilityRange>();
@@ -83,15 +85,18 @@ public class PostAvailabilityRange : IEndpoint
         foreach (var r in request)
         {
             if (r.AvailableFrom >= r.AvailableTo)
-                return Results.BadRequest(ApiResponse<string>.Fail("AvailableTo must be later than AvailableFrom.", traceId));
+                return Results.BadRequest(ApiResponse<string>
+                    .Fail("AvailableTo must be later than AvailableFrom.", traceId));
 
             if (evt.IsAutoScheduled)
             {
                 if (evt.RangeStart.HasValue && r.AvailableFrom < evt.RangeStart.Value)
-                    return Results.BadRequest(ApiResponse<string>.Fail("Availability starts before event range.", traceId));
+                    return Results.BadRequest(ApiResponse<string>
+                        .Fail("Availability starts before event range.", traceId));
 
                 if (evt.RangeEnd.HasValue && r.AvailableTo > evt.RangeEnd.Value)
-                    return Results.BadRequest(ApiResponse<string>.Fail("Availability ends after event range.", traceId));
+                    return Results.BadRequest(ApiResponse<string>
+                        .Fail("Availability ends after event range.", traceId));
             }
 
             var hasOverlap = addedRanges.Any(ar =>
@@ -115,36 +120,19 @@ public class PostAvailabilityRange : IEndpoint
         await dbContext.EventAvailabilityRanges.AddRangeAsync(addedRanges, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation(
-            "[PostAvailabilityRanges] User {UserId} added {Count} availability ranges for event {EventId}. TraceId: {TraceId}",
-            currentUserId, addedRanges.Count, eventId, traceId);
+        logger.LogInformation("[PostAvailabilityRanges] User {UserId} added {Count} availability ranges for event {EventId}." +
+                              " TraceId: {TraceId}", currentUserId, addedRanges.Count, eventId, traceId);
 
         var responseDtos = addedRanges.Select(r => new AvailabilityRangeResponseDto
         {
             Id = r.Id,
             EventId = r.EventId,
             UserId = r.UserId,
-            AvailableFrom = r.AvailableFrom,
-            AvailableTo = r.AvailableTo
+            AvailableFrom = r.AvailableFrom.ToLocalTime(),
+            AvailableTo = r.AvailableTo.ToLocalTime()
         }).ToList();
 
         return Results.Ok(ApiResponse<List<AvailabilityRangeResponseDto>>.Ok(
             responseDtos, "Availability ranges added successfully.", traceId));
-    }
-
-
-    public record AvailabilityRangeRequestDto
-    {
-        public DateTime AvailableFrom { get; set; }
-        public DateTime AvailableTo { get; set; }
-    }
-
-    public record AvailabilityRangeResponseDto
-    {
-        public string Id { get; set; } = null!;
-        public string EventId { get; set; } = null!;
-        public string UserId { get; set; } = null!;
-        public DateTime AvailableFrom { get; set; }
-        public DateTime AvailableTo { get; set; }
     }
 }

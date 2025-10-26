@@ -1,9 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using WebApplication1.Features.Users;
 using WebApplication1.Shared.Responses;
 
@@ -16,11 +14,11 @@ public class DeleteUserTest: TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = NullLogger<DeleteUser>.Instance;
+        var logger = NullLogger<DeleteUser>.Instance;
         var claimsPrincipal = CreateClaimsPrincipal();
 
         var result = await DeleteUser
-            .Handle(claimsPrincipal, dbContext, httpContext, mockLogger, CancellationToken.None);
+            .Handle(claimsPrincipal, dbContext, httpContext, logger, CancellationToken.None);
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequest = result as BadRequest<ApiResponse<string>>;
@@ -33,12 +31,12 @@ public class DeleteUserTest: TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<DeleteUser>>();
+        var logger = NullLogger<DeleteUser>.Instance;
         
         var user1 = TestDataFactory.CreateUser("u1", "Test User", "test@test.com", "testUser");
         var claimsPrincipal = CreateClaimsPrincipal(user1.Id);
         var result = await DeleteUser
-            .Handle(claimsPrincipal, dbContext, httpContext, mockLogger.Object, CancellationToken.None);
+            .Handle(claimsPrincipal, dbContext, httpContext, logger, CancellationToken.None);
 
         result.Should().BeOfType<NotFound<ApiResponse<string>>>();
         var notFound = result as NotFound<ApiResponse<string>>;
@@ -50,7 +48,7 @@ public class DeleteUserTest: TestBase
     {
         var dbName = Guid.NewGuid().ToString();
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<DeleteUser>>();
+        var logger = NullLogger<DeleteUser>.Instance;
         
         await using (var dbContext = GetInMemoryDbContext(dbName))
         {
@@ -69,7 +67,7 @@ public class DeleteUserTest: TestBase
                 claimsPrincipal, 
                 context2, 
                 httpContext, 
-                mockLogger.Object,
+                logger,
                 CancellationToken.None
             );
 

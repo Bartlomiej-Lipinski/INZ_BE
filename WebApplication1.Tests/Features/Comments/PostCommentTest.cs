@@ -17,7 +17,7 @@ public class PostCommentTest : TestBase
 
         var result = await PostComment.Handle(
             "rec1",
-            TestDataFactory.CreateCommentRequestDto("Recommendation", "Hello!"),
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
             CreateClaimsPrincipal(),
             httpContext,
@@ -71,7 +71,7 @@ public class PostCommentTest : TestBase
 
         var result = await PostComment.Handle(
             "r1",
-            TestDataFactory.CreateCommentRequestDto("Recommendation", "Hello!"),
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             httpContext,
@@ -108,7 +108,7 @@ public class PostCommentTest : TestBase
 
         var result = await PostComment.Handle(
             "r1",
-            TestDataFactory.CreateCommentRequestDto("Recommendation", "Super!"),
+            TestDataFactory.CreateCommentRequestDto("Super!"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             httpContext,

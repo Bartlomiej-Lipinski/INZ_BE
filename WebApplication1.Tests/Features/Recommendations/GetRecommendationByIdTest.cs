@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Recommendations;
+using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
@@ -73,8 +74,8 @@ public class GetRecommendationByIdTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetRecommendationById.RecommendationResponseDto>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetRecommendationById.RecommendationResponseDto>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<RecommendationResponseDto>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<RecommendationResponseDto>>;
         okResult!.Value!.Data.Should().NotBeNull();
         okResult.Value.Data!.Id.Should().Be("r1");
         okResult.Value.Data.Title.Should().Be("Test Recommendation");

@@ -2,13 +2,14 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Groups;
 
-public class GrantAdminPrivlages : IEndpoint
+public class GrantAdminPrivileges : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -20,18 +21,18 @@ public class GrantAdminPrivlages : IEndpoint
             .WithOpenApi();
     }
     public static async Task<IResult> Handle(
-        [FromBody] GrantAdminPrivlagesDto request,
+        [FromBody] GrantAdminPrivilegesDto request,
         AppDbContext dbContext,
         ClaimsPrincipal? user,
         HttpContext httpContext,
-        ILogger<GrantAdminPrivlages> logger,
+        ILogger<GrantAdminPrivileges> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         
         if (user == null)
         {
-            logger.LogWarning("Null user principal in GrantAdminPrivlages. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Null user principal in GrantAdminPrivileges. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         
@@ -51,19 +52,22 @@ public class GrantAdminPrivlages : IEndpoint
         var isCurrentUserAdmin = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == request.GroupId  && gu.UserId == currentUserId && gu.IsAdmin,
                 cancellationToken);
+        
         if (!isCurrentUserAdmin)
         {
             logger.LogWarning("User {UserId} is not admin of group {GroupId}. TraceId: {TraceId}", 
                 currentUserId, request.GroupId, traceId);
             return Results.Forbid();
         }
+        
         var groupUser = await dbContext.GroupUsers
             .FirstOrDefaultAsync(gu => gu.GroupId==request.GroupId && gu.UserId == request.UserId,
                 cancellationToken);
 
         if (groupUser == null)
         {
-            logger.LogWarning("Target user {UserId} not found in group {GroupId}. TraceId: {TraceId}", request.UserId, request.GroupId, traceId);
+            logger.LogWarning("Target user {UserId} not found in group {GroupId}. TraceId: {TraceId}",
+                request.UserId, request.GroupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("User not found in group.", traceId));
         }
 
@@ -78,5 +82,4 @@ public class GrantAdminPrivlages : IEndpoint
 
         return Results.Ok(ApiResponse<string>.Ok("Admin privileges granted successfully.", traceId));
     }
-    public record GrantAdminPrivlagesDto(string GroupId, string UserId);
 }

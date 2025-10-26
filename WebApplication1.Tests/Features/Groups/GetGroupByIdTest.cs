@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Moq;
-using WebApplication1.Features.Groups;
+using Microsoft.Extensions.Logging.Abstractions;
+using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Features.Groups.GroupCRUD;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Groups;
@@ -13,18 +13,18 @@ public class GetGroupByIdTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GetGroupById>>();
+        var logger = NullLogger<GetGroupById>.Instance;
         
         var group = TestDataFactory.CreateGroup("group1", "Test Group", "#FFFFFF", "CODE1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
         var result = await GetGroupById
-            .Handle(group.Id, dbContext, httpContext, mockLogger.Object, CancellationToken.None);
+            .Handle(group.Id, dbContext, httpContext, logger, CancellationToken.None);
             
         result.Should()
-            .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>;
+            .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GroupResponseDto>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GroupResponseDto>>;
             
         okResult!.Value?.Success.Should().BeTrue();
         okResult.Value?.Data.Should().NotBeNull();
@@ -40,10 +40,10 @@ public class GetGroupByIdTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GetGroupById>>();
+        var logger = NullLogger<GetGroupById>.Instance;
         
         var result = await GetGroupById
-            .Handle("nonexistent", dbContext, httpContext, mockLogger.Object, CancellationToken.None);
+            .Handle("nonexistent", dbContext, httpContext, logger, CancellationToken.None);
             
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
         var notFoundResult = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
@@ -58,10 +58,10 @@ public class GetGroupByIdTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GetGroupById>>();
+        var logger = NullLogger<GetGroupById>.Instance;
         
         var result = await GetGroupById
-            .Handle("", dbContext, httpContext, mockLogger.Object, CancellationToken.None);
+            .Handle("", dbContext, httpContext, logger, CancellationToken.None);
             
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequestResult = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
@@ -76,16 +76,16 @@ public class GetGroupByIdTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GetGroupById>>();
+        var logger = NullLogger<GetGroupById>.Instance;
         
         var group = TestDataFactory.CreateGroup("group2", "Another Group", "#000000", "CODE2");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
         var result = await GetGroupById
-            .Handle(group.Id, dbContext, httpContext, mockLogger.Object, CancellationToken.None);
+            .Handle(group.Id, dbContext, httpContext, logger, CancellationToken.None);
             
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetGroupById.GroupResponseDto>>;
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GroupResponseDto>>;
         okResult.Should().NotBeNull();
 
         var dto = okResult.Value?.Data;

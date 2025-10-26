@@ -1,9 +1,8 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Moq;
 using System.Security.Claims;
-using WebApplication1.Features.Groups;
-using WebApplication1.Infrastructure.Data.Entities;
+using Microsoft.Extensions.Logging.Abstractions;
+using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Features.Groups.JoinGroupFeatures;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 
 namespace WebApplication1.Tests.Features.Groups;
@@ -15,7 +14,7 @@ public class GetJoinRequestsForAdminsTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GetJoinRequestsForAdmins>>();
+        var logger = NullLogger<GetJoinRequestsForAdmins>.Instance;
         
         var user1 = TestDataFactory.CreateUser("user1");
         var user2 = TestDataFactory.CreateUser("user2");
@@ -37,14 +36,14 @@ public class GetJoinRequestsForAdminsTest : TestBase
         );
 
         var result = await GetJoinRequestsForAdmins
-            .Handle(claimsPrincipal, dbContext, httpContext, mockLogger.Object, CancellationToken.None);
+            .Handle(claimsPrincipal, dbContext, httpContext, logger, CancellationToken.None);
         result
             .Should()
-            .BeOfType<Microsoft.AspNetCore.Http.HttpResults.
-                Ok<Shared.Responses.ApiResponse<IEnumerable<GetJoinRequestsForAdmins.SingleJoinRequestResponse>>>>();
+            .BeOfType<Microsoft.AspNetCore.Http.HttpResults
+                .Ok<Shared.Responses.ApiResponse<IEnumerable<JoinRequestResponseDto>>>>();
         var okResult =
-            result as Microsoft.AspNetCore.Http.HttpResults.
-                Ok<Shared.Responses.ApiResponse<IEnumerable<GetJoinRequestsForAdmins.SingleJoinRequestResponse>>>;
+            result as Microsoft.AspNetCore.Http.HttpResults
+                .Ok<Shared.Responses.ApiResponse<IEnumerable<JoinRequestResponseDto>>>;
         okResult!.Value?.Success.Should().BeTrue();
         okResult.Value?.Data.Should().NotBeNull();
         okResult.Value?.TraceId.Should().Be("test-trace-id");

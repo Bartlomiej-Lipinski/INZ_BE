@@ -1,14 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.GroupCRUD;
 
 [ApiExplorerSettings(GroupName = "Groups")]
 public class PostGroup : IEndpoint
@@ -87,26 +86,5 @@ public class PostGroup : IEndpoint
         logger.LogError("Failed to create group '{GroupName}' for user {UserId}. TraceId: {TraceId}", 
             requestDto.Name, userId, traceId);
         return Results.Json(ApiResponse<string>.Fail("Failed to create group", traceId), statusCode: 500);
-    }
-
-    public record GroupRequestDto
-    {
-        [Required]
-        [MaxLength(100)]
-        public string Name { get; set; } = null!;
-        [Required]
-        [MaxLength(100)]
-        public string Color { get; set; } = null!;
-    }
-
-    public record GroupResponseDto
-    {
-        [MaxLength(50)]
-        public string Id { get; set; } = null!;
-        [MaxLength(50)]
-        public string Name { get; set; } = null!;
-        [MaxLength(7)]
-        public string Color { get; set; } = null!;
-        
     }
 }

@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Groups;
 using WebApplication1.Shared.Responses;
 
@@ -12,7 +12,7 @@ public class DeleteUserFromGroupTest : TestBase
     public async Task DeleteUserFromGroup_Succeeds()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = new LoggerFactory().CreateLogger<DeleteUserFromGroup>();
+        var logger = NullLogger<DeleteUserFromGroup>.Instance;
         var httpContext = CreateHttpContext();
 
         var userId = TestDataFactory.CreateUser("u1");

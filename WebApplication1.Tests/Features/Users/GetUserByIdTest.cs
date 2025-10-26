@@ -1,10 +1,8 @@
-﻿using System.Security.Claims;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
+﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Users;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Users;
@@ -16,7 +14,7 @@ public class GetUserByIdTest: TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GetUserById>>();
+        var logger = NullLogger<GetUserById>.Instance;
         
         dbContext.Users.Add(TestDataFactory.CreateUser(
             "user1", "Test", "test@test.com", "testUser", "User"));
@@ -28,12 +26,12 @@ public class GetUserByIdTest: TestBase
             claimsPrincipal,
             dbContext, 
             httpContext, 
-            mockLogger.Object, 
+            logger, 
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Ok<ApiResponse<GetUserById.UserResponseDto>>>();
-        var okResult = result as Ok<ApiResponse<GetUserById.UserResponseDto>>;
+        result.Should().BeOfType<Ok<ApiResponse<UserResponseDto>>>();
+        var okResult = result as Ok<ApiResponse<UserResponseDto>>;
         okResult!.Value!.Success.Should().BeTrue();
         okResult.Value.Data!.Id.Should().Be("user1");
         okResult.Value.Data.UserName.Should().Be("testUser");
@@ -46,7 +44,7 @@ public class GetUserByIdTest: TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GetUserById>>();
+        var logger = NullLogger<GetUserById>.Instance;
         
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         var claimsPrincipal = CreateClaimsPrincipal(user.Id);
@@ -56,7 +54,7 @@ public class GetUserByIdTest: TestBase
             claimsPrincipal,
             dbContext,
             httpContext,
-            mockLogger.Object,
+            logger,
             CancellationToken.None
         );
 
@@ -68,12 +66,12 @@ public class GetUserByIdTest: TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GetUserById>>();
+        var logger = NullLogger<GetUserById>.Instance;
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         var result = await GetUserById
-            .Handle("",claimsPrincipal ,dbContext, httpContext, mockLogger.Object, CancellationToken.None);
+            .Handle("",claimsPrincipal ,dbContext, httpContext, logger, CancellationToken.None);
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequest = result as BadRequest<ApiResponse<string>>;

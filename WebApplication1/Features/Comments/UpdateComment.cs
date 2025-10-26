@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -23,7 +24,7 @@ public class UpdateComment : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string targetId,
         [FromRoute] string commentId,
-        [FromBody] UpdateCommentRequestDto request,
+        [FromBody] CommentRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -70,10 +71,5 @@ public class UpdateComment : IEndpoint
             currentUserId, commentId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Comment updated successfully.", comment.Id, traceId));
-    }
-
-    public record UpdateCommentRequestDto
-    {
-        public string Content { get; set; } = null!;
     }
 }

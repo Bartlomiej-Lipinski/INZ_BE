@@ -42,8 +42,8 @@ public class GetUserGroupsTest : TestBase
         response.Success.Should().BeTrue();
         response.Data.Should().NotBeNull();
         response.Data!.Count().Should().Be(2);
-        response.Data.Should().ContainEquivalentOf(new GetUserGroups.GroupResponse(group1.Id, group1.Name));
-        response.Data.Should().ContainEquivalentOf(new GetUserGroups.GroupResponse(group2.Id, group2.Name));
+        response.Data.Should().ContainEquivalentOf(TestDataFactory.CreateGroupResponseDto(group1.Id, group1.Name));
+        response.Data.Should().ContainEquivalentOf(TestDataFactory.CreateGroupResponseDto(group2.Id, group2.Name));
     }
     
     [Fact]

@@ -1,14 +1,13 @@
-using System.Security.Claims;
 using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.JoinGroupFeatures;
 
 public class GetJoinRequestsForAdmins : IEndpoint
 {
@@ -51,14 +50,12 @@ public class GetJoinRequestsForAdmins : IEndpoint
                          && gu.AcceptanceStatus == AcceptanceStatus.Pending && !gu.IsAdmin)
             .Include(gu => gu.Group)
             .Include(gu => gu.User)
-            .Select(gu => new SingleJoinRequestResponse(gu.GroupId, gu.Group.Name, gu.UserId, gu.User.UserName))
+            .Select(gu => new JoinRequestResponseDto(gu.GroupId, gu.Group.Name, gu.UserId, gu.User.UserName))
             .ToListAsync(cancellationToken);
 
         logger.LogInformation("Found {RequestCount} pending join requests for admin user: {UserId}. TraceId: {TraceId}", 
             pendingRequests.Count, userId, traceId);
 
-        return Results.Ok(ApiResponse<IEnumerable<SingleJoinRequestResponse>>.Ok(pendingRequests, null, traceId));
+        return Results.Ok(ApiResponse<IEnumerable<JoinRequestResponseDto>>.Ok(pendingRequests, null, traceId));
     }
-    
-    public record SingleJoinRequestResponse(string GroupId, string GroupName, string UserId, string? UserName);
 }

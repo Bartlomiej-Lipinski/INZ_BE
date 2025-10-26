@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Comments;
+using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Comments;
@@ -42,10 +43,8 @@ public class GetCommentsForTargetTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults
-            .Ok<ApiResponse<List<GetCommentsForTarget.CommentResponseDto>>>>();
-        var ok = result as Microsoft.AspNetCore.Http.HttpResults
-            .Ok<ApiResponse<List<GetCommentsForTarget.CommentResponseDto>>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<CommentResponseDto>>>>();
+        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<CommentResponseDto>>>;
         ok!.Value!.Data.Should().HaveCount(2);
         ok.Value.Data.Should().ContainSingle(c => c.Content == "First comment");
         ok.Value.Data.Should().ContainSingle(c => c.Content == "Second comment");

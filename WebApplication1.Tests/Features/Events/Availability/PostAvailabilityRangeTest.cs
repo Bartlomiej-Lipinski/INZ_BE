@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events.Availability;
-using WebApplication1.Infrastructure.Data.Entities.Events;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Events.Availability;
@@ -154,7 +154,7 @@ public class PostAvailabilityRangeTest :TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<PostAvailabilityRange.AvailabilityRangeResponseDto>>>>();
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<AvailabilityRangeResponseDto>>>>();
         (await dbContext.EventAvailabilityRanges.CountAsync()).Should().Be(1);
     }
 }

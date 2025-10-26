@@ -17,7 +17,7 @@ public class UpdateRecommendationTest : TestBase
 
         var result = await UpdateRecommendation.Handle(
             "rec1",
-            TestDataFactory.CreateUpdateRecommendationDto("New title", "Updated content"),
+            TestDataFactory.CreateRecommendationRequestDto("New title", "Updated content"),
             dbContext,
             CreateClaimsPrincipal(),
             httpContext,
@@ -41,7 +41,7 @@ public class UpdateRecommendationTest : TestBase
 
         var result = await UpdateRecommendation.Handle(
             "nonexistent",
-            TestDataFactory.CreateUpdateRecommendationDto("Title", "Content"),
+            TestDataFactory.CreateRecommendationRequestDto("Title", "Content"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             httpContext,
@@ -77,7 +77,7 @@ public class UpdateRecommendationTest : TestBase
 
         var result = await UpdateRecommendation.Handle(
             "rec1",
-            TestDataFactory.CreateUpdateRecommendationDto("Hacked!", "Evil update"),
+            TestDataFactory.CreateRecommendationRequestDto("Hacked!", "Evil update"),
             dbContext,
             CreateClaimsPrincipal(otherUser.Id),
             httpContext,
@@ -111,7 +111,7 @@ public class UpdateRecommendationTest : TestBase
 
         var result = await UpdateRecommendation.Handle(
             "rec1",
-            TestDataFactory.CreateUpdateRecommendationDto(
+            TestDataFactory.CreateRecommendationRequestDto(
                 "Updated title",
                 "Updated content", 
                 "Books", 

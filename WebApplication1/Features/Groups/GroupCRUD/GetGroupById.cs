@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.GroupCRUD;
 
 [ApiExplorerSettings(GroupName = "Groups")]
 public class GetGroupById : IEndpoint
@@ -56,17 +56,5 @@ public class GetGroupById : IEndpoint
 
         logger.LogInformation("Group successfully retrieved with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
         return Results.Ok(ApiResponse<GroupResponseDto>.Ok(dto, "Group retrieved successfully", traceId));
-    }
-
-    public record GroupResponseDto
-    {
-        [MaxLength(50)]
-        public string Id { get; set; } = null!;
-        [MaxLength(50)]
-        public string Name { get; set; } = null!;
-        [MaxLength(7)]
-        public string Color { get; set; } = null!;
-        [MaxLength(5)]
-        public string Code { get; set; } = null!;
     }
 }

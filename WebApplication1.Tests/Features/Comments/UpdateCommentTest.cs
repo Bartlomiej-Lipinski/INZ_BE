@@ -17,7 +17,7 @@ public class UpdateCommentTest : TestBase
         var result = await UpdateComment.Handle(
             "r1",
             "c1",
-            TestDataFactory.CreateUpdateCommentRequestDto("Updated"),
+            TestDataFactory.CreateCommentRequestDto("Updated"),
             dbContext,
             CreateClaimsPrincipal(),
             httpContext,
@@ -42,7 +42,7 @@ public class UpdateCommentTest : TestBase
         var result = await UpdateComment.Handle(
             "r1",
             "c1",
-            TestDataFactory.CreateUpdateCommentRequestDto("Updated"),
+            TestDataFactory.CreateCommentRequestDto("Updated"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             httpContext,
@@ -79,7 +79,7 @@ public class UpdateCommentTest : TestBase
         var result = await UpdateComment.Handle(
             target.Id,
             comment.Id,
-            TestDataFactory.CreateUpdateCommentRequestDto("Updated"),
+            TestDataFactory.CreateCommentRequestDto("Updated"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             httpContext,

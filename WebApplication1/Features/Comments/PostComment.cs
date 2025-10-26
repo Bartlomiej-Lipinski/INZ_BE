@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Shared.Endpoints;
@@ -87,11 +88,5 @@ public class PostComment : IEndpoint
                               "TraceId: {TraceId}", currentUserId, comment.Id, targetId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Comment added successfully.", comment.Id, traceId));
-    }
-
-    public record CommentRequestDto
-    {
-        public string TargetType { get; set; } = null!;
-        public string Content { get; set; } = null!;
     }
 }
