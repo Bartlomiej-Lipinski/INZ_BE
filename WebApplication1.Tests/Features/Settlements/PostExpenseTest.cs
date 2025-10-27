@@ -34,8 +34,8 @@ public class PostExpenseTest : TestBase
         var httpContext = CreateHttpContext(user1.Id);
 
         var dto = TestDataFactory.CreateExpenseRequestDto("Dinner", user1.Id, 100, true, [
-            new ExpenseBeneficiaryRequestDto { UserId = user1.Id },
-            new ExpenseBeneficiaryRequestDto { UserId = user2.Id }
+            new ExpenseBeneficiaryDto { UserId = user1.Id },
+            new ExpenseBeneficiaryDto { UserId = user2.Id }
         ]);
         
         var mockCalculator = new Mock<ISettlementCalculator>();
@@ -83,7 +83,7 @@ public class PostExpenseTest : TestBase
             "u1", 
             50,
             true, 
-            [new ExpenseBeneficiaryRequestDto { UserId = "u1" }]);
+            [new ExpenseBeneficiaryDto { UserId = "u1" }]);
         
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
@@ -118,7 +118,7 @@ public class PostExpenseTest : TestBase
             "u1", 
             40,
             true, 
-            [new ExpenseBeneficiaryRequestDto { UserId = "u1" }]);
+            [new ExpenseBeneficiaryDto { UserId = "u1" }]);
         
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
@@ -157,7 +157,7 @@ public class PostExpenseTest : TestBase
             "u2", 
             10,
             true, 
-            [new ExpenseBeneficiaryRequestDto { UserId = "u2" }]);
+            [new ExpenseBeneficiaryDto { UserId = "u2" }]);
         
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
@@ -244,8 +244,8 @@ public class PostExpenseTest : TestBase
             100,
             false,
             [
-                new ExpenseBeneficiaryRequestDto { UserId = user.Id, Share = 30 },
-                new ExpenseBeneficiaryRequestDto { UserId = "u2", Share = 60 }
+                new ExpenseBeneficiaryDto { UserId = user.Id, Share = 30 },
+                new ExpenseBeneficiaryDto { UserId = "u2", Share = 60 }
             ]);
         
         var mockCalculator = new Mock<ISettlementCalculator>();

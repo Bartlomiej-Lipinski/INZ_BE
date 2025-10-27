@@ -9,6 +9,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 
 namespace WebApplication1.Tests;
@@ -316,8 +317,32 @@ public static class TestDataFactory
         };
     }
 
+    public static Expense CreateExpense(
+        string id, string groupId, string paidByUserId, string title, decimal amount, bool isEvenSplit)
+    {
+        return new Expense
+        {
+            Id = id,
+            GroupId = groupId,
+            PaidByUserId = paidByUserId,
+            Title = title,
+            Amount = amount,
+            IsEvenSplit = isEvenSplit
+        };
+    }
+
+    public static ExpenseBeneficiary CreateExpenseBeneficiary(string expenseId, string userId, decimal share)
+    {
+        return new ExpenseBeneficiary
+        {
+            ExpenseId = expenseId,
+            UserId = userId,
+            Share = share
+        };
+    }
+
     public static ExpenseRequestDto CreateExpenseRequestDto(
-        string title, string paidByUserId, decimal amount, bool isEvenSplit, List<ExpenseBeneficiaryRequestDto> beneficiaries)
+        string title, string paidByUserId, decimal amount, bool isEvenSplit, List<ExpenseBeneficiaryDto> beneficiaries)
     {
         return new ExpenseRequestDto
         {
