@@ -2,7 +2,7 @@
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Storage;
-using WebApplication1.Infrastructure.Storage;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Storage;

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -29,6 +30,7 @@ public class PostExpense : IEndpoint
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<PostExpense> logger,
+        ISettlementCalculator settlementCalculator,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
@@ -109,7 +111,8 @@ public class PostExpense : IEndpoint
         dbContext.Expenses.Add(expense);
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        await SettlementCalculator.RecalculateSettlementsAsync(dbContext, groupId, logger, cancellationToken);
+        await settlementCalculator.RecalculateSettlementsForExpenseAdditionAsync(
+            expense, dbContext, groupId, logger, cancellationToken);
 
         logger.LogInformation(
             "User {UserId} added new expense {ExpenseId} in group {GroupId}. TraceId: {TraceId}",

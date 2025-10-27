@@ -1,16 +1,10 @@
 using Microsoft.AspNetCore.Http;
 using WebApplication1.Features.Auth;
-using WebApplication1.Features.Comments;
 using WebApplication1.Features.Comments.Dtos;
-using WebApplication1.Features.Events;
-using WebApplication1.Features.Events.Availability;
 using WebApplication1.Features.Events.Dtos;
-using WebApplication1.Features.Groups;
 using WebApplication1.Features.Groups.Dtos;
-using WebApplication1.Features.Groups.GroupCRUD;
-using WebApplication1.Features.Groups.JoinGroupFeatures;
-using WebApplication1.Features.Recommendations;
 using WebApplication1.Features.Recommendations.Dtos;
+using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
@@ -319,6 +313,19 @@ public static class TestDataFactory
         {
             Headers = new HeaderDictionary(),
             ContentType = "application/octet-stream"
+        };
+    }
+
+    public static ExpenseRequestDto CreateExpenseRequestDto(
+        string title, string paidByUserId, decimal amount, bool isEvenSplit, List<ExpenseBeneficiaryRequestDto> beneficiaries)
+    {
+        return new ExpenseRequestDto
+        {
+            Title = title,
+            PaidByUserId = paidByUserId,
+            Amount = amount,
+            IsEvenSplit = isEvenSplit,
+            Beneficiaries = beneficiaries
         };
     }
     

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using WebApplication1.Infrastructure.Storage;
+using WebApplication1.Infrastructure.Service;
 
 namespace WebApplication1.Tests.Features.Storage;
 

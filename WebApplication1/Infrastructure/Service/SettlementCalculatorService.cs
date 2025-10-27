@@ -1,18 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Settlements;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 
-namespace WebApplication1.Features.Settlements;
+namespace WebApplication1.Infrastructure.Service;
 
-public static class SettlementCalculator
+public class SettlementCalculatorService : ISettlementCalculator
 {
-    public static async Task RecalculateSettlementsAsync(
-    AppDbContext dbContext,
-    string groupId,
-    ILogger logger,
-    CancellationToken cancellationToken)
+    public async Task RecalculateSettlementsForExpenseAdditionAsync(
+        Expense expense,
+        AppDbContext dbContext,
+        string groupId,
+        ILogger logger,
+        CancellationToken cancellationToken)
     {
-        logger.LogInformation("Recalculating settlements for group {GroupId}", groupId);
+        logger.LogInformation("Recalculating settlements for new expense in group {GroupId}", groupId);
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         await dbContext.Database.ExecuteSqlRawAsync(
             "SELECT * FROM Expenses WHERE GroupId = {0} FOR UPDATE", groupId);
@@ -21,29 +23,27 @@ public static class SettlementCalculator
         
         try
         {
-            var expenses = await dbContext.Expenses
-                .Include(e => e.Beneficiaries)
-                .Where(e => e.GroupId == groupId)
+            var settlements = await dbContext.Settlements
+                .Where(s => s.GroupId == groupId)
                 .ToListAsync(cancellationToken);
 
-            if (expenses.Count == 0)
-            {
-                logger.LogInformation("No expenses found for group {GroupId}", groupId);
-                await transaction.CommitAsync(cancellationToken);
-                return;
-            }
-
             var balances = new Dictionary<string, decimal>();
-            foreach (var expense in expenses)
+            foreach (var settlement in settlements)
             {
-                balances.TryAdd(expense.PaidByUserId, 0);
-                balances[expense.PaidByUserId] += expense.Amount;
+                balances.TryAdd(settlement.ToUserId, 0);
+                balances[settlement.ToUserId] += settlement.Amount;
+                
+                balances.TryAdd(settlement.FromUserId, 0);
+                balances[settlement.FromUserId] -= settlement.Amount;
+            }
+            
+            balances.TryAdd(expense.PaidByUserId, 0);
+            balances[expense.PaidByUserId] += expense.Amount;
 
-                foreach (var b in expense.Beneficiaries)
-                {
-                    balances.TryAdd(b.UserId, 0);
-                    balances[b.UserId] -= b.Share;
-                }
+            foreach (var b in expense.Beneficiaries)
+            {
+                balances.TryAdd(b.UserId, 0);
+                balances[b.UserId] -= b.Share;
             }
 
             var debtors = balances
@@ -73,6 +73,7 @@ public static class SettlementCalculator
 
                     newSettlements.Add(new Settlement
                     {
+                        Id = Guid.NewGuid().ToString(),
                         GroupId = groupId,
                         FromUserId = debtor.UserId,
                         ToUserId = creditor.UserId,
@@ -84,13 +85,9 @@ public static class SettlementCalculator
                 }
             }
 
-            var existingSettlements = await dbContext.Settlements
-                .Where(s => s.GroupId == groupId)
-                .ToListAsync(cancellationToken);
-
             foreach (var newSet in newSettlements)
             {
-                var existing = existingSettlements.FirstOrDefault(s =>
+                var existing = settlements.FirstOrDefault(s =>
                     s.FromUserId == newSet.FromUserId &&
                     s.ToUserId == newSet.ToUserId &&
                     s.GroupId == groupId);
@@ -108,8 +105,7 @@ public static class SettlementCalculator
                 }
             }
 
-            var toRemove = existingSettlements
-                .Where(es => es.Status != SettlementStatus.Paid)
+            var toRemove = settlements
                 .Where(es => !newSettlements.Any(ns =>
                     ns.FromUserId == es.FromUserId &&
                     ns.ToUserId == es.ToUserId))

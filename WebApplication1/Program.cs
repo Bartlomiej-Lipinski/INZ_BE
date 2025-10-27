@@ -11,7 +11,7 @@ using WebApplication1.Features.Auth.Services;
 using WebApplication1.Infrastructure.Configuration;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
-using WebApplication1.Infrastructure.Storage;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Middlewares;
 
