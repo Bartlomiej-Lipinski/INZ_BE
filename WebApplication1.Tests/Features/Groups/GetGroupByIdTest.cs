@@ -12,15 +12,13 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_Ok_With_Group_When_Group_Exists()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetGroupById>.Instance;
         
         var group = TestDataFactory.CreateGroup("group1", "Test Group", "#FFFFFF", "CODE1");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
         var result = await GetGroupById
-            .Handle(group.Id, dbContext, httpContext, logger, CancellationToken.None);
+            .Handle(group.Id, dbContext, CreateHttpContext(), NullLogger<GetGroupById>.Instance, CancellationToken.None);
             
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GroupResponseDto>>>();
@@ -39,11 +37,9 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetGroupById>.Instance;
         
         var result = await GetGroupById
-            .Handle("nonexistent", dbContext, httpContext, logger, CancellationToken.None);
+            .Handle("nonexistent", dbContext, CreateHttpContext(), NullLogger<GetGroupById>.Instance, CancellationToken.None);
             
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
         var notFoundResult = result as Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>;
@@ -57,11 +53,9 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Id_Is_NullOrEmpty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetGroupById>.Instance;
         
         var result = await GetGroupById
-            .Handle("", dbContext, httpContext, logger, CancellationToken.None);
+            .Handle("", dbContext, CreateHttpContext(), NullLogger<GetGroupById>.Instance, CancellationToken.None);
             
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequestResult = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
@@ -75,15 +69,13 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_Ok_With_Correct_Dto_Properties()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetGroupById>.Instance;
         
         var group = TestDataFactory.CreateGroup("group2", "Another Group", "#000000", "CODE2");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
         var result = await GetGroupById
-            .Handle(group.Id, dbContext, httpContext, logger, CancellationToken.None);
+            .Handle(group.Id, dbContext, CreateHttpContext(), NullLogger<GetGroupById>.Instance, CancellationToken.None);
             
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GroupResponseDto>>;
         okResult.Should().NotBeNull();

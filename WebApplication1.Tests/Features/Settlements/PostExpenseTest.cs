@@ -28,11 +28,7 @@ public class PostExpenseTest : TestBase
         dbContext.Users.AddRange(user1, user2);
         dbContext.GroupUsers.AddRange(gu1, gu2);
         await dbContext.SaveChangesAsync();
-
-        var claims = CreateClaimsPrincipal(user1.Id);
-        var logger = NullLogger<PostExpense>.Instance;
-        var httpContext = CreateHttpContext(user1.Id);
-
+        
         var dto = TestDataFactory.CreateExpenseRequestDto("Dinner", user1.Id, 100, true, [
             new ExpenseBeneficiaryDto { UserId = user1.Id },
             new ExpenseBeneficiaryDto { UserId = user2.Id }
@@ -49,9 +45,9 @@ public class PostExpenseTest : TestBase
             group.Id,
             dto,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user1.Id),
+            CreateHttpContext(user1.Id),
+            NullLogger<PostExpense>.Instance,
             mockCalculator.Object,
             CancellationToken.None);
 
@@ -75,8 +71,6 @@ public class PostExpenseTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Logged_In()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostExpense>.Instance;
-        var httpContext = CreateHttpContext();
 
         var dto = TestDataFactory.CreateExpenseRequestDto(
             "Test", 
@@ -97,8 +91,8 @@ public class PostExpenseTest : TestBase
             dto,
             dbContext,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<PostExpense>.Instance,
             mockCalculator.Object,
             CancellationToken.None);
 
@@ -109,10 +103,7 @@ public class PostExpenseTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostExpense>.Instance;
-        var httpContext = CreateHttpContext("u1");
-        var claims = CreateClaimsPrincipal("u1");
-
+        
         var dto = TestDataFactory.CreateExpenseRequestDto(
             "Groceries",
             "u1", 
@@ -131,9 +122,9 @@ public class PostExpenseTest : TestBase
             "nonexistent",
             dto,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("u1"),
+            CreateHttpContext("u1"),
+            NullLogger<PostExpense>.Instance,
             mockCalculator.Object,
             CancellationToken.None);
 
@@ -147,10 +138,6 @@ public class PostExpenseTest : TestBase
         var group = TestDataFactory.CreateGroup("g1", "Group");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
-
-        var logger = NullLogger<PostExpense>.Instance;
-        var httpContext = CreateHttpContext("u2");
-        var claims = CreateClaimsPrincipal("u2");
 
         var dto = TestDataFactory.CreateExpenseRequestDto(
             "Test",
@@ -170,9 +157,9 @@ public class PostExpenseTest : TestBase
             "g1",
             dto,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("u2"),
+            CreateHttpContext("u2"),
+            NullLogger<PostExpense>.Instance,
             mockCalculator.Object,
             CancellationToken.None);
 
@@ -190,10 +177,6 @@ public class PostExpenseTest : TestBase
         dbContext.Users.Add(user);
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
-
-        var logger = NullLogger<PostExpense>.Instance;
-        var httpContext = CreateHttpContext(user.Id);
-        var claims = CreateClaimsPrincipal(user.Id);
 
         var dto = TestDataFactory.CreateExpenseRequestDto(
             "",
@@ -213,9 +196,9 @@ public class PostExpenseTest : TestBase
             group.Id,
             dto,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<PostExpense>.Instance,
             mockCalculator.Object,
             CancellationToken.None);
 
@@ -233,10 +216,6 @@ public class PostExpenseTest : TestBase
         dbContext.Users.Add(user);
         dbContext.GroupUsers.Add(gu);
         await dbContext.SaveChangesAsync();
-
-        var logger = NullLogger<PostExpense>.Instance;
-        var httpContext = CreateHttpContext(user.Id);
-        var claims = CreateClaimsPrincipal(user.Id);
 
         var dto = TestDataFactory.CreateExpenseRequestDto(
             "Trip",
@@ -259,9 +238,9 @@ public class PostExpenseTest : TestBase
             group.Id,
             dto,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<PostExpense>.Instance,
             mockCalculator.Object,
             CancellationToken.None);
 

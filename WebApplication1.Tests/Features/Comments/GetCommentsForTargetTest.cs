@@ -32,14 +32,11 @@ public class GetCommentsForTargetTest : TestBase
 
         await dbContext.SaveChangesAsync();
 
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetCommentsForTarget>.Instance;
-
         var result = await GetCommentsForTarget.Handle(
             target.Id,
             dbContext,
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<GetCommentsForTarget>.Instance,
             CancellationToken.None
         );
 

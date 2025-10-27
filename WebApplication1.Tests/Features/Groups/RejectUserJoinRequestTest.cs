@@ -13,17 +13,14 @@ public class RejectUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Request_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var claimsPrincipal = CreateClaimsPrincipal("u1");
-        var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContext("u1");
         
         var result = await RejectUserJoinRequest.Handle(
             "g1",
             TestDataFactory.CreateRejectUserJoinRequestDto("u1"), 
             dbContext, 
-            claimsPrincipal,
-            logger,
-            httpContext, 
+            CreateClaimsPrincipal("u1"),
+            NullLogger<RejectUserJoinRequest>.Instance,
+            CreateHttpContext("u1"), 
             CancellationToken.None
         );
         
@@ -46,16 +43,13 @@ public class RejectUserJoinRequestTest : TestBase
         
         await dbContext.SaveChangesAsync();
         
-        var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContext();
-        
         var result = await RejectUserJoinRequest.Handle(
             "g1",
             TestDataFactory.CreateRejectUserJoinRequestDto("u1"),
             dbContext, 
             CreateClaimsPrincipal("admin1"), 
-            logger, 
-            httpContext, 
+            NullLogger<RejectUserJoinRequest>.Instance, 
+            CreateHttpContext(), 
             CancellationToken.None
         );
         
@@ -81,18 +75,16 @@ public class RejectUserJoinRequestTest : TestBase
         dbContext.GroupUsers.Add(pendingUser);
         
         await dbContext.SaveChangesAsync();
-        var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContext("g1");
 
         var result = await RejectUserJoinRequest.Handle(
             "g1",
             TestDataFactory.CreateRejectUserJoinRequestDto("u1"),
             dbContext, 
             CreateClaimsPrincipal("admin1"), 
-            logger, 
-            httpContext, 
+            NullLogger<RejectUserJoinRequest>.Instance, 
+            CreateHttpContext("g1"), 
             CancellationToken.None
-            );
+        );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;

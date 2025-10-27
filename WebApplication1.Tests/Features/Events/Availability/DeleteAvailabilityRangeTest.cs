@@ -12,7 +12,6 @@ public class DeleteAvailabilityRangeTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailabilityRange>.Instance;
 
         var result = await DeleteAvailabilityRange.Handle(
             "g1",
@@ -20,7 +19,7 @@ public class DeleteAvailabilityRangeTest : TestBase
             dbContext,
             CreateClaimsPrincipal(),
             CreateHttpContext(),
-            logger,
+            NullLogger<DeleteAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -31,7 +30,6 @@ public class DeleteAvailabilityRangeTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
@@ -42,7 +40,7 @@ public class DeleteAvailabilityRangeTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
-            logger,
+            NullLogger<DeleteAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -53,7 +51,6 @@ public class DeleteAvailabilityRangeTest : TestBase
     public async Task Handle_Should_Return_Forbidden_When_User_Not_Member_Of_Group()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         dbContext.Users.Add(user);
@@ -66,7 +63,7 @@ public class DeleteAvailabilityRangeTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
-            logger,
+            NullLogger<DeleteAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -77,7 +74,6 @@ public class DeleteAvailabilityRangeTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
@@ -92,7 +88,7 @@ public class DeleteAvailabilityRangeTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<DeleteAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -103,7 +99,6 @@ public class DeleteAvailabilityRangeTest : TestBase
     public async Task Handle_Should_Return_Ok_When_No_Availability_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
@@ -120,7 +115,7 @@ public class DeleteAvailabilityRangeTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<DeleteAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -132,7 +127,6 @@ public class DeleteAvailabilityRangeTest : TestBase
     public async Task Handle_Should_Delete_Existing_Availability()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
@@ -154,7 +148,7 @@ public class DeleteAvailabilityRangeTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<DeleteAvailabilityRange>.Instance,
             CancellationToken.None
         );
 

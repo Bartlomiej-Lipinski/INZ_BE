@@ -13,8 +13,6 @@ public class UpdateFileTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Is_Null()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<UpdateFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
         var file = TestDataFactory.CreateFormFile("test.jpg", "content"u8.ToArray());
 
@@ -24,8 +22,8 @@ public class UpdateFileTest : TestBase
             dbContext,
             mockStorageService.Object,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<UpdateFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
@@ -35,9 +33,6 @@ public class UpdateFileTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_File_Is_Null()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateClaimsPrincipal("user1");
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<UpdateFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var existingFile = TestDataFactory.CreateStoredFile(
@@ -60,9 +55,9 @@ public class UpdateFileTest : TestBase
             null,
             dbContext,
             mockStorageService.Object,
-            user,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("user1"),
+            CreateHttpContext("user1"),
+            NullLogger<UpdateFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
@@ -76,9 +71,6 @@ public class UpdateFileTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_File_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateClaimsPrincipal("user1");
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<UpdateFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
         var file = TestDataFactory.CreateFormFile("test.jpg", "content"u8.ToArray());
 
@@ -87,9 +79,9 @@ public class UpdateFileTest : TestBase
             file,
             dbContext,
             mockStorageService.Object,
-            user,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("user1"),
+            CreateHttpContext("user1"),
+            NullLogger<UpdateFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -103,9 +95,6 @@ public class UpdateFileTest : TestBase
     public async Task Handle_Should_Update_File_Successfully()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateClaimsPrincipal("user1");
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<UpdateFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var existingFile = TestDataFactory.CreateStoredFile(
@@ -135,9 +124,9 @@ public class UpdateFileTest : TestBase
             file,
             dbContext,
             mockStorageService.Object,
-            user,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("user1"),
+            CreateHttpContext("user1"),
+            NullLogger<UpdateFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostFile.StoredFileResponseDto>>>();

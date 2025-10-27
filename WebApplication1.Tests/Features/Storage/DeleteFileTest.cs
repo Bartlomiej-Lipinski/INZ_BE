@@ -13,8 +13,6 @@ public class DeleteFileTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Is_Null()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<DeleteFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var result = await DeleteFile.Handle(
@@ -22,8 +20,8 @@ public class DeleteFileTest : TestBase
             dbContext,
             mockStorageService.Object,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<DeleteFile>.Instance,
             CancellationToken.None
         );
 
@@ -34,18 +32,15 @@ public class DeleteFileTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_File_Does_Not_Exist_In_Database()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateClaimsPrincipal("user1");
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<DeleteFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var result = await DeleteFile.Handle(
             "non-existent-id",
             dbContext,
             mockStorageService.Object,
-            user,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("user1"),
+            CreateHttpContext("user1"),
+            NullLogger<DeleteFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -59,9 +54,6 @@ public class DeleteFileTest : TestBase
     public async Task Handle_Should_Delete_File_Successfully()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateClaimsPrincipal("user1");
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<DeleteFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var storedFile = TestDataFactory.CreateStoredFile(
@@ -82,9 +74,9 @@ public class DeleteFileTest : TestBase
             "test-id",
             dbContext,
             mockStorageService.Object,
-            user,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("user1"),
+            CreateHttpContext("user1"),
+            NullLogger<DeleteFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();

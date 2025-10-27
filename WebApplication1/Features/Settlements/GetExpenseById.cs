@@ -36,7 +36,7 @@ public class GetExpenseById : IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to create event. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to retrieve an expense. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         

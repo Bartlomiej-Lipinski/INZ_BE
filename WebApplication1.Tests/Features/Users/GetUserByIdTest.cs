@@ -13,20 +13,17 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_Ok_When_User_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetUserById>.Instance;
         
         dbContext.Users.Add(TestDataFactory.CreateUser(
             "user1", "Test", "test@test.com", "testUser", "User"));
         await dbContext.SaveChangesAsync();
-        var claimsPrincipal = CreateClaimsPrincipal("user1");
         
         var result = await GetUserById.Handle(
             "user1",
-            claimsPrincipal,
+            CreateClaimsPrincipal("user1"),
             dbContext, 
-            httpContext, 
-            logger, 
+            CreateHttpContext(), 
+            NullLogger<GetUserById>.Instance, 
             CancellationToken.None
         );
 
@@ -43,18 +40,15 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_Forbid_When_User_Does_Not_Exist_Or_Is_Not_CurrentUser()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetUserById>.Instance;
         
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
         
         var result = await GetUserById.Handle(
             "nonexistent",
-            claimsPrincipal,
+            CreateClaimsPrincipal(user.Id),
             dbContext,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<GetUserById>.Instance,
             CancellationToken.None
         );
 
@@ -65,13 +59,16 @@ public class GetUserByIdTest: TestBase
     public async Task Handle_Should_Return_BadRequest_When_Id_Is_NullOrEmpty()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetUserById>.Instance;
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var result = await GetUserById
-            .Handle("",claimsPrincipal ,dbContext, httpContext, logger, CancellationToken.None);
+        var result = await GetUserById.Handle(
+            "", 
+            CreateClaimsPrincipal(user.Id),
+            dbContext,
+            CreateHttpContext(), 
+            NullLogger<GetUserById>.Instance,
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequest = result as BadRequest<ApiResponse<string>>;

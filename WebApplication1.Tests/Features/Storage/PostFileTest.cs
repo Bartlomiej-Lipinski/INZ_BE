@@ -13,8 +13,6 @@ public class PostFileTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Is_Null()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<PostFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
         var file = TestDataFactory.CreateFormFile("test.jpg", "content"u8.ToArray());
 
@@ -25,8 +23,8 @@ public class PostFileTest : TestBase
             dbContext,
             mockStorageService.Object,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<PostFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
@@ -36,9 +34,6 @@ public class PostFileTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_File_Is_Null()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateClaimsPrincipal("user1");
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<PostFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var result = await PostFile.Handle(
@@ -47,9 +42,9 @@ public class PostFileTest : TestBase
             null,
             dbContext,
             mockStorageService.Object,
-            user,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("user1"),
+            CreateHttpContext("user1"),
+            NullLogger<PostFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
@@ -63,9 +58,6 @@ public class PostFileTest : TestBase
     public async Task Handle_Should_Upload_File_Successfully()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = CreateClaimsPrincipal("user1");
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<PostFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var file = TestDataFactory.CreateFormFile("test.jpg", "content"u8.ToArray());
@@ -80,9 +72,9 @@ public class PostFileTest : TestBase
             file,
             dbContext,
             mockStorageService.Object,
-            user,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("user1"),
+            CreateHttpContext("user1"),
+            NullLogger<PostFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostFile.StoredFileResponseDto>>>();

@@ -11,8 +11,6 @@ public class GetIsAdminTest : TestBase
     public async Task GetIsAdmin_ReturnsTrue_ForAdminUser()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetIsAdmin>.Instance;
         var user1 = TestDataFactory.CreateUser("user1");
         var group = TestDataFactory.CreateGroup("group1");
         dbContext.Users.Add(user1);
@@ -28,8 +26,8 @@ public class GetIsAdminTest : TestBase
             groupId: group.Id,
             dbContext,
             CreateClaimsPrincipal(user1.Id),
-            logger,
-            httpContext,
+            NullLogger<GetIsAdmin>.Instance,
+            CreateHttpContext(),
             CancellationToken.None);
 
         var isAdmin = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<bool>>;
@@ -41,8 +39,6 @@ public class GetIsAdminTest : TestBase
     public async Task GetIsAdmin_ReturnsFalse_ForNonAdminUser()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetIsAdmin>.Instance;
         var user1 = TestDataFactory.CreateUser("user1");
         var group = TestDataFactory.CreateGroup("group1");
         dbContext.Users.Add(user1);
@@ -58,8 +54,8 @@ public class GetIsAdminTest : TestBase
             groupId: group.Id,
             dbContext,
             CreateClaimsPrincipal(user1.Id),
-            logger,
-            httpContext,
+            NullLogger<GetIsAdmin>.Instance,
+            CreateHttpContext(),
             CancellationToken.None);
 
         var isAdmin = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<bool>>;

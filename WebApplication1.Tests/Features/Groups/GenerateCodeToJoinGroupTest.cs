@@ -11,14 +11,17 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldGenerateUniqueCode()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<GenerateCodeToJoinGroup>.Instance;
-        var httpContext = CreateHttpContext();
-
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
-        var result = await GenerateCodeToJoinGroup.Handle("g1", dbContext, httpContext, logger, CancellationToken.None);
+        var result = await GenerateCodeToJoinGroup.Handle(
+            "g1", 
+            dbContext,
+            CreateHttpContext(),
+            NullLogger<GenerateCodeToJoinGroup>.Instance, 
+            CancellationToken.None
+        );
         
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
@@ -37,11 +40,14 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnNotFound_WhenGroupDoesNotExist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GenerateCodeToJoinGroup>.Instance;
         
-        var result = await GenerateCodeToJoinGroup
-            .Handle("non-existent", dbContext, httpContext, logger, CancellationToken.None);
+        var result = await GenerateCodeToJoinGroup.Handle(
+            "non-existent", 
+            dbContext,
+            CreateHttpContext(),
+            NullLogger<GenerateCodeToJoinGroup>.Instance,
+            CancellationToken.None
+        );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
        
@@ -54,10 +60,14 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenGroupIdIsEmpty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GenerateCodeToJoinGroup>.Instance;
         
-        var result = await GenerateCodeToJoinGroup.Handle("", dbContext, httpContext, logger, CancellationToken.None);
+        var result = await GenerateCodeToJoinGroup.Handle(
+            "",
+            dbContext,
+            CreateHttpContext(), 
+            NullLogger<GenerateCodeToJoinGroup>.Instance, 
+            CancellationToken.None
+        );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         

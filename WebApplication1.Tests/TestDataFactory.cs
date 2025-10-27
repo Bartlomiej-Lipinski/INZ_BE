@@ -26,7 +26,7 @@ public static class TestDataFactory
             Code = code ?? GenerateUniqueCode()
         };
     }
-    
+
     public static GroupUser CreateGroupUser(
         string? userId = null,
         string? groupId = null,
@@ -41,7 +41,7 @@ public static class TestDataFactory
             AcceptanceStatus = acceptance
         };
     }
-    
+
     public static GroupRequestDto CreateGroupRequestDto(string? name = null, string? color = null)
     {
         return new GroupRequestDto
@@ -55,7 +55,7 @@ public static class TestDataFactory
     {
         return new GroupResponseDto
         {
-            Id = groupId, 
+            Id = groupId,
             Name = name
         };
     }
@@ -102,7 +102,7 @@ public static class TestDataFactory
             UserId = userId
         };
     }
-    
+
     public static JoinGroupRequestDto CreateJoinGroupRequest(string groupCode)
     {
         return new JoinGroupRequestDto
@@ -110,7 +110,7 @@ public static class TestDataFactory
             GroupCode = groupCode,
         };
     }
-    
+
     public static AuthController.UserRequestDto CreateUserRequestDto(
         string email, string userName, string password, string name, string surname)
     {
@@ -123,7 +123,7 @@ public static class TestDataFactory
             Password = password
         };
     }
-    
+
     public static ExtendedLoginRequest CreateExtendedLoginRequest(string email, string password)
     {
         return new ExtendedLoginRequest
@@ -194,7 +194,8 @@ public static class TestDataFactory
     }
 
     public static Event CreateEvent(
-        string id, string groupId, string userId, string title, string? description, string? location, DateTime createdAt)
+        string id, string groupId, string userId, string title, string? description, string? location,
+        DateTime createdAt)
     {
         return new Event
         {
@@ -204,14 +205,14 @@ public static class TestDataFactory
             Title = title,
             Description = description,
             Location = location,
-            CreatedAt = createdAt  
+            CreatedAt = createdAt
         };
     }
 
     public static EventRequestDto CreateEventRequestDto(
-        string title, 
+        string title,
         DateTime? startDate = null,
-        DateTime? endDate = null, 
+        DateTime? endDate = null,
         string? description = null,
         string? location = null)
     {
@@ -284,9 +285,9 @@ public static class TestDataFactory
 
     public static StoredFile CreateStoredFile(
         string id,
-        string fileName, 
-        string contentType, 
-        int size, 
+        string fileName,
+        string contentType,
+        int size,
         string url,
         DateTime uploadedAt,
         string entityId,
@@ -306,7 +307,7 @@ public static class TestDataFactory
             UploadedBy = uploadedBy
         };
     }
-    
+
     public static IFormFile CreateFormFile(string fileName, byte[] content)
     {
         var stream = new MemoryStream(content);
@@ -341,7 +342,20 @@ public static class TestDataFactory
         };
     }
 
-    public static ExpenseRequestDto CreateExpenseRequestDto(
+    public static Settlement CreateSettlement(
+        string id, string groupId, string fromUserId, string toUserId, decimal amount)
+    {
+        return new Settlement
+        {
+            Id = id,
+            GroupId = groupId,
+            FromUserId = fromUserId,
+            ToUserId = toUserId,
+            Amount = amount
+        };
+    }
+
+public static ExpenseRequestDto CreateExpenseRequestDto(
         string title, string paidByUserId, decimal amount, bool isEvenSplit, List<ExpenseBeneficiaryDto> beneficiaries)
     {
         return new ExpenseRequestDto

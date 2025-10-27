@@ -13,9 +13,6 @@ public class GetJoinRequestsForAdminsTest : TestBase
     public async Task Test_JoinRequest_For_Admins()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetJoinRequestsForAdmins>.Instance;
-        
         var user1 = TestDataFactory.CreateUser("user1");
         var user2 = TestDataFactory.CreateUser("user2");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#FFFFFF", "CODE1");
@@ -31,12 +28,14 @@ public class GetJoinRequestsForAdminsTest : TestBase
             .Add(TestDataFactory.CreateGroupUser(user2.Id, group1.Id, false, AcceptanceStatus.Pending));
         await dbContext.SaveChangesAsync();
 
-        var claimsPrincipal = new ClaimsPrincipal(
-            new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, user1.Id)])
+        var result = await GetJoinRequestsForAdmins.Handle(
+            CreateClaimsPrincipal(user1.Id),
+            dbContext,
+            CreateHttpContext(), 
+            NullLogger<GetJoinRequestsForAdmins>.Instance, 
+            CancellationToken.None
         );
-
-        var result = await GetJoinRequestsForAdmins
-            .Handle(claimsPrincipal, dbContext, httpContext, logger, CancellationToken.None);
+        
         result
             .Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults

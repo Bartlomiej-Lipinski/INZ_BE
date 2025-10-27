@@ -12,8 +12,6 @@ public class GrantAdminPrivilegesTest : TestBase
     public async Task GrantAdminPrivileges_Should_Grant_Admin_Role_To_User()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GrantAdminPrivileges>.Instance;
         var userOne = TestDataFactory.CreateUser("user1");
         var userTwo = TestDataFactory.CreateUser("user2");
         var group = TestDataFactory.CreateGroup("group1", "Test Group", "#FFFFFF", "CODE1");
@@ -29,8 +27,8 @@ public class GrantAdminPrivilegesTest : TestBase
                 TestDataFactory.CreateGrantAdminPrivilegesDto("group1", "user2"),
                 dbContext,
                 CreateClaimsPrincipal(userOne.Id),
-                httpContext,
-                logger,
+                CreateHttpContext(),
+                NullLogger<GrantAdminPrivileges>.Instance,
                 CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();

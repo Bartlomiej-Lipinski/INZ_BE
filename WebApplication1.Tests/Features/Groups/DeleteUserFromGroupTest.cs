@@ -12,8 +12,6 @@ public class DeleteUserFromGroupTest : TestBase
     public async Task DeleteUserFromGroup_Succeeds()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteUserFromGroup>.Instance;
-        var httpContext = CreateHttpContext();
 
         var userId = TestDataFactory.CreateUser("u1");
         var userTwoId = TestDataFactory.CreateUser("u2");
@@ -29,10 +27,11 @@ public class DeleteUserFromGroupTest : TestBase
             userTwoId.Id,
             dbContext,
             CreateClaimsPrincipal(userId.Id),
-            logger,
-            httpContext,
+            NullLogger<DeleteUserFromGroup>.Instance,
+            CreateHttpContext(),
             CancellationToken.None
         );
+        
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var groupUserInDb = await dbContext.GroupUsers
             .FirstOrDefaultAsync(gu => gu.UserId == userTwoId.Id && gu.GroupId == group.Id);

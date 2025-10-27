@@ -13,7 +13,6 @@ public class PostAvailabilityRangeTest :TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostAvailabilityRange>.Instance;
 
         var result = await PostAvailabilityRange.Handle(
             "g1",
@@ -22,7 +21,7 @@ public class PostAvailabilityRangeTest :TestBase
             dbContext,
             CreateClaimsPrincipal(),
             CreateHttpContext(),
-            logger,
+            NullLogger<PostAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -33,7 +32,6 @@ public class PostAvailabilityRangeTest :TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
@@ -51,7 +49,7 @@ public class PostAvailabilityRangeTest :TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<PostAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -62,7 +60,6 @@ public class PostAvailabilityRangeTest :TestBase
     public async Task Handle_Should_Return_Forbidden_When_User_Not_Member_Of_Group()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         dbContext.Users.Add(user);
@@ -82,7 +79,7 @@ public class PostAvailabilityRangeTest :TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<PostAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -93,7 +90,6 @@ public class PostAvailabilityRangeTest :TestBase
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
@@ -115,7 +111,7 @@ public class PostAvailabilityRangeTest :TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<PostAvailabilityRange>.Instance,
             CancellationToken.None
         );
 
@@ -126,7 +122,6 @@ public class PostAvailabilityRangeTest :TestBase
     public async Task Handle_Should_Create_New_Ranges_When_Valid()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostAvailabilityRange>.Instance;
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
@@ -150,7 +145,7 @@ public class PostAvailabilityRangeTest :TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<PostAvailabilityRange>.Instance,
             CancellationToken.None
         );
 

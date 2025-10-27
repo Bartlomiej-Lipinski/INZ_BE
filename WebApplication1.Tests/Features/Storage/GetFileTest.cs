@@ -12,16 +12,14 @@ public class GetFileTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_File_Does_Not_Exist_In_Database()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var result = await GetFile.Handle(
             "non-existent-id",
             dbContext,
             mockStorageService.Object,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<GetFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound>();
@@ -31,8 +29,6 @@ public class GetFileTest : TestBase
     public async Task Handle_Should_Return_File_Stream_Successfully()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var storedFile = TestDataFactory.CreateStoredFile(
@@ -61,8 +57,8 @@ public class GetFileTest : TestBase
             "test-id",
             dbContext,
             mockStorageService.Object,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<GetFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.FileStreamHttpResult>();
@@ -79,8 +75,6 @@ public class GetFileTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Physical_File_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<GetFile>.Instance;
         var mockStorageService = new Mock<IStorageService>();
 
         var storedFile = TestDataFactory.CreateStoredFile(
@@ -106,8 +100,8 @@ public class GetFileTest : TestBase
             "test-id",
             dbContext,
             mockStorageService.Object,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<GetFile>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound>();

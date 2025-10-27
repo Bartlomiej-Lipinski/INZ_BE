@@ -11,8 +11,6 @@ public class UpdateCommentTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Logged_In()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<UpdateComment>.Instance;
 
         var result = await UpdateComment.Handle(
             "r1",
@@ -20,8 +18,8 @@ public class UpdateCommentTest : TestBase
             TestDataFactory.CreateCommentRequestDto("Updated"),
             dbContext,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<UpdateComment>.Instance,
             CancellationToken.None
         );
 
@@ -35,18 +33,15 @@ public class UpdateCommentTest : TestBase
         var user = TestDataFactory.CreateUser("u1", "testUser");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<UpdateComment>.Instance;
-
+        
         var result = await UpdateComment.Handle(
             "r1",
             "c1",
             TestDataFactory.CreateCommentRequestDto("Updated"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<UpdateComment>.Instance,
             CancellationToken.None
         );
 
@@ -72,18 +67,15 @@ public class UpdateCommentTest : TestBase
             "c1", target.Id, "Recommendation", user.Id, "Old content", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<UpdateComment>.Instance;
-
+        
         var result = await UpdateComment.Handle(
             target.Id,
             comment.Id,
             TestDataFactory.CreateCommentRequestDto("Updated"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<UpdateComment>.Instance,
             CancellationToken.None
         );
 

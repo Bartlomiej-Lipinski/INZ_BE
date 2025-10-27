@@ -12,22 +12,18 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     public async Task Handle_Should_Update_TwoFactorStatus_When_Valid()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         user.TwoFactorEnabled = false;
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-
+        
         var result = await UpdateUserTwoFactorVerificationStatus.Handle(
             true,
-            claimsPrincipal,
+            CreateClaimsPrincipal(user.Id),
             dbContext,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Ok<ApiResponse<string>>>();
@@ -44,17 +40,13 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
-
-        var claimsPrincipal = CreateClaimsPrincipal("");
-
+        
         var result = await UpdateUserTwoFactorVerificationStatus.Handle(
             true,
-            claimsPrincipal,
+            CreateClaimsPrincipal(""),
             dbContext,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<UnauthorizedHttpResult>();
@@ -64,17 +56,13 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_User_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
-
-        var claimsPrincipal = CreateClaimsPrincipal("nonexistent-id");
-
+        
         var result = await UpdateUserTwoFactorVerificationStatus.Handle(
             true,
-            claimsPrincipal,
+            CreateClaimsPrincipal("nonexistent-id"),
             dbContext,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<NotFound<ApiResponse<string>>>();
@@ -88,22 +76,18 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Status_Already_Set()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         user.TwoFactorEnabled = true;
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-
+        
         var result = await UpdateUserTwoFactorVerificationStatus.Handle(
             true,
-            claimsPrincipal,
+            CreateClaimsPrincipal(user.Id),
             dbContext,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
@@ -117,22 +101,18 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     public async Task Handle_Should_Disable_TwoFactor_When_Flag_Is_False()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance;
 
         var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
         user.TwoFactorEnabled = true;
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-
+        
         var result = await UpdateUserTwoFactorVerificationStatus.Handle(
             false,
-            claimsPrincipal,
+            CreateClaimsPrincipal(user.Id),
             dbContext,
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Ok<ApiResponse<string>>>();

@@ -13,15 +13,14 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Name_Is_Missing()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<PostGroup>.Instance;
 
         var result = await PostGroup.Handle(
-                httpContext,
-                TestDataFactory.CreateGroupRequestDto("",  "#FFF"),
-                dbContext,
-                logger,
-                CancellationToken.None);
+            CreateHttpContext("user1"),
+            TestDataFactory.CreateGroupRequestDto("",  "#FFF"),
+            dbContext,
+            NullLogger<PostGroup>.Instance,
+            CancellationToken.None
+        );
                 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
@@ -32,13 +31,14 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_No_UserId()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<PostGroup>.Instance;
         
-        var result = 
-            await PostGroup.Handle(
-                httpContext, TestDataFactory.CreateGroupRequestDto(
-                    "Test Group",  "#FFF"), dbContext, logger, CancellationToken.None);
+        var result = await PostGroup.Handle(
+            CreateHttpContext(), 
+            TestDataFactory.CreateGroupRequestDto("Test Group",  "#FFF"), 
+            dbContext,
+            NullLogger<PostGroup>.Instance,
+            CancellationToken.None
+        );
                     
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
@@ -47,11 +47,15 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Create_Group_And_Assign_User_As_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext("user1");
-        var logger = NullLogger<PostGroup>.Instance;
         var dto = TestDataFactory.CreateGroupRequestDto("My Group",  "#FFF");
         
-        var result = await PostGroup.Handle(httpContext, dto, dbContext, logger, CancellationToken.None);
+        var result = await PostGroup.Handle(
+            CreateHttpContext("user1"),
+            dto, 
+            dbContext,
+            NullLogger<PostGroup>.Instance,
+            CancellationToken.None
+        );
         
         result.Should()
             .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Created<ApiResponse<GroupResponseDto>>>();

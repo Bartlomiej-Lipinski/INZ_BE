@@ -39,7 +39,7 @@ public class PostExpense : IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to create event. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to create expense. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 

@@ -28,12 +28,14 @@ public class GetGroupEventsTest : TestBase
         dbContext.Events.AddRange(evt1, evt2);
         await dbContext.SaveChangesAsync();
 
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetGroupEvents>.Instance;
-
         var result = await GetGroupEvents.Handle(
-            group.Id, dbContext, claimsPrincipal, httpContext, logger, CancellationToken.None);
+            group.Id,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<GetGroupEvents>.Instance,
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<EventResponseDto>>>>();
         var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<EventResponseDto>>>;
@@ -51,12 +53,14 @@ public class GetGroupEventsTest : TestBase
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
 
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetGroupEvents>.Instance;
-
         var result = await GetGroupEvents.Handle(
-            group.Id, dbContext, claimsPrincipal, httpContext, logger, CancellationToken.None);
+            group.Id,
+            dbContext,
+            CreateClaimsPrincipal(user.Id), 
+            CreateHttpContext(user.Id),
+            NullLogger<GetGroupEvents>.Instance, 
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();    
     }
@@ -69,12 +73,14 @@ public class GetGroupEventsTest : TestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetGroupEvents>.Instance;
-
         var result = await GetGroupEvents.Handle(
-            "nonexistent-group", dbContext, claimsPrincipal, httpContext, logger, CancellationToken.None);
+            "nonexistent-group",
+            dbContext, 
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<GetGroupEvents>.Instance,
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
     }
@@ -84,11 +90,14 @@ public class GetGroupEventsTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
-        var httpContext = new DefaultHttpContext();
-        var logger = NullLogger<GetGroupEvents>.Instance;
-
         var result = await GetGroupEvents.Handle(
-            "any-group", dbContext, new ClaimsPrincipal(), httpContext, logger, CancellationToken.None);
+            "any-group", 
+            dbContext,
+            CreateClaimsPrincipal(),
+            CreateHttpContext(),
+            NullLogger<GetGroupEvents>.Instance,
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
