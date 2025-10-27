@@ -10,8 +10,15 @@ public class Settlement
     public string ToUserId { get; set; } = null!;
     
     public decimal Amount { get; set; }
+    public SettlementStatus Status { get; set; }
 
     public Group Group { get; set; } = null!;
     public User FromUser { get; set; } = null!;
     public User ToUser { get; set; } = null!;
+}
+
+public enum SettlementStatus
+{
+    NotPaid,
+    Paid
 }
