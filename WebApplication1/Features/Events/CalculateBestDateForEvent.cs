@@ -40,6 +40,15 @@ public class CalculateBestDateForEvent : IEndpoint
             logger.LogWarning("Event not found. EventId: {EventId}. TraceId: {TraceId}", eventId, traceId);
             return Results.NotFound();
         }
+        var isUserInGroup = await dbContext.GroupUsers
+            .AnyAsync(gu => gu.GroupId == evt.GroupId && gu.UserId == currentUserId, cancellationToken);
+        
+        if (!isUserInGroup)
+        {
+            logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
+                currentUserId, evt.GroupId, traceId);
+            return Results.Forbid();
+        }
 
         var (bestDate, bestTime) = GetBestDateAndTime(evt);
 
@@ -118,12 +127,6 @@ public class CalculateBestDateForEvent : IEndpoint
 
                 // Dodaj podstawowe punkty
                 hourScores[bestDate][hour] += points;
-
-                // Dodaj bonusowe punkty jeśli godzina spełnia kryterium
-                if (hour >= bonusStartHour)
-                {
-                    hourScores[bestDate][hour] += 2; // Bonus 2 punkty
-                }
             }
         }
 
