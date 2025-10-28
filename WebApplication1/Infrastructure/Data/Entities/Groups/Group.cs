@@ -9,7 +9,7 @@ namespace WebApplication1.Infrastructure.Data.Entities.Groups;
 public class Group
 {
     [Key]
-    public string Id { get; init; } = Guid.NewGuid().ToString();
+    public string Id { get; init; } = null!;
     [Required]
     public string Name { get; set; } = null!;
     [Required]

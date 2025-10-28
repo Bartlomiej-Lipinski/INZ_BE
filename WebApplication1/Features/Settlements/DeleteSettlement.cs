@@ -35,7 +35,7 @@ public class DeleteSettlement : IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to delete event. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to delete settlement. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
