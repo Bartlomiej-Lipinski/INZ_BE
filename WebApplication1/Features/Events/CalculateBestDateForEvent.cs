@@ -11,6 +11,8 @@ namespace WebApplication1.Features.Events;
 
 public class CalculateBestDateForEvent : IEndpoint
 {
+    public record BestDateResult(DateTime DateTime, int Score);
+
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/events/{eventId}/calculate-best-date", Handle)
@@ -42,7 +44,7 @@ public class CalculateBestDateForEvent : IEndpoint
         }
         var isUserInGroup = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == evt.GroupId && gu.UserId == currentUserId, cancellationToken);
-        
+
         if (!isUserInGroup)
         {
             logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
@@ -50,13 +52,17 @@ public class CalculateBestDateForEvent : IEndpoint
             return Results.Forbid();
         }
 
-        var (bestDate, bestTime) = GetBestDateAndTime(evt);
+        var topDates = GetBestDateAndTime(evt);
 
-        return Results.Ok(ApiResponse<string>.Ok($"{bestTime:G}, {bestDate:D}", "Najlepsza data Obliczona", traceId));
+        var results = topDates
+            .Select(d => new BestDateResult(d.date.Add(d.time.TimeOfDay), d.score))
+            .ToList();
+
+        return Results.Ok(ApiResponse<List<BestDateResult>>.Ok(results, "Top 3 najlepsze daty", traceId));
     }
 
 
-    public static (DateTime bestDate, DateTime bestTime) GetBestDateAndTime(Event ev)
+    public static List<(DateTime date, DateTime time, int score)> GetBestDateAndTime(Event ev)
     {
         Dictionary<DateTime, int> dateScores = new();
         Dictionary<DateTime, Dictionary<int, int>> hourScores = new();
@@ -91,54 +97,65 @@ public class CalculateBestDateForEvent : IEndpoint
         if (!dateScores.Any())
         {
             DateTime fallback = ev.StartDate ?? DateTime.Now;
-            return (fallback, fallback.AddHours(9));
-        }
-
-        // Znajdź najlepszą datę
-        DateTime bestDate = dateScores.OrderByDescending(kvp => kvp.Value).First().Key;
-
-        bool isWeekend = bestDate.DayOfWeek == DayOfWeek.Saturday || bestDate.DayOfWeek == DayOfWeek.Sunday;
-        int bonusStartHour = isWeekend ? 12 : 17;
-
-        // KROK 2: Oblicz punkty dla godzin tylko dla wybranej najlepszej daty
-        hourScores[bestDate] = new Dictionary<int, int>();
-
-        foreach (var availability in ev.AvailabilityRanges)
-        {
-            var userAvailability = eventAvailabilities.FirstOrDefault(a => a.UserId == availability.UserId);
-            int points = userAvailability?.Status switch
+            return new List<(DateTime, DateTime, int)>
             {
-                EventAvailabilityStatus.Going => 3,
-                EventAvailabilityStatus.NotGoing => 0,
-                EventAvailabilityStatus.Maybe => 1,
-                _ => 0
+                (fallback, fallback.AddHours(9), 0)
             };
-
-            for (DateTime dateTime = availability.AvailableFrom;
-                 dateTime <= availability.AvailableTo;
-                 dateTime = dateTime.AddHours(1))
-            {
-                if (dateTime.Date != bestDate)
-                    continue;
-
-                int hour = dateTime.Hour;
-                if (!hourScores[bestDate].ContainsKey(hour))
-                    hourScores[bestDate][hour] = 0;
-
-                // Dodaj podstawowe punkty
-                hourScores[bestDate][hour] += points;
-            }
         }
 
-        // Znajdź najlepszą godzinę dla najlepszej daty
-        int bestHour = 9;
-        if (hourScores.ContainsKey(bestDate) && hourScores[bestDate].Any())
+        // Znajdź 3 najlepsze daty
+        var topDates = dateScores
+            .OrderByDescending(kvp => kvp.Value)
+            .Take(3)
+            .ToList();
+
+        var results = new List<(DateTime date, DateTime time, int score)>();
+
+        // KROK 2: Oblicz punkty dla godzin dla każdej z top 3 dat
+        foreach (var dateEntry in topDates)
         {
-            var bestHourEntry = hourScores[bestDate].OrderByDescending(kvp => kvp.Value).First();
-            bestHour = bestHourEntry.Key;
+            DateTime currentDate = dateEntry.Key;
+            int dateScore = dateEntry.Value;
+            hourScores[currentDate] = new Dictionary<int, int>();
+
+            foreach (var availability in ev.AvailabilityRanges)
+            {
+                var userAvailability = eventAvailabilities.FirstOrDefault(a => a.UserId == availability.UserId);
+                int points = userAvailability?.Status switch
+                {
+                    EventAvailabilityStatus.Going => 3,
+                    EventAvailabilityStatus.NotGoing => 0,
+                    EventAvailabilityStatus.Maybe => 1,
+                    _ => 0
+                };
+
+                for (DateTime dateTime = availability.AvailableFrom;
+                     dateTime <= availability.AvailableTo;
+                     dateTime = dateTime.AddHours(1))
+                {
+                    if (dateTime.Date != currentDate)
+                        continue;
+
+                    int hour = dateTime.Hour;
+                    if (!hourScores[currentDate].ContainsKey(hour))
+                        hourScores[currentDate][hour] = 0;
+
+                    hourScores[currentDate][hour] += points;
+                }
+            }
+
+            // Znajdź najlepszą godzinę dla tej daty
+            int bestHour = 9;
+            if (hourScores.ContainsKey(currentDate) && hourScores[currentDate].Any())
+            {
+                var bestHourEntry = hourScores[currentDate].OrderByDescending(kvp => kvp.Value).First();
+                bestHour = bestHourEntry.Key;
+            }
+
+            DateTime bestTime = currentDate.Date.AddHours(bestHour);
+            results.Add((currentDate, bestTime, dateScore));
         }
 
-        DateTime bestTime = bestDate.Date.AddHours(bestHour);
-        return (bestDate, bestTime);
+        return results;
     }
 }
