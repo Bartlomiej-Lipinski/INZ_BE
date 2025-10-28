@@ -144,6 +144,18 @@ builder.Services.AddAuthentication(opt =>
 })
 .AddJwtBearer(RefreshScheme, opt =>
 {
+    opt.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var refreshToken = context.Request.Cookies["refresh_token"];
+            if (!string.IsNullOrEmpty(refreshToken))
+                context.Token = refreshToken;
+
+            return Task.CompletedTask;
+        }
+    };
+
     opt.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
@@ -156,6 +168,7 @@ builder.Services.AddAuthentication(opt =>
         ClockSkew = TimeSpan.Zero
     };
 });
+
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy("RefreshTokenPolicy", policy =>
@@ -238,5 +251,4 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapEndpoints();
 app.UseHttpsRedirection();
-
 app.Run();
