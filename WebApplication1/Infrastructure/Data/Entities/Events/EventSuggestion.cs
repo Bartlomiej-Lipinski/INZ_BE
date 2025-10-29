@@ -2,7 +2,7 @@
 
 public class EventSuggestion
 {
-    public string Id { get; set; } = null!;
+    public string Id { get; set; } = Guid.NewGuid().ToString();
     public string EventId { get; set; } = null!;
     
     public DateTime StartTime { get; set; }

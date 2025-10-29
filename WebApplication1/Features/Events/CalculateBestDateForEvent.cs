@@ -52,22 +52,29 @@ public class CalculateBestDateForEvent : IEndpoint
         }
 
         var topDates = GetBestDateAndTime(evt);
-        foreach (var evtSuggestion in topDates.Select(dateTime => new EventSuggestion
-                 {
-                     EventId = evt.Id,
-                     StartTime = dateTime,
-                 }))
+        foreach (var (date, availablePeople) in topDates)
         {
+            var evtSuggestion = new EventSuggestion
+            {
+                EventId = evt.Id,
+                StartTime = date,
+                AvailableUserCount = availablePeople
+            };
             evt.Suggestions.Add(evtSuggestion);
         }
-        return Results.Ok(ApiResponse<List<DateTime>>.Ok(topDates, "Top 3 najlepsze daty dodane do sugesti", traceId));
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        return Results.Ok(ApiResponse<List<(DateTime date, int availablePeople)>>.Ok(
+            topDates, 
+            "Top 3 best date added to suggestions", 
+            traceId));
     }
 
-
-    public static List<DateTime> GetBestDateAndTime(Event ev)
+    public static List<(DateTime date, int availablePeople)> GetBestDateAndTime(Event ev)
     {
-        Dictionary<DateTime, int> dateScores = new();
-        Dictionary<DateTime, Dictionary<int, int>> hourScores = new();
+        Dictionary<DateTime, HashSet<string>> dateUsers = new();
+        Dictionary<DateTime, Dictionary<int, HashSet<string>>> hourUsers = new();
 
         foreach (var availability in ev.AvailabilityRanges)
         {
@@ -78,29 +85,29 @@ public class CalculateBestDateForEvent : IEndpoint
                 if (date < ev.StartDate || date > ev.EndDate)
                     continue;
 
-                if (!dateScores.ContainsKey(date))
-                    dateScores[date] = 0;
+                if (!dateUsers.ContainsKey(date))
+                    dateUsers[date] = new HashSet<string>();
 
-                dateScores[date]++;
+                dateUsers[date].Add(availability.UserId);
             }
         }
 
-        if (dateScores.Count == 0)
+        if (dateUsers.Count == 0)
         {
             var fallback = ev.StartDate ?? DateTime.Now;
-            return new List<DateTime> { fallback.Date.AddHours(9) };
+            return new List<(DateTime, int)> { (fallback.Date.AddHours(9), 0) };
         }
 
-        var topDates = dateScores
-            .OrderByDescending(kvp => kvp.Value)
+        var topDates = dateUsers
+            .OrderByDescending(kvp => kvp.Value.Count)
             .Take(3)
             .ToList();
 
-        var results = new List<DateTime>();
+        var results = new List<(DateTime, int)>();
 
         foreach (var currentDate in topDates.Select(dateEntry => dateEntry.Key))
         {
-            hourScores[currentDate] = new Dictionary<int, int>();
+            hourUsers[currentDate] = new Dictionary<int, HashSet<string>>();
 
             foreach (var availability in ev.AvailabilityRanges)
             {
@@ -112,22 +119,25 @@ public class CalculateBestDateForEvent : IEndpoint
                         continue;
 
                     var hour = dateTime.Hour;
-                    if (!hourScores[currentDate].ContainsKey(hour))
-                        hourScores[currentDate][hour] = 0;
+                    if (!hourUsers[currentDate].ContainsKey(hour))
+                        hourUsers[currentDate][hour] = new HashSet<string>();
 
-                    hourScores[currentDate][hour]++;
+                    hourUsers[currentDate][hour].Add(availability.UserId);
                 }
             }
 
             var bestHour = 9;
-            if (hourScores.TryGetValue(currentDate, out var value) && value.Count != 0)
+            var availablePeople = 0;
+            
+            if (hourUsers.TryGetValue(currentDate, out var value) && value.Count != 0)
             {
-                var bestHourEntry = value.OrderByDescending(kvp => kvp.Value).First();
+                var bestHourEntry = value.OrderByDescending(kvp => kvp.Value.Count).First();
                 bestHour = bestHourEntry.Key;
+                availablePeople = bestHourEntry.Value.Count;
             }
 
             var bestTime = currentDate.Date.AddHours(bestHour);
-            results.Add(bestTime);
+            results.Add((bestTime, availablePeople));
         }
 
         return results;
