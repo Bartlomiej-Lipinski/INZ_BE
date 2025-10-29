@@ -13,7 +13,7 @@ public class GetExpenseById : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/groups/{groupId}/expenses/{id}", Handle)
+        app.MapGet("/groups/{groupId}/expenses/{expenseId}", Handle)
             .WithName("GetExpenseById")
             .WithDescription("Retrieves a single expense by its ID")
             .WithTags("Settlements")
@@ -23,7 +23,7 @@ public class GetExpenseById : IEndpoint
 
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
-        [FromRoute] string id,
+        [FromRoute] string expenseId,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -53,18 +53,18 @@ public class GetExpenseById : IEndpoint
         var expense = await dbContext.Expenses
             .Include(e => e.Group)
             .Include(e => e.PaidByUser)
-            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(e => e.Id == expenseId, cancellationToken);
 
         if (expense == null)
         {
-            logger.LogWarning("Expense not found: {RecommendationId}. TraceId: {TraceId}", id, traceId);
+            logger.LogWarning("Expense not found: {RecommendationId}. TraceId: {TraceId}", expenseId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Expense not found.", traceId));
         }
         
         var beneficiaries = await dbContext.ExpenseBeneficiaries
             .AsNoTracking()
             .Include(b => b.User)
-            .Where(b => b.ExpenseId == id)
+            .Where(b => b.ExpenseId == expenseId)
             .ToListAsync(cancellationToken);
 
         var response = new ExpenseResponseDto

@@ -13,7 +13,7 @@ public class DeleteExpense : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/groups/{groupId}/expenses/{id}", Handle)
+        app.MapDelete("/groups/{groupId}/expenses/{expenseId}", Handle)
             .WithName("DeleteExpense")
             .WithDescription("Deletes a specific expense from a group")
             .WithTags("Settlements")
@@ -23,7 +23,7 @@ public class DeleteExpense : IEndpoint
 
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
-        [FromRoute] string id,
+        [FromRoute] string expenseId,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -52,11 +52,11 @@ public class DeleteExpense : IEndpoint
             return Results.Forbid();
         
         var expense = await dbContext.Expenses
-            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(e => e.Id == expenseId, cancellationToken);
         
         if (expense == null)
         {
-            logger.LogWarning("Expense {EventId} not found in group {GroupId}. TraceId: {TraceId}", id, groupId, traceId);
+            logger.LogWarning("Expense {EventId} not found in group {GroupId}. TraceId: {TraceId}", expenseId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Expense not found.", traceId));
         }
         
@@ -67,8 +67,8 @@ public class DeleteExpense : IEndpoint
             expense, dbContext, groupId, isAddition: false, logger, cancellationToken);
         
         logger.LogInformation("User {UserId} deleted expense {ExpenseId} from group {GroupId}. TraceId: {TraceId}",
-            userId, id, groupId, traceId);
+            userId, expenseId, groupId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok("Expense deleted successfully.", id, traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Expense deleted successfully.", expenseId, traceId));
     }
 }

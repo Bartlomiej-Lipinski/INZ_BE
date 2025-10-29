@@ -14,7 +14,7 @@ public class RejectUserJoinRequest : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/groups/{groupId}/reject-join-request/{userId}", Handle)
+        app.MapDelete("/groups/{groupId}/reject-join-request/", Handle)
             .WithName("RejectUserJoinRequest")
             .WithDescription("Rejects a user's join request to a group")
             .WithTags("Groups")

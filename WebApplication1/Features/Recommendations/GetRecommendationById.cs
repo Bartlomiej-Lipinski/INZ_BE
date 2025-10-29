@@ -14,7 +14,7 @@ public class GetRecommendationById : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/recommendations/{id}", Handle)
+        app.MapGet("/recommendations/{recommendationId}", Handle)
             .WithName("GetRecommendationById")
             .WithDescription("Retrieves a single recommendation by its ID")
             .WithTags("Recommendations")
@@ -23,7 +23,7 @@ public class GetRecommendationById : IEndpoint
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string id,
+        [FromRoute] string recommendationId,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -40,7 +40,7 @@ public class GetRecommendationById : IEndpoint
             return Results.Unauthorized();
         }
         
-        if (string.IsNullOrWhiteSpace(id))
+        if (string.IsNullOrWhiteSpace(recommendationId))
         {
             return Results.BadRequest(ApiResponse<string>.Fail("Recommendation ID is required.", traceId));
         }
@@ -49,23 +49,23 @@ public class GetRecommendationById : IEndpoint
             .AsNoTracking()
             .Include(r => r.User)
             .Include(r => r.Group)
-            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
 
         if (recommendation == null)
         {
-            logger.LogWarning("Recommendation not found: {RecommendationId}. TraceId: {TraceId}", id, traceId);
+            logger.LogWarning("Recommendation not found: {RecommendationId}. TraceId: {TraceId}", recommendationId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Recommendation not found.", traceId));
         }
         
         var comments = await dbContext.Comments
             .AsNoTracking()
             .Include(c => c.User)
-            .Where(c => c.TargetId == id && c.TargetType == "Recommendation")
+            .Where(c => c.TargetId == recommendationId && c.TargetType == "Recommendation")
             .ToListAsync(cancellationToken);
 
         var reactions = await dbContext.Reactions
             .AsNoTracking()
-            .Where(r => r.TargetId == id && r.TargetType == "Recommendation")
+            .Where(r => r.TargetId == recommendationId && r.TargetType == "Recommendation")
             .ToListAsync(cancellationToken);
 
         var response = new RecommendationResponseDto

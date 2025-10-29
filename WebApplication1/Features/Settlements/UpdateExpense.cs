@@ -15,7 +15,7 @@ public class UpdateExpense : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/groups/{groupId}/expenses/{id}", Handle)
+        app.MapPut("/groups/{groupId}/expenses/{expenseId}", Handle)
             .WithName("UpdateExpense")
             .WithDescription("Updates an existing expense in a group")
             .WithTags("Settlements")
@@ -25,7 +25,7 @@ public class UpdateExpense : IEndpoint
 
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
-        [FromRoute] string id,
+        [FromRoute] string expenseId,
         [FromBody] ExpenseRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
@@ -64,7 +64,7 @@ public class UpdateExpense : IEndpoint
 
         var expense = await dbContext.Expenses
             .Include(e => e.Beneficiaries)
-            .FirstOrDefaultAsync(e => e.Id == id && e.GroupId == groupId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.Id == expenseId && e.GroupId == groupId, cancellationToken);
 
         if (expense == null)
             return Results.NotFound(ApiResponse<string>.Fail("Expense not found.", traceId));
@@ -142,8 +142,8 @@ public class UpdateExpense : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Expense {ExpenseId} updated successfully in group {GroupId}. TraceId: {TraceId}",
-            id, groupId, traceId);
+            expenseId, groupId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok("Expense updated successfully.", id, traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Expense updated successfully.", expenseId, traceId));
     }
 }

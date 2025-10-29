@@ -12,7 +12,7 @@ public class DeleteSettlement : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/groups/{groupId}/settlements/{id}", Handle)
+        app.MapDelete("/groups/{groupId}/settlements/{settlementId}", Handle)
             .WithName("DeleteSettlement")
             .WithDescription("Deletes a specific settlement marking it as paid")
             .WithTags("Settlements")
@@ -22,7 +22,7 @@ public class DeleteSettlement : IEndpoint
 
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
-        [FromRoute] string id,
+        [FromRoute] string settlementId,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -50,11 +50,11 @@ public class DeleteSettlement : IEndpoint
             return Results.Forbid();
         
         var settlement = await dbContext.Settlements
-            .FirstOrDefaultAsync(s => s.Id == id && s.FromUserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == settlementId && s.FromUserId == userId, cancellationToken);
         
         if (settlement == null)
         {
-            logger.LogWarning("Settlement {Id} not found for user {UserId}. TraceId: {TraceId}", id, userId, traceId);
+            logger.LogWarning("Settlement {Id} not found for user {UserId}. TraceId: {TraceId}", settlementId, userId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Settlement not found.", traceId));
         }
             
@@ -62,8 +62,8 @@ public class DeleteSettlement : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} deleted settlement {Id} from group {GroupId}. TraceId: {TraceId}",
-            userId, id, groupId, traceId);
+            userId, settlementId, groupId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok("Settlement deleted successfully.", id, traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Settlement deleted successfully.", settlementId, traceId));
     }
 }

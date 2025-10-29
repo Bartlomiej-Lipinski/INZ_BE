@@ -12,7 +12,7 @@ public class DeleteRecommendation : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/recommendations/{id}", Handle)
+        app.MapDelete("/recommendations/{recommendationId}", Handle)
             .WithName("DeleteRecommendation")
             .WithDescription("Deletes a recommendation and its related comments and reactions")
             .WithTags("Recommendations")
@@ -21,7 +21,7 @@ public class DeleteRecommendation : IEndpoint
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string id,
+        [FromRoute] string recommendationId,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -39,41 +39,41 @@ public class DeleteRecommendation : IEndpoint
         }
         
         var recommendation = await dbContext.Recommendations
-            .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
 
         if (recommendation == null)
         {
-            logger.LogWarning("Recommendation {RecommendationId} not found. TraceId: {TraceId}", id, traceId);
+            logger.LogWarning("Recommendation {RecommendationId} not found. TraceId: {TraceId}", recommendationId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Recommendation not found.", traceId));
         }
         
         if (recommendation.UserId != currentUserId)
         {
             logger.LogWarning("User {UserId} tried to delete recommendation {RecommendationId} not owned by them. " +
-                              "TraceId: {TraceId}", currentUserId, id, traceId);
+                              "TraceId: {TraceId}", currentUserId, recommendationId, traceId);
             return Results.Forbid();
         }
         
         var relatedComments = await dbContext.Comments
-            .Where(c => c.TargetId == id)
+            .Where(c => c.TargetId == recommendationId)
             .ToListAsync(cancellationToken);
 
         var relatedReactions = await dbContext.Reactions
-            .Where(r => r.TargetId == id)
+            .Where(r => r.TargetId == recommendationId)
             .ToListAsync(cancellationToken);
         
         if (relatedComments.Count > 0)
         {
             dbContext.Comments.RemoveRange(relatedComments);
             logger.LogInformation("Deleted {Count} comments linked to recommendation {RecommendationId}. TraceId: {TraceId}",
-                relatedComments.Count, id, traceId);
+                relatedComments.Count, recommendationId, traceId);
         }
 
         if (relatedReactions.Count > 0)
         {
             dbContext.Reactions.RemoveRange(relatedReactions);
             logger.LogInformation("Deleted {Count} reactions linked to recommendation {RecommendationId}. TraceId: {TraceId}",
-                relatedReactions.Count, id, traceId);
+                relatedReactions.Count, recommendationId, traceId);
         }
         
         dbContext.Recommendations.Remove(recommendation);
@@ -81,8 +81,8 @@ public class DeleteRecommendation : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Recommendation {RecommendationId} deleted by user {UserId}. TraceId: {TraceId}", 
-            id, currentUserId, traceId);
+            recommendationId, currentUserId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok("Recommendation deleted successfully.", id, traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Recommendation deleted successfully.", recommendationId, traceId));
     }
 }
