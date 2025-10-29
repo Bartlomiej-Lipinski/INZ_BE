@@ -310,7 +310,7 @@ public static class TestDataFactory
 
     public static IFormFile CreateFormFile(string fileName, byte[] content)
     {
-        var stream = new MemoryStream(content);
+        using var stream = new MemoryStream(content);
         return new FormFile(stream, 0, content.Length, "file", fileName)
         {
             Headers = new HeaderDictionary(),

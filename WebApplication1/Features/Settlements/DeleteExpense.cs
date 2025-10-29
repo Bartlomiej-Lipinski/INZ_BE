@@ -57,7 +57,7 @@ public class DeleteExpense : IEndpoint
         if (expense == null)
         {
             logger.LogWarning("Expense {EventId} not found in group {GroupId}. TraceId: {TraceId}", id, groupId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
+            return Results.NotFound(ApiResponse<string>.Fail("Expense not found.", traceId));
         }
         
         dbContext.Expenses.Remove(expense);
