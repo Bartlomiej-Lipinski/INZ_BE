@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using WebApplication1.Infrastructure.Data.Entities.Settlements;
 
 namespace WebApplication1.Infrastructure.Data.Entities;
 

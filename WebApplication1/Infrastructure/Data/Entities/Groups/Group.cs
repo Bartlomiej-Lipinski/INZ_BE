@@ -1,20 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
-using WebApplication1.Infrastructure.Data.Entities.Events;
+﻿using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 
 namespace WebApplication1.Infrastructure.Data.Entities.Groups;
 
-[Index(nameof(Code), IsUnique = true)]
 public class Group
 {
-    [Key]
     public string Id { get; init; } = null!;
-    [Required]
+
     public string Name { get; set; } = null!;
-    [Required]
     public string Color { get; set; } = null!;
-    [Required]
     public string Code { get; set; } = null!;
     public DateTime? CodeExpirationTime { get; set; } 
     

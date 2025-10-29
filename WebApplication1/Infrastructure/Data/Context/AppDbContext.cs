@@ -33,6 +33,47 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        
+        builder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.UserId).IsRequired();
+        });
+
+        builder.Entity<Group>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.Property(g => g.Name).IsRequired();
+            entity.Property(g => g.Color).IsRequired();
+            entity.Property(g => g.Code).IsRequired();
+            entity.HasIndex(g => g.Code).IsUnique();
+        });
+        
+        builder.Entity<GroupUser>(entity =>
+        {
+            entity.HasKey(gu => gu.Id);
+            entity.Property(gu => gu.IsAdmin).IsRequired();
+            
+            entity.HasOne(gu => gu.Group)
+                .WithMany(g => g.GroupUsers)
+                .HasForeignKey(gu => gu.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(gu => gu.User)
+                .WithMany()
+                .HasForeignKey(gu => gu.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        builder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.TokenHash).IsRequired();
+            entity.Property(p => p.UserId).IsRequired();
+            entity.Property(p => p.ExpiresAt).IsRequired();
+            entity.HasIndex(p => p.UserId);
+        });
+
         builder.Entity<LoginAttempt>(entity =>
         {
             entity.HasKey(e => e.Id);
