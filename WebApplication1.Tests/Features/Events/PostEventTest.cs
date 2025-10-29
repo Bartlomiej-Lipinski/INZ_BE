@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Events;
@@ -27,16 +28,19 @@ public class PostEventTest : TestBase
             "Event description", 
             "Online");
 
-        var httpContext = CreateHttpContext();
-        var claims = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<PostEvent>.Instance;
-
         var result = await PostEvent.Handle(
-            group.Id, request, dbContext, claims, httpContext, logger, CancellationToken.None);
+            group.Id,
+            request,
+            dbContext, 
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(),
+            NullLogger<PostEvent>.Instance, 
+            CancellationToken.None
+        );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostEvent.EventResponseDto>>>();
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<EventResponseDto>>>();
 
-        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostEvent.EventResponseDto>>;
+        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<EventResponseDto>>;
         ok!.Value!.Success.Should().BeTrue();
         ok.Value.Data!.Title.Should().Be("New Event");
 
@@ -58,11 +62,16 @@ public class PostEventTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var request = TestDataFactory.CreateEventRequestDto("Event", DateTime.UtcNow.AddDays(1));
-        var httpContext = CreateHttpContext();
-        var claims = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<PostEvent>.Instance;
 
-        var result = await PostEvent.Handle(group.Id, request, dbContext, claims, httpContext, logger, CancellationToken.None);
+        var result = await PostEvent.Handle(
+            group.Id,
+            request,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(), 
+            NullLogger<PostEvent>.Instance, 
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();    
     }
@@ -80,12 +89,16 @@ public class PostEventTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var request = TestDataFactory.CreateEventRequestDto("", DateTime.UtcNow.AddDays(1));
-        var httpContext = CreateHttpContext();
-        var claims = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<PostEvent>.Instance;
 
         var result = await PostEvent.Handle(
-            group.Id, request, dbContext, claims, httpContext, logger, CancellationToken.None);
+            group.Id, 
+            request,
+            dbContext, 
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(),
+            NullLogger<PostEvent>.Instance,
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
     }

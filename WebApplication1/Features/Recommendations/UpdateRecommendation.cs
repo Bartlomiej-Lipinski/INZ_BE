@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -22,7 +23,7 @@ public class UpdateRecommendation : IEndpoint
 
     public static async Task<IResult> Handle(
         [FromRoute] string recommendationId,
-        [FromBody] UpdateRecommendationDto request,
+        [FromBody] RecommendationRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -74,14 +75,5 @@ public class UpdateRecommendation : IEndpoint
 
         return Results.Ok(ApiResponse<string>.Ok("Recommendation updated successfully.", 
             recommendationId, traceId));
-    }
-    
-    public record UpdateRecommendationDto
-    {
-        public string Title { get; set; } = null!;
-        public string Content { get; set; } = null!;
-        public string? Category { get; set; }
-        public string? ImageUrl { get; set; }
-        public string? LinkUrl { get; set; }
     }
 }

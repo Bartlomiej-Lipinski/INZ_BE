@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
@@ -97,10 +98,5 @@ public class PostAvailability : IEndpoint
             currentUserId, eventId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Availability added.", traceId));
-    }
-
-    public record EventAvailabilityRequestDto
-    {
-        public EventAvailabilityStatus Status { get; set; }
     }
 }

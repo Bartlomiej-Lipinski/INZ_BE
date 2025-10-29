@@ -21,10 +21,6 @@ public class PostRecommendationTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
 
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<PostRecommendation>.Instance;
-        var httpContext = CreateHttpContext(user.Id);
-
         var dto = TestDataFactory.CreateRecommendationRequestDto(
             "Great Book", 
             "You should read 'Clean Code'.", 
@@ -34,9 +30,9 @@ public class PostRecommendationTest : TestBase
             group.Id,
             dto,
             dbContext,
-            claimsPrincipal,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<PostRecommendation>.Instance,
             CancellationToken.None);
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
@@ -56,8 +52,6 @@ public class PostRecommendationTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Has_No_Claims()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<PostRecommendation>.Instance;
 
         var dto = TestDataFactory.CreateRecommendationRequestDto("Test", "Test content");
 
@@ -66,8 +60,8 @@ public class PostRecommendationTest : TestBase
             dto,
             dbContext,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<PostRecommendation>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
@@ -77,20 +71,16 @@ public class PostRecommendationTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Missing_Title_Or_Content()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<PostRecommendation>.Instance;
-        var httpContext = CreateHttpContext("u1");
-
-        var claims = CreateClaimsPrincipal("u1");
-
+        
         var dto = TestDataFactory.CreateRecommendationRequestDto("", "");
 
         var result = await PostRecommendation.Handle(
             "g1",
             dto,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("u1"),
+            CreateHttpContext("u1"),
+            NullLogger<PostRecommendation>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
@@ -103,20 +93,16 @@ public class PostRecommendationTest : TestBase
 
         dbContext.Groups.Add(TestDataFactory.CreateGroup("g1", "Test Group"));
         await dbContext.SaveChangesAsync();
-
-        var claims = CreateClaimsPrincipal("u2");
-        var logger = NullLogger<PostRecommendation>.Instance;
-        var httpContext = CreateHttpContext("u2");
-
+        
         var dto = TestDataFactory.CreateRecommendationRequestDto("Test", "Some text");
 
         var result = await PostRecommendation.Handle(
             "g1",
             dto,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal("u2"),
+            CreateHttpContext("u2"),
+            NullLogger<PostRecommendation>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();

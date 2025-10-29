@@ -12,7 +12,7 @@ public class GetIsAdmin : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/group/{groupid}/isAdmin", Handle)
+        app.MapGet("/group/{groupId}/isAdmin", Handle)
                         .WithName("GetIsGroupAdmin")
             .WithDescription("Checks if User is Admin of given group")
             .WithTags("Groups")
@@ -21,7 +21,7 @@ public class GetIsAdmin : IEndpoint
     }
 
     public static async Task<IResult> Handle(
-        [FromRoute] string groupid,
+        [FromRoute] string groupId,
         AppDbContext context,
         ClaimsPrincipal currentUser,
         ILogger<GetIsAdmin> logger,
@@ -29,7 +29,6 @@ public class GetIsAdmin : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
@@ -43,7 +42,7 @@ public class GetIsAdmin : IEndpoint
 
         var userIsAdmin = await context.GroupUsers
             .AsNoTracking()
-            .AnyAsync(gu => gu.GroupId == groupid && gu.UserId == userId && gu.IsAdmin, cancellationToken);
+            .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == userId && gu.IsAdmin, cancellationToken);
 
         logger.LogInformation("Admin status for user ID: {UserId} is {IsAdmin}. TraceId: {TraceId}", 
             userId, userIsAdmin, traceId);

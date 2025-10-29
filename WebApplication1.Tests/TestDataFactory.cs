@@ -1,13 +1,15 @@
+using Microsoft.AspNetCore.Http;
 using WebApplication1.Features.Auth;
-using WebApplication1.Features.Comments;
-using WebApplication1.Features.Events;
-using WebApplication1.Features.Events.Availability;
-using WebApplication1.Features.Groups;
-using WebApplication1.Features.Recommendations;
+using WebApplication1.Features.Comments.Dtos;
+using WebApplication1.Features.Events.Dtos;
+using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Features.Recommendations.Dtos;
+using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 
 namespace WebApplication1.Tests;
@@ -24,7 +26,7 @@ public static class TestDataFactory
             Code = code ?? GenerateUniqueCode()
         };
     }
-    
+
     public static GroupUser CreateGroupUser(
         string? userId = null,
         string? groupId = null,
@@ -39,22 +41,40 @@ public static class TestDataFactory
             AcceptanceStatus = acceptance
         };
     }
-    
-    public static PostGroup.GroupRequestDto CreateGroupRequestDto(string? name = null, string? color = null)
+
+    public static GroupRequestDto CreateGroupRequestDto(string? name = null, string? color = null)
     {
-        return new PostGroup.GroupRequestDto
+        return new GroupRequestDto
         {
             Name = name ?? "TestGroup",
             Color = color ?? "Red"
         };
     }
 
-    public static AcceptUserJoinRequest.AcceptUserJoinRequestDto CreateAcceptUserJoinRequestDto(
+    public static GroupResponseDto CreateGroupResponseDto(string groupId, string name)
+    {
+        return new GroupResponseDto
+        {
+            Id = groupId,
+            Name = name
+        };
+    }
+
+    public static AcceptUserJoinRequestDto CreateAcceptUserJoinRequestDto(
         string? groupId, string? userId)
     {
         ArgumentNullException.ThrowIfNull(groupId, nameof(groupId));
         ArgumentNullException.ThrowIfNull(userId, nameof(userId));
-        return new AcceptUserJoinRequest.AcceptUserJoinRequestDto
+        return new AcceptUserJoinRequestDto
+        {
+            GroupId = groupId,
+            UserId = userId
+        };
+    }
+
+    public static GrantAdminPrivilegesDto CreateGrantAdminPrivilegesDto(string groupId, string userId)
+    {
+        return new GrantAdminPrivilegesDto
         {
             GroupId = groupId,
             UserId = userId
@@ -75,24 +95,22 @@ public static class TestDataFactory
         };
     }
 
-    public static RejectUserJoinRequest.RejectUserJoinRequestDto CreateRejectUserJoinRequestDto(
-        string groupId, string userId)
+    public static RejectUserJoinRequestDto CreateRejectUserJoinRequestDto(string userId)
     {
-        return new RejectUserJoinRequest.RejectUserJoinRequestDto
+        return new RejectUserJoinRequestDto
         {
-            GroupId = groupId,
             UserId = userId
         };
     }
-    
-    public static JoinGroup.JoinGroupRequest CreateJoinGroupRequest(string groupCode)
+
+    public static JoinGroupRequestDto CreateJoinGroupRequest(string groupCode)
     {
-        return new JoinGroup.JoinGroupRequest
+        return new JoinGroupRequestDto
         {
             GroupCode = groupCode,
         };
     }
-    
+
     public static AuthController.UserRequestDto CreateUserRequestDto(
         string email, string userName, string password, string name, string surname)
     {
@@ -105,7 +123,7 @@ public static class TestDataFactory
             Password = password
         };
     }
-    
+
     public static ExtendedLoginRequest CreateExtendedLoginRequest(string email, string password)
     {
         return new ExtendedLoginRequest
@@ -153,21 +171,10 @@ public static class TestDataFactory
         };
     }
 
-    public static PostRecommendation.RecommendationRequestDto CreateRecommendationRequestDto(
-        string title, string content, string? category = null)
-    {
-        return new PostRecommendation.RecommendationRequestDto
-        {
-            Title = title,
-            Content = content,
-            Category = category
-        };
-    }
-
-    public static UpdateRecommendation.UpdateRecommendationDto CreateUpdateRecommendationDto(
+    public static RecommendationRequestDto CreateRecommendationRequestDto(
         string title, string content, string? category = null, string? imageUrl = null, string? linkUrl = null)
     {
-        return new UpdateRecommendation.UpdateRecommendationDto
+        return new RecommendationRequestDto
         {
             Title = title,
             Content = content,
@@ -177,25 +184,18 @@ public static class TestDataFactory
         };
     }
 
-    public static PostComment.CommentRequestDto CreateCommentRequestDto(string targetType, string content)
+    public static CommentRequestDto CreateCommentRequestDto(string content, string? targetType = "Recommendation")
     {
-        return new PostComment.CommentRequestDto
+        return new CommentRequestDto
         {
             TargetType = targetType,
             Content = content
         };
     }
 
-    public static UpdateComment.UpdateCommentRequestDto CreateUpdateCommentRequestDto(string content)
-    {
-        return new UpdateComment.UpdateCommentRequestDto
-        {
-            Content = content
-        };
-    }
-
     public static Event CreateEvent(
-        string id, string groupId, string userId, string title, string? description, string? location, DateTime createdAt)
+        string id, string groupId, string userId, string title, string? description, string? location,
+        DateTime createdAt)
     {
         return new Event
         {
@@ -205,29 +205,24 @@ public static class TestDataFactory
             Title = title,
             Description = description,
             Location = location,
-            CreatedAt = createdAt  
+            CreatedAt = createdAt
         };
     }
 
-    public static PostEvent.EventRequestDto CreateEventRequestDto(
-        string title, DateTime startDate, DateTime? endDate = null, string? description = null, string? location = null)
+    public static EventRequestDto CreateEventRequestDto(
+        string title,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        string? description = null,
+        string? location = null)
     {
-        return new PostEvent.EventRequestDto
+        return new EventRequestDto
         {
             Title = title,
             StartDate = startDate,
             EndDate = endDate,
             Description = description,
             Location = location
-        };
-    }
-
-    public static UpdateEvent.UpdateEventRequestDto CreateUpdateEventRequestDto(string title, string? description = null)
-    {
-        return new UpdateEvent.UpdateEventRequestDto
-        {
-            Title = title,
-            Description = description
         };
     }
 
@@ -243,10 +238,10 @@ public static class TestDataFactory
         };
     }
 
-    public static PostAvailability.EventAvailabilityRequestDto CreateEventAvailabilityRequestDto(
+    public static EventAvailabilityRequestDto CreateEventAvailabilityRequestDto(
         EventAvailabilityStatus status)
     {
-        return new PostAvailability.EventAvailabilityRequestDto
+        return new EventAvailabilityRequestDto
         {
             Status = status
         };
@@ -265,20 +260,20 @@ public static class TestDataFactory
         };
     }
 
-    public static List<PostAvailabilityRange.AvailabilityRangeRequestDto> CreateAvailabilityRangeRequestDto(
+    public static List<AvailabilityRangeRequestDto> CreateAvailabilityRangeRequestDto(
         DateTime startTime,
         int numberOfRanges = 1,
         int rangeLengthHours = 2,
         int gapBetweenRangesHours = 1)
     {
-        var list = new List<PostAvailabilityRange.AvailabilityRangeRequestDto>();
+        var list = new List<AvailabilityRangeRequestDto>();
 
         for (var i = 0; i < numberOfRanges; i++)
         {
             var from = startTime.AddHours(i * (rangeLengthHours + gapBetweenRangesHours));
             var to = from.AddHours(rangeLengthHours);
 
-            list.Add(new PostAvailabilityRange.AvailabilityRangeRequestDto
+            list.Add(new AvailabilityRangeRequestDto
             {
                 AvailableFrom = from,
                 AvailableTo = to
@@ -286,6 +281,91 @@ public static class TestDataFactory
         }
 
         return list;
+    }
+
+    public static StoredFile CreateStoredFile(
+        string id,
+        string fileName,
+        string contentType,
+        int size,
+        string url,
+        DateTime uploadedAt,
+        string entityId,
+        string entityType,
+        string uploadedBy)
+    {
+        return new StoredFile
+        {
+            Id = id,
+            FileName = fileName,
+            ContentType = contentType,
+            Size = size,
+            Url = url,
+            UploadedAt = uploadedAt,
+            EntityId = entityId,
+            EntityType = entityType,
+            UploadedBy = uploadedBy
+        };
+    }
+
+    public static IFormFile CreateFormFile(string fileName, byte[] content)
+    {
+        using var stream = new MemoryStream(content);
+        return new FormFile(stream, 0, content.Length, "file", fileName)
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "application/octet-stream"
+        };
+    }
+
+    public static Expense CreateExpense(
+        string id, string groupId, string paidByUserId, string title, decimal amount, bool isEvenSplit)
+    {
+        return new Expense
+        {
+            Id = id,
+            GroupId = groupId,
+            PaidByUserId = paidByUserId,
+            Title = title,
+            Amount = amount,
+            IsEvenSplit = isEvenSplit
+        };
+    }
+
+    public static ExpenseBeneficiary CreateExpenseBeneficiary(string expenseId, string userId, decimal share)
+    {
+        return new ExpenseBeneficiary
+        {
+            ExpenseId = expenseId,
+            UserId = userId,
+            Share = share
+        };
+    }
+
+    public static Settlement CreateSettlement(
+        string id, string groupId, string fromUserId, string toUserId, decimal amount)
+    {
+        return new Settlement
+        {
+            Id = id,
+            GroupId = groupId,
+            FromUserId = fromUserId,
+            ToUserId = toUserId,
+            Amount = amount
+        };
+    }
+
+public static ExpenseRequestDto CreateExpenseRequestDto(
+        string title, string paidByUserId, decimal amount, bool isEvenSplit, List<ExpenseBeneficiaryDto> beneficiaries)
+    {
+        return new ExpenseRequestDto
+        {
+            Title = title,
+            PaidByUserId = paidByUserId,
+            Amount = amount,
+            IsEvenSplit = isEvenSplit,
+            Beneficiaries = beneficiaries
+        };
     }
     
     private static string GenerateUniqueCode()

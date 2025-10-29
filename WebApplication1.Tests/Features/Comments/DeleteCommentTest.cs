@@ -12,16 +12,14 @@ public class DeleteCommentTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Logged_In()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<DeleteComment>.Instance;
 
         var result = await DeleteComment.Handle(
             "r1", 
             "c1",
             dbContext,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<DeleteComment>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
@@ -34,17 +32,14 @@ public class DeleteCommentTest : TestBase
         var user = TestDataFactory.CreateUser("u1", "testUser");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<DeleteComment>.Instance;
-
+        
         var result = await DeleteComment.Handle(
             "r1",
             "c1",
             dbContext, 
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger, 
+            CreateHttpContext(user.Id),
+            NullLogger<DeleteComment>.Instance, 
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -69,16 +64,13 @@ public class DeleteCommentTest : TestBase
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
 
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<DeleteComment>.Instance;
-
         var result = await DeleteComment.Handle(
             target.Id, 
             comment.Id, 
             dbContext, 
             CreateClaimsPrincipal(user.Id), 
-            httpContext, 
-            logger,
+            CreateHttpContext(user.Id), 
+            NullLogger<DeleteComment>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
@@ -107,16 +99,13 @@ public class DeleteCommentTest : TestBase
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
 
-        var httpContext = CreateHttpContext(owner.Id);
-        var logger = NullLogger<DeleteComment>.Instance;
-
         var result = await DeleteComment.Handle(
             target.Id, 
             comment.Id, 
             dbContext, 
             CreateClaimsPrincipal(owner.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(owner.Id),
+            NullLogger<DeleteComment>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
@@ -146,17 +135,14 @@ public class DeleteCommentTest : TestBase
             "c1", target.Id, "Recommendation", commenter.Id, "Text", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(other.Id);
-        var logger = NullLogger<DeleteComment>.Instance;
-
+        
         var result = await DeleteComment.Handle(
             target.Id,
             comment.Id, 
             dbContext, 
             CreateClaimsPrincipal(other.Id),
-            httpContext, 
-            logger, 
+            CreateHttpContext(other.Id), 
+            NullLogger<DeleteComment>.Instance, 
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();

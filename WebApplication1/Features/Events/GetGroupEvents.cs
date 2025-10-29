@@ -2,8 +2,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -49,8 +49,8 @@ public class GetGroupEvents : IEndpoint
         var isMember = group.GroupUsers.Any(gu => gu.UserId == userId);
         if (!isMember)
         {
-            logger.LogWarning("User {UserId} tried to get events for group {GroupId} without membership. TraceId: {TraceId}", 
-                userId, groupId, traceId);
+            logger.LogWarning("User {UserId} tried to get events for group {GroupId} without membership." +
+                              " TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }
 
@@ -59,7 +59,7 @@ public class GetGroupEvents : IEndpoint
             .Include(e => e.Availabilities)
             .Where(e => e.GroupId == groupId)
             .OrderBy(e => e.StartDate)
-            .Select(e => new EventDto
+            .Select(e => new EventResponseDto
             {
                 Id = e.Id,
                 Title = e.Title,
@@ -67,7 +67,7 @@ public class GetGroupEvents : IEndpoint
                 Location = e.Location,
                 StartDate = e.StartDate,
                 EndDate = e.EndDate,
-                CreatedAt = e.CreatedAt,
+                CreatedAt = e.CreatedAt.ToLocalTime(),
                 UserId = e.UserId,
                 Availabilities = e.Availabilities.Select(ea => new EventAvailabilityResponseDto
                 {
@@ -78,26 +78,7 @@ public class GetGroupEvents : IEndpoint
             })
             .ToListAsync(cancellationToken);
 
-        return Results.Ok(ApiResponse<List<EventDto>>.Ok(events, "Group events retrieved successfully.", traceId));
-    }
-
-    public record EventDto
-    {
-        public string Id { get; set; } = null!;
-        public string Title { get; set; } = null!;
-        public string? Description { get; set; }
-        public string? Location { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public string UserId { get; set; } = null!;
-        public ICollection<EventAvailabilityResponseDto> Availabilities { get; set; } = [];
-    }
-    
-    public record EventAvailabilityResponseDto
-    {
-        public string UserId { get; set; } = null!;
-        public EventAvailabilityStatus Status { get; set; }
-        public DateTime CreatedAt { get; set; }
+        return Results.Ok(ApiResponse<List<EventResponseDto>>.Ok(events, "Group events retrieved successfully.",
+            traceId));
     }
 }

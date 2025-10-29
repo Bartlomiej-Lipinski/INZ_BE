@@ -23,18 +23,14 @@ public class PostReactionTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         dbContext.Recommendations.Add(target);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<PostReaction>.Instance;
-
+        
         var result = await PostReaction.Handle(
             target.Id,
             "Recommendation",
             dbContext,
-            claimsPrincipal,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<PostReaction>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
@@ -62,18 +58,14 @@ public class PostReactionTest : TestBase
         dbContext.Recommendations.Add(target);
         dbContext.Reactions.Add(existingReaction);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<PostReaction>.Instance;
-
+        
         var result = await PostReaction.Handle(
             target.Id,
             "Recommendation",
             dbContext,
-            claimsPrincipal,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<PostReaction>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
@@ -84,16 +76,14 @@ public class PostReactionTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Target_Not_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext("u1");
-        var logger = NullLogger<PostReaction>.Instance;
 
         var result = await PostReaction.Handle(
             "nonexistent",
             "Recommendation",
             dbContext,
             CreateClaimsPrincipal("u1"),
-            httpContext,
-            logger,
+            CreateHttpContext("u1"),
+            NullLogger<PostReaction>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -103,16 +93,14 @@ public class PostReactionTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_No_User()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<PostReaction>.Instance;
 
         var result = await PostReaction.Handle(
             "r1",
             "Recommendation",
             dbContext,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<PostReaction>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
@@ -131,18 +119,14 @@ public class PostReactionTest : TestBase
         dbContext.Groups.Add(group);
         dbContext.Recommendations.Add(target);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<PostReaction>.Instance;
-
+        
         var result = await PostReaction.Handle(
             target.Id,
             "Recommendation",
             dbContext,
-            claimsPrincipal,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<PostReaction>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();

@@ -38,6 +38,7 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         var refresh = new RefreshToken()
         {
+            Id = Guid.NewGuid().ToString(),
             Token = Guid.NewGuid().ToString(),
             UserId = user.Id,
             ExpiresAt = DateTime.UtcNow.AddDays(2),

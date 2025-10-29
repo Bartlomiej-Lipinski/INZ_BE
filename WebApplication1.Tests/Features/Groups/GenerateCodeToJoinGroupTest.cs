@@ -1,6 +1,6 @@
 ﻿using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using WebApplication1.Features.Groups;
+using Microsoft.Extensions.Logging.Abstractions;
+using WebApplication1.Features.Groups.JoinGroupFeatures;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Groups;
@@ -11,22 +11,25 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldGenerateUniqueCode()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
-        var httpContext = CreateHttpContext();
-
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
-        var result = await GenerateCodeToJoinGroup.Handle("g1", dbContext, httpContext, logger, CancellationToken.None);
+        var result = await GenerateCodeToJoinGroup.Handle(
+            "g1", 
+            dbContext,
+            CreateHttpContext(),
+            NullLogger<GenerateCodeToJoinGroup>.Instance, 
+            CancellationToken.None
+        );
         
         result.Should()
-            .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GenerateCodeToJoinGroup.GenerateCodeResponse>>>();
+            .BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         
         var okResult = 
-            result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GenerateCodeToJoinGroup.GenerateCodeResponse>>;
+            result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
         okResult!.Value?.Success.Should().BeTrue();
-        okResult.Value?.Data?.Message.Should().Be($"New code generated successfully. The code is valid for 5 minutes. Code: {group.Code}");
+        okResult.Value?.Data?.Should().Be($"New code generated successfully. The code is valid for 5 minutes. Code: {group.Code}");
         
         var updatedGroup = await dbContext.Groups.FindAsync("g1");
         updatedGroup.Should().NotBeNull();
@@ -37,11 +40,14 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnNotFound_WhenGroupDoesNotExist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
         
-        var result = await GenerateCodeToJoinGroup
-            .Handle("non-existent", dbContext, httpContext, logger, CancellationToken.None);
+        var result = await GenerateCodeToJoinGroup.Handle(
+            "non-existent", 
+            dbContext,
+            CreateHttpContext(),
+            NullLogger<GenerateCodeToJoinGroup>.Instance,
+            CancellationToken.None
+        );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
        
@@ -54,10 +60,14 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenGroupIdIsEmpty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = new LoggerFactory().CreateLogger<GenerateCodeToJoinGroup>();
         
-        var result = await GenerateCodeToJoinGroup.Handle("", dbContext, httpContext, logger, CancellationToken.None);
+        var result = await GenerateCodeToJoinGroup.Handle(
+            "",
+            dbContext,
+            CreateHttpContext(), 
+            NullLogger<GenerateCodeToJoinGroup>.Instance, 
+            CancellationToken.None
+        );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
         

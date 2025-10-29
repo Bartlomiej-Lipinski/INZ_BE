@@ -4,6 +4,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Entities.Tokens;
 
@@ -25,10 +26,54 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<EventAvailabilityRange> EventAvailabilityRanges { get; set; }
     public DbSet<EventSuggestion> EventSuggestions { get; set; }
     public DbSet<StoredFile> StoredFiles { get; set; } = null!;
+    public DbSet<Expense> Expenses { get; set; } = null!;
+    public DbSet<ExpenseBeneficiary> ExpenseBeneficiaries { get; set; } = null!;
+    public DbSet<Settlement> Settlements { get; set; } = null!;
      
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        
+        builder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.UserId).IsRequired();
+        });
+
+        builder.Entity<Group>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.Property(g => g.Name).IsRequired();
+            entity.Property(g => g.Color).IsRequired();
+            entity.Property(g => g.Code).IsRequired();
+            entity.HasIndex(g => g.Code).IsUnique();
+        });
+        
+        builder.Entity<GroupUser>(entity =>
+        {
+            entity.HasKey(gu => gu.Id);
+            entity.Property(gu => gu.IsAdmin).IsRequired();
+            
+            entity.HasOne(gu => gu.Group)
+                .WithMany(g => g.GroupUsers)
+                .HasForeignKey(gu => gu.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(gu => gu.User)
+                .WithMany()
+                .HasForeignKey(gu => gu.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        builder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.TokenHash).IsRequired();
+            entity.Property(p => p.UserId).IsRequired();
+            entity.Property(p => p.ExpiresAt).IsRequired();
+            entity.HasIndex(p => p.UserId);
+        });
+
         builder.Entity<LoginAttempt>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -157,6 +202,43 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasOne(es => es.Event)
                 .WithMany(e => e.Suggestions)
                 .HasForeignKey(es => es.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<Expense>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Amount).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.IsEvenSplit).IsRequired();
+            entity.Property(e => e.PaidByUserId).IsRequired();
+
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Expenses)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<ExpenseBeneficiary>(entity =>
+        {
+            entity.HasKey(eb => new { eb.ExpenseId, eb.UserId });
+            entity.Property(eb => eb.Share).IsRequired();
+
+            entity.HasOne(eb => eb.Expense)
+                .WithMany(e => e.Beneficiaries)
+                .HasForeignKey(eb => eb.ExpenseId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<Settlement>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Amount).IsRequired();
+
+            entity.HasOne(s => s.Group)
+                .WithMany(g => g.Settlements)
+                .HasForeignKey(s => s.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

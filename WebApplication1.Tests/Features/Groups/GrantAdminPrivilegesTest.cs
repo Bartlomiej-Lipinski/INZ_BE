@@ -1,20 +1,17 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Groups;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Groups;
 
-public class GrantAdminPrivlagesTest : TestBase
+public class GrantAdminPrivilegesTest : TestBase
 {
     [Fact]
     public async Task GrantAdminPrivileges_Should_Grant_Admin_Role_To_User()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<GrantAdminPrivlages>>();
         var userOne = TestDataFactory.CreateUser("user1");
         var userTwo = TestDataFactory.CreateUser("user2");
         var group = TestDataFactory.CreateGroup("group1", "Test Group", "#FFFFFF", "CODE1");
@@ -25,13 +22,13 @@ public class GrantAdminPrivlagesTest : TestBase
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
 
-        var result = await GrantAdminPrivlages
+        var result = await GrantAdminPrivileges
             .Handle(
-                new GrantAdminPrivlages.GrantAdminPrivlagesDto("group1", "user2"),
+                TestDataFactory.CreateGrantAdminPrivilegesDto("group1", "user2"),
                 dbContext,
                 CreateClaimsPrincipal(userOne.Id),
-                httpContext,
-                mockLogger.Object,
+                CreateHttpContext(),
+                NullLogger<GrantAdminPrivileges>.Instance,
                 CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();

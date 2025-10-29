@@ -1,8 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using WebApplication1.Features.Groups;
-using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Features.Groups.JoinGroupFeatures;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Responses;
 
@@ -14,16 +13,14 @@ public class RejectUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Request_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var claimsPrincipal = CreateClaimsPrincipal("u1");
-        var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContext("u1");
         
         var result = await RejectUserJoinRequest.Handle(
-            TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"), 
+            "g1",
+            TestDataFactory.CreateRejectUserJoinRequestDto("u1"), 
             dbContext, 
-            claimsPrincipal,
-            logger,
-            httpContext, 
+            CreateClaimsPrincipal("u1"),
+            NullLogger<RejectUserJoinRequest>.Instance,
+            CreateHttpContext("u1"), 
             CancellationToken.None
         );
         
@@ -35,29 +32,24 @@ public class RejectUserJoinRequestTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
-                // Add group
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         dbContext.Groups.Add(group);
         
-        // Add group administrator
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "g1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
         
-        // Add user with accepted request (not pending)
         var acceptedUser = TestDataFactory.CreateGroupUser("u1", "g1", false, AcceptanceStatus.Accepted);
         dbContext.GroupUsers.Add(acceptedUser);
         
         await dbContext.SaveChangesAsync();
         
-        var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContext();
-        
         var result = await RejectUserJoinRequest.Handle(
-            TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
+            "g1",
+            TestDataFactory.CreateRejectUserJoinRequestDto("u1"),
             dbContext, 
             CreateClaimsPrincipal("admin1"), 
-            logger, 
-            httpContext, 
+            NullLogger<RejectUserJoinRequest>.Instance, 
+            CreateHttpContext(), 
             CancellationToken.None
         );
         
@@ -73,30 +65,26 @@ public class RejectUserJoinRequestTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
-        // Dodaj grupę
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         dbContext.Groups.Add(group);
         
-        // Dodaj administratora grupy
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "g1", true, AcceptanceStatus.Accepted);
         dbContext.GroupUsers.Add(adminGroupUser);
         
-        // Dodaj użytkownika z pending request
         var pendingUser = TestDataFactory.CreateGroupUser("u1", "g1", false, AcceptanceStatus.Pending);
         dbContext.GroupUsers.Add(pendingUser);
         
         await dbContext.SaveChangesAsync();
-        var logger = NullLogger<RejectUserJoinRequest>.Instance;
-        var httpContext = CreateHttpContext("g1");
 
         var result = await RejectUserJoinRequest.Handle(
-            TestDataFactory.CreateRejectUserJoinRequestDto("g1", "u1"),
+            "g1",
+            TestDataFactory.CreateRejectUserJoinRequestDto("u1"),
             dbContext, 
             CreateClaimsPrincipal("admin1"), 
-            logger, 
-            httpContext, 
+            NullLogger<RejectUserJoinRequest>.Instance, 
+            CreateHttpContext("g1"), 
             CancellationToken.None
-            );
+        );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;

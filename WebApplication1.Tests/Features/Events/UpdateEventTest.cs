@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Events;
@@ -25,7 +26,8 @@ public class UpdateEventTest : TestBase
         dbContext.Events.Add(existingEvent);
         await dbContext.SaveChangesAsync();
 
-        var updateDto = TestDataFactory.CreateUpdateEventRequestDto("New Title", "Updated Description");
+        var updateDto = TestDataFactory.CreateEventRequestDto(
+            "New Title", null, null, "Updated Description");
         
         var result = await UpdateEvent.Handle(
             group.Id,
@@ -38,7 +40,7 @@ public class UpdateEventTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<UpdateEvent.EventResponseDto>>>();
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<EventResponseDto>>>();
         var updatedEvent = await dbContext.Events.FirstAsync();
         updatedEvent.Title.Should().Be("New Title");
         updatedEvent.Description.Should().Be("Updated Description");
@@ -63,7 +65,7 @@ public class UpdateEventTest : TestBase
         dbContext.Events.Add(existingEvent);
         await dbContext.SaveChangesAsync();
 
-        var updateDto = TestDataFactory.CreateUpdateEventRequestDto("New Title");
+        var updateDto = TestDataFactory.CreateEventRequestDto("New Title");
         
         var result = await UpdateEvent.Handle(
             group.Id,
@@ -91,7 +93,7 @@ public class UpdateEventTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
 
-        var updateDto = TestDataFactory.CreateUpdateEventRequestDto("New Title");
+        var updateDto = TestDataFactory.CreateEventRequestDto("New Title");
         
         var result = await UpdateEvent.Handle(
             group.Id,
@@ -113,7 +115,7 @@ public class UpdateEventTest : TestBase
         var user = TestDataFactory.CreateUser("u1", "testUser");
         dbContext.Users.Add(user);
 
-        var updateDto = TestDataFactory.CreateUpdateEventRequestDto("New Title");
+        var updateDto = TestDataFactory.CreateEventRequestDto("New Title");
         
         var result = await UpdateEvent.Handle(
             "nonexistent-group",

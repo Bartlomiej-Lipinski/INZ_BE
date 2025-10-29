@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Storage;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 
 namespace WebApplication1.Features.Storage
