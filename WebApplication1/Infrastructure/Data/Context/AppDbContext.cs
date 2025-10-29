@@ -151,7 +151,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             entity.HasKey(es => es.Id);
             entity.Property(es => es.StartTime).IsRequired();
-            entity.Property(es => es.EndTime).IsRequired();
             entity.Property(es => es.AvailableUserCount).IsRequired();
 
             entity.HasOne(es => es.Event)

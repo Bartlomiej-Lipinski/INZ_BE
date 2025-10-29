@@ -92,7 +92,6 @@ public class GetEventById : IEndpoint
             Suggestions = evt.Suggestions?.Select(s => new EventSuggestionResponseDto
                 {
                     StartTime = s.StartTime.ToLocalTime(),
-                    EndTime = s.EndTime.ToLocalTime(),
                     AvailableUserCount = s.AvailableUserCount
                 }).ToList() ?? []
         };
