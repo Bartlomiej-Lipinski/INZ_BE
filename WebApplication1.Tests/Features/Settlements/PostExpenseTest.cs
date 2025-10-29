@@ -36,8 +36,8 @@ public class PostExpenseTest : TestBase
         
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
-            .Setup(c => c.RecalculateSettlementsForExpenseAdditionAsync(
-                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(),
+            .Setup(c => c.RecalculateSettlementsForExpenseChangeAsync(
+                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(), true,
                 It.IsAny<ILogger>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         
@@ -81,8 +81,8 @@ public class PostExpenseTest : TestBase
         
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
-            .Setup(c => c.RecalculateSettlementsForExpenseAdditionAsync(
-                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(),
+            .Setup(c => c.RecalculateSettlementsForExpenseChangeAsync(
+                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(), true,
                 It.IsAny<ILogger>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -113,8 +113,8 @@ public class PostExpenseTest : TestBase
         
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
-            .Setup(c => c.RecalculateSettlementsForExpenseAdditionAsync(
-                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(),
+            .Setup(c => c.RecalculateSettlementsForExpenseChangeAsync(
+                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(), true,
                 It.IsAny<ILogger>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -148,8 +148,8 @@ public class PostExpenseTest : TestBase
         
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
-            .Setup(c => c.RecalculateSettlementsForExpenseAdditionAsync(
-                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(),
+            .Setup(c => c.RecalculateSettlementsForExpenseChangeAsync(
+                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(), true,
                 It.IsAny<ILogger>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
@@ -187,8 +187,8 @@ public class PostExpenseTest : TestBase
 
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
-            .Setup(c => c.RecalculateSettlementsForExpenseAdditionAsync(
-                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(),
+            .Setup(c => c.RecalculateSettlementsForExpenseChangeAsync(
+                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(), true,
                 It.IsAny<ILogger>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         
@@ -229,8 +229,8 @@ public class PostExpenseTest : TestBase
         
         var mockCalculator = new Mock<ISettlementCalculator>();
         mockCalculator
-            .Setup(c => c.RecalculateSettlementsForExpenseAdditionAsync(
-                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(),
+            .Setup(c => c.RecalculateSettlementsForExpenseChangeAsync(
+                It.IsAny<Expense>(), It.IsAny<AppDbContext>(), It.IsAny<string>(), true,
                 It.IsAny<ILogger>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 

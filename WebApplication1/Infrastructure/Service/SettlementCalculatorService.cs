@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using WebApplication1.Features.Settlements;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 
@@ -7,20 +6,23 @@ namespace WebApplication1.Infrastructure.Service;
 
 public class SettlementCalculatorService : ISettlementCalculator
 {
-    public async Task RecalculateSettlementsForExpenseAdditionAsync(
-        Expense expense,
-        AppDbContext dbContext,
-        string groupId,
-        ILogger logger,
-        CancellationToken cancellationToken)
+    public async Task RecalculateSettlementsForExpenseChangeAsync(
+    Expense expense,
+    AppDbContext dbContext,
+    string groupId,
+    bool isAddition,
+    ILogger logger,
+    CancellationToken cancellationToken)
     {
-        logger.LogInformation("Recalculating settlements for new expense in group {GroupId}", groupId);
+        var action = isAddition ? "addition" : "removal";
+        logger.LogInformation("Recalculating settlements for expense {Action} in group {GroupId}", action, groupId);
+
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         await dbContext.Database.ExecuteSqlRawAsync(
             "SELECT * FROM Expenses WHERE GroupId = {0} FOR UPDATE", groupId);
         await dbContext.Database.ExecuteSqlRawAsync(
             "SELECT * FROM Settlements WHERE GroupId = {0} FOR UPDATE", groupId);
-        
+
         try
         {
             var settlements = await dbContext.Settlements
@@ -36,14 +38,15 @@ public class SettlementCalculatorService : ISettlementCalculator
                 balances.TryAdd(settlement.FromUserId, 0);
                 balances[settlement.FromUserId] -= settlement.Amount;
             }
-            
+
+            var sign = isAddition ? 1 : -1;
             balances.TryAdd(expense.PaidByUserId, 0);
-            balances[expense.PaidByUserId] += expense.Amount;
+            balances[expense.PaidByUserId] += sign * expense.Amount;
 
             foreach (var b in expense.Beneficiaries)
             {
                 balances.TryAdd(b.UserId, 0);
-                balances[b.UserId] -= b.Share;
+                balances[b.UserId] -= sign * b.Share;
             }
 
             var debtors = balances
@@ -100,7 +103,6 @@ public class SettlementCalculatorService : ISettlementCalculator
                 }
                 else
                 {
-                    newSet.Id = Guid.NewGuid().ToString();
                     dbContext.Settlements.Add(newSet);
                 }
             }
@@ -117,16 +119,16 @@ public class SettlementCalculatorService : ISettlementCalculator
             await dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
-            logger.LogInformation("Settlements successfully recalculated and committed for group {GroupId}", groupId);
+            logger.LogInformation("Settlements successfully recalculated after expense {Action} for group {GroupId}", action, groupId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error while recalculating settlements for group {GroupId}", groupId);
+            logger.LogError(ex, "Error while recalculating settlements after expense {Action} for group {GroupId}", action, groupId);
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
     }
-    
+
     private class SettlementParticipant
     {
         public string UserId { get; set; } = null!;

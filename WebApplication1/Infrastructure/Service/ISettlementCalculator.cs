@@ -5,10 +5,11 @@ namespace WebApplication1.Infrastructure.Service;
 
 public interface ISettlementCalculator
 {
-    Task RecalculateSettlementsForExpenseAdditionAsync(
+    Task RecalculateSettlementsForExpenseChangeAsync(
         Expense expense,
         AppDbContext dbContext,
         string groupId,
+        bool isAddition,
         ILogger logger,
         CancellationToken cancellationToken);
 }

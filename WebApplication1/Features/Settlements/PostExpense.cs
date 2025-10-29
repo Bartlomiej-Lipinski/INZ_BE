@@ -111,8 +111,8 @@ public class PostExpense : IEndpoint
         dbContext.Expenses.Add(expense);
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        await settlementCalculator.RecalculateSettlementsForExpenseAdditionAsync(
-            expense, dbContext, groupId, logger, cancellationToken);
+        await settlementCalculator.RecalculateSettlementsForExpenseChangeAsync(
+            expense, dbContext, groupId, isAddition: true, logger, cancellationToken);
 
         logger.LogInformation(
             "User {UserId} added new expense {ExpenseId} in group {GroupId}. TraceId: {TraceId}",
