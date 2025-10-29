@@ -11,8 +11,6 @@ namespace WebApplication1.Features.Events;
 
 public class CalculateBestDateForEvent : IEndpoint
 {
-    public record BestDateResult(DateTime DateTime, int Score);
-
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/events/{eventId}/calculate-best-date", Handle)
@@ -42,6 +40,7 @@ public class CalculateBestDateForEvent : IEndpoint
             logger.LogWarning("Event not found. EventId: {EventId}. TraceId: {TraceId}", eventId, traceId);
             return Results.NotFound();
         }
+
         var isUserInGroup = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == evt.GroupId && gu.UserId == currentUserId, cancellationToken);
 
@@ -54,33 +53,19 @@ public class CalculateBestDateForEvent : IEndpoint
 
         var topDates = GetBestDateAndTime(evt);
 
-        var results = topDates
-            .Select(d => new BestDateResult(d.date.Add(d.time.TimeOfDay), d.score))
-            .ToList();
 
-        return Results.Ok(ApiResponse<List<BestDateResult>>.Ok(results, "Top 3 najlepsze daty", traceId));
+        return Results.Ok(ApiResponse<List<DateTime>>.Ok(topDates, "Top 3 najlepsze daty", traceId));
     }
 
 
-    public static List<(DateTime date, DateTime time, int score)> GetBestDateAndTime(Event ev)
+    public static List<DateTime> GetBestDateAndTime(Event ev)
     {
         Dictionary<DateTime, int> dateScores = new();
         Dictionary<DateTime, Dictionary<int, int>> hourScores = new();
-        var eventAvailabilities = ev.Availabilities;
 
-        // KROK 1: Oblicz punkty tylko dla dat (bez godzin)
         foreach (var availability in ev.AvailabilityRanges)
         {
-            var userAvailability = eventAvailabilities.FirstOrDefault(a => a.UserId == availability.UserId);
-            int points = userAvailability?.Status switch
-            {
-                EventAvailabilityStatus.Going => 3,
-                EventAvailabilityStatus.NotGoing => 0,
-                EventAvailabilityStatus.Maybe => 1,
-                _ => 0
-            };
-
-            for (DateTime date = availability.AvailableFrom.Date;
+            for (var date = availability.AvailableFrom.Date;
                  date <= availability.AvailableTo.Date;
                  date = date.AddDays(1))
             {
@@ -90,70 +75,53 @@ public class CalculateBestDateForEvent : IEndpoint
                 if (!dateScores.ContainsKey(date))
                     dateScores[date] = 0;
 
-                dateScores[date] += points;
+                dateScores[date]++;
             }
         }
 
-        if (!dateScores.Any())
+        if (dateScores.Count == 0)
         {
-            DateTime fallback = ev.StartDate ?? DateTime.Now;
-            return new List<(DateTime, DateTime, int)>
-            {
-                (fallback, fallback.AddHours(9), 0)
-            };
+            var fallback = ev.StartDate ?? DateTime.Now;
+            return new List<DateTime> { fallback.Date.AddHours(9) };
         }
 
-        // Znajdź 3 najlepsze daty
         var topDates = dateScores
             .OrderByDescending(kvp => kvp.Value)
             .Take(3)
             .ToList();
 
-        var results = new List<(DateTime date, DateTime time, int score)>();
+        var results = new List<DateTime>();
 
-        // KROK 2: Oblicz punkty dla godzin dla każdej z top 3 dat
-        foreach (var dateEntry in topDates)
+        foreach (var currentDate in topDates.Select(dateEntry => dateEntry.Key))
         {
-            DateTime currentDate = dateEntry.Key;
-            int dateScore = dateEntry.Value;
             hourScores[currentDate] = new Dictionary<int, int>();
 
             foreach (var availability in ev.AvailabilityRanges)
             {
-                var userAvailability = eventAvailabilities.FirstOrDefault(a => a.UserId == availability.UserId);
-                int points = userAvailability?.Status switch
-                {
-                    EventAvailabilityStatus.Going => 3,
-                    EventAvailabilityStatus.NotGoing => 0,
-                    EventAvailabilityStatus.Maybe => 1,
-                    _ => 0
-                };
-
-                for (DateTime dateTime = availability.AvailableFrom;
+                for (var dateTime = availability.AvailableFrom;
                      dateTime <= availability.AvailableTo;
                      dateTime = dateTime.AddHours(1))
                 {
                     if (dateTime.Date != currentDate)
                         continue;
 
-                    int hour = dateTime.Hour;
+                    var hour = dateTime.Hour;
                     if (!hourScores[currentDate].ContainsKey(hour))
                         hourScores[currentDate][hour] = 0;
 
-                    hourScores[currentDate][hour] += points;
+                    hourScores[currentDate][hour]++;
                 }
             }
 
-            // Znajdź najlepszą godzinę dla tej daty
-            int bestHour = 9;
-            if (hourScores.ContainsKey(currentDate) && hourScores[currentDate].Any())
+            var bestHour = 9;
+            if (hourScores.TryGetValue(currentDate, out var value) && value.Count != 0)
             {
-                var bestHourEntry = hourScores[currentDate].OrderByDescending(kvp => kvp.Value).First();
+                var bestHourEntry = value.OrderByDescending(kvp => kvp.Value).First();
                 bestHour = bestHourEntry.Key;
             }
 
-            DateTime bestTime = currentDate.Date.AddHours(bestHour);
-            results.Add((currentDate, bestTime, dateScore));
+            var bestTime = currentDate.Date.AddHours(bestHour);
+            results.Add(bestTime);
         }
 
         return results;

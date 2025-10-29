@@ -111,8 +111,8 @@ public class CalculateBestDateForEventTests : TestBase
             CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<Ok<ApiResponse<List<CalculateBestDateForEvent.BestDateResult>>>>();
-        var ok = result as Ok<ApiResponse<List<CalculateBestDateForEvent.BestDateResult>>>;
+        result.Should().BeOfType<Ok<ApiResponse<List<DateTime>>>>();
+        var ok = result as Ok<ApiResponse<List<DateTime>>>;
         ok!.Value!.Success.Should().BeTrue();
         ok.Value.Data.Should().NotBeNull();
         ok.Value.Data.Should().HaveCountGreaterThan(0);
@@ -155,8 +155,8 @@ public class CalculateBestDateForEventTests : TestBase
         // Assert
         results.Should().HaveCountGreaterThan(0);
         var bestResult = results.First();
-        bestResult.date.Should().Be(startDate);
-        bestResult.time.Hour.Should().BeInRange(12, 16);
+        bestResult.Date.Should().Be(startDate);
+        bestResult.Hour.Should().BeInRange(12, 16);
     }
 
     [Fact]
@@ -180,9 +180,8 @@ public class CalculateBestDateForEventTests : TestBase
         // Assert
         results.Should().HaveCount(1);
         var bestResult = results.First();
-        bestResult.date.Date.Should().Be(startDate.Date);
-        bestResult.time.Hour.Should().Be(9);
-        bestResult.score.Should().Be(0);
+        bestResult.Date.Should().Be(startDate.Date);
+        bestResult.Hour.Should().Be(9);
     }
 
 
@@ -230,8 +229,8 @@ public class CalculateBestDateForEventTests : TestBase
         // Assert
         results.Should().HaveCountGreaterThan(0);
         var bestResult = results.First();
-        bestResult.date.Should().Be(startDate);
-        bestResult.time.Hour.Should().BeInRange(14, 16);
+        bestResult.Date.Should().Be(startDate);
+        bestResult.Hour.Should().BeInRange(14, 16);
     }
 
     [Fact]
@@ -284,16 +283,9 @@ public class CalculateBestDateForEventTests : TestBase
         results.Should().HaveCount(3, "metoda zwraca maksymalnie 3 najlepsze daty");
 
         var bestResult = results.First();
-        bestResult.date.Should().Be(new DateTime(2024, 1, 3),
+        bestResult.Date.Should().Be(new DateTime(2024, 1, 3),
             "dzień 3 stycznia ma największe nakładanie się dostępności wszystkich trzech użytkowników");
-        bestResult.time.Hour.Should()
+        bestResult.Hour.Should()
             .Be(13, "godzina 13 to początek przedziału gdzie wszyscy trzej użytkownicy są dostępni");
-        bestResult.score.Should().BeGreaterThan(0);
-
-        for (int i = 0; i < results.Count - 1; i++)
-        {
-            results[i].score.Should().BeGreaterThanOrEqualTo(results[i + 1].score,
-                "wyniki powinny być posortowane malejąco według punktów");
-        }
     }
 }
