@@ -54,7 +54,7 @@ public class PostEvent : IEndpoint
         if (string.IsNullOrWhiteSpace(request.Title))
             return Results.BadRequest(ApiResponse<string>.Fail("Event title is required.", traceId));
 
-        if (request.StartDate == default && !request.IsAutoScheduled)
+        if (request.StartDate == null && !request.IsAutoScheduled)
             return Results.BadRequest(ApiResponse<string>.Fail("Start date is required for manual events.",
                 traceId));
         
@@ -70,7 +70,7 @@ public class PostEvent : IEndpoint
         }
 
         if (request is { IsAutoScheduled: false, EndDate: not null } 
-            && request.StartDate != default && request.EndDate < request.StartDate)
+            && request.StartDate != null && request.EndDate < request.StartDate)
             return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.",
                 traceId));
 
