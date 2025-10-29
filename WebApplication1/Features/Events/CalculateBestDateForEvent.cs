@@ -52,9 +52,15 @@ public class CalculateBestDateForEvent : IEndpoint
         }
 
         var topDates = GetBestDateAndTime(evt);
-
-
-        return Results.Ok(ApiResponse<List<DateTime>>.Ok(topDates, "Top 3 najlepsze daty", traceId));
+        foreach (var evtSuggestion in topDates.Select(dateTime => new EventSuggestion
+                 {
+                     EventId = evt.Id,
+                     StartTime = dateTime,
+                 }))
+        {
+            evt.Suggestions.Add(evtSuggestion);
+        }
+        return Results.Ok(ApiResponse<List<DateTime>>.Ok(topDates, "Top 3 najlepsze daty dodane do sugesti", traceId));
     }
 
 
