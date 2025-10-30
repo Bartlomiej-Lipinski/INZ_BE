@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using WebApplication1.Infrastructure.Data.Entities.Polls;
 
 namespace WebApplication1.Infrastructure.Data.Entities;
 
@@ -23,4 +24,6 @@ public class User : IdentityUser
     public string? Description { get; set; }
 
     public string? Photo { get; set; }
+    
+    public ICollection<PollOption> VotedPollOptions { get; set; } = new List<PollOption>();
 }

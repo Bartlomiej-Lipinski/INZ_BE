@@ -28,6 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Features\Polls\Dtos\" />
       <Folder Include="Migrations\" />
       <Folder Include="Storage\" />
     </ItemGroup>

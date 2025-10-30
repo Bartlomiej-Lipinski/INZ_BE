@@ -7,6 +7,7 @@ using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Entities.Tokens;
+using WebApplication1.Infrastructure.Data.Entities.Polls;
 
 namespace WebApplication1.Infrastructure.Data.Context;
 
@@ -29,6 +30,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Expense> Expenses { get; set; } = null!;
     public DbSet<ExpenseBeneficiary> ExpenseBeneficiaries { get; set; } = null!;
     public DbSet<Settlement> Settlements { get; set; } = null!;
+    public DbSet<Poll> Polls { get; set; } = null!;
+    public DbSet<PollOption> PollOptions { get; set; } = null!;
      
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -241,5 +244,61 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(s => s.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+        
+        builder.Entity<Poll>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.GroupId).IsRequired();
+            entity.Property(p => p.CreatedByUserId).IsRequired();
+            entity.Property(p => p.Question).IsRequired().HasMaxLength(500);
+            entity.Property(p => p.CreatedAt).IsRequired();
+
+            entity.HasOne(p => p.Group)
+                .WithMany(g => g.Polls)
+                .HasForeignKey(p => p.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(p => p.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(p => p.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasMany(p => p.Options)
+                .WithOne(o => o.Poll)
+                .HasForeignKey(o => o.PollId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<PollOption>(entity =>
+        {
+            entity.HasKey(po => po.Id);
+            entity.Property(po => po.PollId).IsRequired();
+            entity.Property(po => po.Text).IsRequired().HasMaxLength(300);
+            
+            entity.HasOne(po => po.Poll)
+                .WithMany(p => p.Options)
+                .HasForeignKey(po => po.PollId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(po => po.VotedUsers)
+                .WithMany(u => u.VotedPollOptions)
+                .UsingEntity<Dictionary<string, object>>(
+                    "UserPollOption",
+                    j => j
+                        .HasOne<User>()
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j => j
+                        .HasOne<PollOption>()
+                        .WithMany()
+                        .HasForeignKey("PollOptionId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j =>
+                    {
+                        j.HasKey("UserId", "PollOptionId");
+                        j.ToTable("UserPollOptions");
+                    });
+        });   
     }
 }
