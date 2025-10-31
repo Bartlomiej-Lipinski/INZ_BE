@@ -55,13 +55,14 @@ namespace WebApplication1.Features.Storage
 
             var record = new StoredFile
             {
+                Id = Guid.NewGuid().ToString(),
                 FileName = file.FileName,
                 ContentType = file.ContentType ?? "application/octet-stream",
                 Size = file.Length,
                 Url = url,
                 EntityType = entityType,
                 EntityId = entityId,
-                UploadedBy = currentUserId,
+                UploadedById = currentUserId,
                 UploadedAt = DateTime.UtcNow
             };
 
