@@ -304,7 +304,7 @@ public static class TestDataFactory
             UploadedAt = uploadedAt,
             EntityId = entityId,
             EntityType = entityType,
-            UploadedBy = uploadedBy
+            UploadedById = uploadedBy
         };
     }
 

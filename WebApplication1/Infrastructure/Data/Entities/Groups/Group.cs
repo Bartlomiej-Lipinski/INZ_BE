@@ -1,5 +1,6 @@
 ﻿using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
+using WebApplication1.Infrastructure.Data.Entities.Polls;
 
 namespace WebApplication1.Infrastructure.Data.Entities.Groups;
 
@@ -17,4 +18,5 @@ public class Group
     public ICollection<Event> Events { get; set; } = new List<Event>();
     public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
     public ICollection<Settlement> Settlements { get; set; } = new List<Settlement>();
+    public ICollection<Poll> Polls { get; set; } = new List<Poll>();
 }
