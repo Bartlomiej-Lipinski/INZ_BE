@@ -283,6 +283,18 @@ public static class TestDataFactory
         return list;
     }
 
+    public static EventSuggestion CreateEventSuggestion(
+        string id, string eventId, DateTime startTime, int availableUserCount)
+    {
+        return new EventSuggestion
+        {
+            Id = id,
+            EventId = eventId,
+            StartTime = startTime,
+            AvailableUserCount = availableUserCount
+        };
+    }
+
     public static StoredFile CreateStoredFile(
         string id,
         string fileName,
@@ -355,7 +367,7 @@ public static class TestDataFactory
         };
     }
 
-public static ExpenseRequestDto CreateExpenseRequestDto(
+    public static ExpenseRequestDto CreateExpenseRequestDto(
         string title, string paidByUserId, decimal amount, bool isEvenSplit, List<ExpenseBeneficiaryDto> beneficiaries)
     {
         return new ExpenseRequestDto

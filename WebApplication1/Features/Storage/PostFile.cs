@@ -61,7 +61,7 @@ namespace WebApplication1.Features.Storage
                 Url = url,
                 EntityType = entityType,
                 EntityId = entityId,
-                UploadedBy = currentUserId,
+                UploadedById = currentUserId,
                 UploadedAt = DateTime.UtcNow
             };
 
