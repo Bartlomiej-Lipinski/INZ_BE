@@ -34,9 +34,11 @@ public class CalculateBestDateForEvent : IEndpoint
         var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
+        if (currentUser?.Identity?.IsAuthenticated != true) return TypedResults.Unauthorized();
+
         var evt = await dbContext.Events
-            .Include(@event => @event.Suggestions)
-            .Include(@event => @event.AvailabilityRanges)
+            .Include(e => e.Suggestions)
+            .Include(e => e.AvailabilityRanges)
             .FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
 
         if (evt == null)
@@ -66,18 +68,20 @@ public class CalculateBestDateForEvent : IEndpoint
         {
             var evtSuggestion = new EventSuggestion
             {
+                Id = Guid.NewGuid().ToString(),
                 EventId = evt.Id,
                 StartTime = date,
                 AvailableUserCount = availablePeople
             };
             evt.Suggestions.Add(evtSuggestion);
         }
-        
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.Ok(ApiResponse<List<EventSuggestion>>.Ok(evt.Suggestions.ToList()));
     }
 
+    // ... reszta klasy bez zmian ...
     public static List<(DateTime date, int availablePeople)> GetBestDateAndTime(Event ev)
     {
         Dictionary<DateTime, HashSet<string>> dateUsers = new();
@@ -101,7 +105,7 @@ public class CalculateBestDateForEvent : IEndpoint
 
         if (dateUsers.Count == 0)
         {
-            var fallback = ev.StartDate ?? DateTime.Now;
+            var fallback = ev.StartDate ?? DateTime.UtcNow;
             return new List<(DateTime, int)> { (fallback.Date.AddHours(9), 0) };
         }
 
@@ -135,7 +139,7 @@ public class CalculateBestDateForEvent : IEndpoint
 
             var bestHour = 9;
             var availablePeople = 0;
-            
+
             if (hourUsers.TryGetValue(currentDate, out var value) && value.Count != 0)
             {
                 var bestHourEntry = value.OrderByDescending(kvp => kvp.Value.Count).First();

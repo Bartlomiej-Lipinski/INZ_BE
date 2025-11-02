@@ -12,33 +12,25 @@ public class CalculateBestDateForEventTests : TestBase
     [Fact]
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Found()
     {
-        // Arrange
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var httpContext = CreateHttpContext();
-        var claims = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<CalculateBestDateForEvent>.Instance;
-
-        // Act
         var result = await CalculateBestDateForEvent.Handle(
             "non-existent-id",
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(),
+            NullLogger<CalculateBestDateForEvent>.Instance,
             CancellationToken.None);
 
-        // Assert
         result.Should().BeOfType<NotFound>();
     }
 
     [Fact]
     public async Task Handle_Should_Return_Forbidden_When_User_Not_In_Group()
     {
-        // Arrange
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
@@ -54,7 +46,6 @@ public class CalculateBestDateForEventTests : TestBase
         var claims = CreateClaimsPrincipal(user.Id);
         var logger = NullLogger<CalculateBestDateForEvent>.Instance;
 
-        // Act
         var result = await CalculateBestDateForEvent.Handle(
             evt.Id,
             dbContext,
@@ -63,14 +54,12 @@ public class CalculateBestDateForEventTests : TestBase
             logger,
             CancellationToken.None);
 
-        // Assert
         result.Should().BeOfType<ForbidHttpResult>();
     }
 
     [Fact]
     public async Task Handle_Should_Return_Best_Date_When_Valid()
     {
-        // Arrange
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
@@ -97,20 +86,15 @@ public class CalculateBestDateForEventTests : TestBase
         dbContext.Events.Add(evt);
         await dbContext.SaveChangesAsync();
 
-        var httpContext = CreateHttpContext();
-        var claims = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<CalculateBestDateForEvent>.Instance;
 
-        // Act
         var result = await CalculateBestDateForEvent.Handle(
             evt.Id,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(),
+            NullLogger<CalculateBestDateForEvent>.Instance,
             CancellationToken.None);
 
-        // Assert
         result.Should().BeOfType<Ok<ApiResponse<List<EventSuggestion>>>>();
         var ok = result as Ok<ApiResponse<List<EventSuggestion>>>;
         ok!.Value!.Success.Should().BeTrue();
@@ -121,7 +105,6 @@ public class CalculateBestDateForEventTests : TestBase
     [Fact]
     public void GetBestDateAndTime_Should_Select_Date_With_Most_Points()
     {
-        // Arrange
         var startDate = new DateTime(2024, 1, 1);
         var user1 = TestDataFactory.CreateUser("user-1", "User1");
         var user2 = TestDataFactory.CreateUser("user-2", "User2");
@@ -143,10 +126,8 @@ public class CalculateBestDateForEventTests : TestBase
                 startDate.AddHours(18))
         };
 
-        // Act
         var results = CalculateBestDateForEvent.GetBestDateAndTime(evt);
 
-        // Assert
         results.Should().HaveCountGreaterThan(0);
         var bestResult = results.First();
         bestResult.date.Date.Should().Be(startDate.Date);
@@ -156,7 +137,6 @@ public class CalculateBestDateForEventTests : TestBase
     [Fact]
     public void GetBestDateAndTime_Should_Return_Fallback_When_No_Availabilities()
     {
-        // Arrange
         var startDate = new DateTime(2024, 1, 1);
         var user = TestDataFactory.CreateUser("u1", "User1");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
@@ -168,10 +148,8 @@ public class CalculateBestDateForEventTests : TestBase
         evt.Availabilities = new List<EventAvailability>();
         evt.AvailabilityRanges = new List<EventAvailabilityRange>();
 
-        // Act
         var results = CalculateBestDateForEvent.GetBestDateAndTime(evt);
 
-        // Assert
         results.Should().HaveCount(1);
         var bestResult = results.First();
         bestResult.date.Date.Should().Be(startDate.Date);
@@ -182,7 +160,6 @@ public class CalculateBestDateForEventTests : TestBase
     [Fact]
     public void GetBestDateAndTime_Should_Handle_Overlapping_Availabilities()
     {
-        // Arrange
         var startDate = new DateTime(2024, 1, 1);
         var user1 = TestDataFactory.CreateUser("user-1", "User1");
         var user2 = TestDataFactory.CreateUser("user-2", "User2");
@@ -208,10 +185,8 @@ public class CalculateBestDateForEventTests : TestBase
                 startDate.AddHours(15))
         };
 
-        // Act
         var results = CalculateBestDateForEvent.GetBestDateAndTime(evt);
 
-        // Assert
         results.Should().HaveCountGreaterThan(0);
         var bestResult = results.First();
         bestResult.date.Date.Should().Be(startDate.Date);
@@ -221,7 +196,6 @@ public class CalculateBestDateForEventTests : TestBase
     [Fact]
     public void GetBestDateAndTime_Should_Select_Best_Date_With_Multiple_AvailabilityRanges()
     {
-        // Arrange
         var startDate = new DateTime(2024, 1, 1);
         var user1 = TestDataFactory.CreateUser("user-1", "User1");
         var user2 = TestDataFactory.CreateUser("user-2", "User2");
@@ -261,10 +235,8 @@ public class CalculateBestDateForEventTests : TestBase
                 new DateTime(2024, 1, 5, 10, 0, 0))
         };
 
-        // Act
         var results = CalculateBestDateForEvent.GetBestDateAndTime(evt);
 
-        // Assert
         results.Should().HaveCount(3, "metoda zwraca maksymalnie 3 najlepsze daty");
 
         var bestResult = results.First();
