@@ -3,6 +3,7 @@ using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Features.Polls.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -377,6 +378,15 @@ public static class TestDataFactory
             Amount = amount,
             IsEvenSplit = isEvenSplit,
             Beneficiaries = beneficiaries
+        };
+    }
+
+    public static PollRequestDto CreatePollRequestDto(string question, List<PollOptionRequestDto> options)
+    {
+        return new PollRequestDto
+        {
+            Question = question,
+            Options = options
         };
     }
     

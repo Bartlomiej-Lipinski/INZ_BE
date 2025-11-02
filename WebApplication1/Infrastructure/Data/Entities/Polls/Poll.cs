@@ -10,7 +10,6 @@ public class Poll
     
     public string Question { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
-    public DateTime? EndsAt { get; set; }
     
     public Group Group { get; set; } = null!;
     public User CreatedByUser { get; set; } = null!;
