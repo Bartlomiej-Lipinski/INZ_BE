@@ -304,13 +304,13 @@ public static class TestDataFactory
             UploadedAt = uploadedAt,
             EntityId = entityId,
             EntityType = entityType,
-            UploadedBy = uploadedBy
+            UploadedById = uploadedBy
         };
     }
 
     public static IFormFile CreateFormFile(string fileName, byte[] content)
     {
-        using var stream = new MemoryStream(content);
+        var stream = new MemoryStream(content);
         return new FormFile(stream, 0, content.Length, "file", fileName)
         {
             Headers = new HeaderDictionary(),
