@@ -34,12 +34,17 @@ public class CalculateBestDateForEvent : IEndpoint
         var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        var evt = await dbContext.Events.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
+        var evt = await dbContext.Events
+            .Include(@event => @event.Suggestions)
+            .Include(@event => @event.AvailabilityRanges)
+            .FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
+
         if (evt == null)
         {
             logger.LogWarning("Event not found. EventId: {EventId}. TraceId: {TraceId}", eventId, traceId);
             return Results.NotFound();
         }
+
 
         var isUserInGroup = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == evt.GroupId && gu.UserId == currentUserId, cancellationToken);
@@ -49,6 +54,11 @@ public class CalculateBestDateForEvent : IEndpoint
             logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
                 currentUserId, evt.GroupId, traceId);
             return Results.Forbid();
+        }
+
+        if (evt.Suggestions.Count != 0)
+        {
+            evt.Suggestions.Clear();
         }
 
         var topDates = GetBestDateAndTime(evt);
@@ -64,11 +74,8 @@ public class CalculateBestDateForEvent : IEndpoint
         }
         
         await dbContext.SaveChangesAsync(cancellationToken);
-        
-        return Results.Ok(ApiResponse<List<(DateTime date, int availablePeople)>>.Ok(
-            topDates, 
-            "Top 3 best date added to suggestions", 
-            traceId));
+
+        return Results.Ok(ApiResponse<List<EventSuggestion>>.Ok(evt.Suggestions.ToList()));
     }
 
     public static List<(DateTime date, int availablePeople)> GetBestDateAndTime(Event ev)

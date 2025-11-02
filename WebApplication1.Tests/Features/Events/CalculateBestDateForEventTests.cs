@@ -111,8 +111,8 @@ public class CalculateBestDateForEventTests : TestBase
             CancellationToken.None);
 
         // Assert
-        result.Should().BeOfType<Ok<ApiResponse<List<(DateTime date, int availablePeople)>>>>();
-        var ok = result as Ok<ApiResponse<List<(DateTime date, int availablePeople)>>>;
+        result.Should().BeOfType<Ok<ApiResponse<List<EventSuggestion>>>>();
+        var ok = result as Ok<ApiResponse<List<EventSuggestion>>>;
         ok!.Value!.Success.Should().BeTrue();
         ok.Value.Data.Should().NotBeNull();
         ok.Value.Data.Should().HaveCountGreaterThan(0);
@@ -132,21 +132,15 @@ public class CalculateBestDateForEventTests : TestBase
         evt.EndDate = startDate.AddDays(7);
         evt.Availabilities = new List<EventAvailability>
         {
-            new() { UserId = user1.Id, Status = EventAvailabilityStatus.Going, EventId = evt.Id },
-            new() { UserId = user2.Id, Status = EventAvailabilityStatus.Going, EventId = evt.Id }
+            TestDataFactory.CreateEventAvailability(evt.Id, user1.Id, EventAvailabilityStatus.Going, DateTime.Now),
+            TestDataFactory.CreateEventAvailability(evt.Id, user2.Id, EventAvailabilityStatus.Going, DateTime.Now)
         };
         evt.AvailabilityRanges = new List<EventAvailabilityRange>
         {
-            new()
-            {
-                UserId = user1.Id, EventId = evt.Id, AvailableFrom = startDate.AddHours(10),
-                AvailableTo = startDate.AddHours(16)
-            },
-            new()
-            {
-                UserId = user2.Id, EventId = evt.Id, AvailableFrom = startDate.AddHours(12),
-                AvailableTo = startDate.AddHours(18)
-            }
+            TestDataFactory.CreateEventAvailabilityRange(evt.Id, user1.Id, startDate.AddHours(10),
+                startDate.AddHours(16)),
+            TestDataFactory.CreateEventAvailabilityRange(evt.Id, user2.Id, startDate.AddHours(12),
+                startDate.AddHours(18))
         };
 
         // Act
@@ -200,27 +194,18 @@ public class CalculateBestDateForEventTests : TestBase
         evt.EndDate = startDate.AddDays(2);
         evt.Availabilities = new List<EventAvailability>
         {
-            new() { UserId = user1.Id, Status = EventAvailabilityStatus.Going, EventId = evt.Id },
-            new() { UserId = user2.Id, Status = EventAvailabilityStatus.Going, EventId = evt.Id },
-            new() { UserId = user3.Id, Status = EventAvailabilityStatus.Maybe, EventId = evt.Id }
+            TestDataFactory.CreateEventAvailability(evt.Id, user1.Id, EventAvailabilityStatus.Going, DateTime.Now),
+            TestDataFactory.CreateEventAvailability(evt.Id, user2.Id, EventAvailabilityStatus.Going, DateTime.Now),
+            TestDataFactory.CreateEventAvailability(evt.Id, user3.Id, EventAvailabilityStatus.Going, DateTime.Now)
         };
         evt.AvailabilityRanges = new List<EventAvailabilityRange>
         {
-            new()
-            {
-                UserId = user1.Id, EventId = evt.Id, AvailableFrom = startDate.AddHours(10),
-                AvailableTo = startDate.AddHours(16)
-            },
-            new()
-            {
-                UserId = user2.Id, EventId = evt.Id, AvailableFrom = startDate.AddHours(12),
-                AvailableTo = startDate.AddHours(18)
-            },
-            new()
-            {
-                UserId = user3.Id, EventId = evt.Id, AvailableFrom = startDate.AddHours(14),
-                AvailableTo = startDate.AddHours(17)
-            }
+            TestDataFactory.CreateEventAvailabilityRange(evt.Id, user1.Id, startDate.AddHours(10),
+                startDate.AddHours(16)),
+            TestDataFactory.CreateEventAvailabilityRange(evt.Id, user2.Id, startDate.AddHours(14),
+                startDate.AddHours(18)),
+            TestDataFactory.CreateEventAvailabilityRange(evt.Id, user3.Id, startDate.AddHours(13),
+                startDate.AddHours(15))
         };
 
         // Act
