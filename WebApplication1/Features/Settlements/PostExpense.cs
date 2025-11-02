@@ -30,7 +30,7 @@ public class PostExpense : IEndpoint
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<PostExpense> logger,
-        ISettlementCalculator settlementCalculator,
+        [FromServices] ISettlementCalculator settlementCalculator,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;

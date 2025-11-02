@@ -31,7 +31,7 @@ public class UpdateExpense : IEndpoint
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<UpdateExpense> logger,
-        ISettlementCalculator settlementCalculator,
+        [FromServices] ISettlementCalculator settlementCalculator,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
