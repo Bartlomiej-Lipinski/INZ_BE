@@ -2,10 +2,9 @@
 
 public class GroupUser
 {
-    public string Id { get; init; } = null!;
-    
     public string GroupId { get; set; } = null!;
-    public string UserId { get; set; } = null!;
+    public string UserId { get; set; } = null!; 
+    
     public bool IsAdmin { get; set; }
     public AcceptanceStatus AcceptanceStatus { get; set; } 
     

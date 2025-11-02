@@ -90,7 +90,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         
         builder.Entity<GroupUser>(entity =>
         {
-            entity.HasKey(gu => gu.Id);
+            entity.HasKey(gu => new { gu.UserId, gu.GroupId });
             entity.Property(gu => gu.IsAdmin).IsRequired();
             
             entity.HasOne(gu => gu.Group)

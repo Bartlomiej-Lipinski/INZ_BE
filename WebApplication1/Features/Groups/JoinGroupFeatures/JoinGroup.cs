@@ -63,7 +63,6 @@ public class JoinGroup : IEndpoint
 
         var groupUser = new GroupUser
         {
-            Id = Guid.NewGuid().ToString(),
             GroupId = group.Id,
             UserId = userId,
             IsAdmin = false,
