@@ -10,6 +10,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 
@@ -381,7 +382,18 @@ public static class TestDataFactory
         };
     }
 
-    public static PollRequestDto CreatePollRequestDto(string question, List<PollOptionRequestDto> options)
+    public static Poll CreatePoll(string id, string groupId, string userId, string question)
+    {
+        return new Poll
+        {
+            Id = id,
+            GroupId = groupId,
+            CreatedByUserId = userId,
+            Question = question
+        };
+    }
+
+    public static PollRequestDto CreatePollRequestDto(string question, List<PollOptionDto> options)
     {
         return new PollRequestDto
         {

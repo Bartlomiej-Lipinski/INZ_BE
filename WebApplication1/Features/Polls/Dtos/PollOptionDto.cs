@@ -1,6 +1,6 @@
 ﻿namespace WebApplication1.Features.Polls.Dtos;
 
-public record PollOptionRequestDto
+public record PollOptionDto
 {
     public string Text { get; set; } = null!;
 }

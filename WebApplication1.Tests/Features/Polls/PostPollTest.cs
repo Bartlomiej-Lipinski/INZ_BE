@@ -24,9 +24,9 @@ public class PostPollTest : TestBase
         var dto = TestDataFactory.CreatePollRequestDto(
             "What should we do this weekend?",
             [
-                new PollOptionRequestDto { Text = "Go hiking" },
-                new PollOptionRequestDto { Text = "Watch a movie" },
-                new PollOptionRequestDto { Text = "Have a barbecue" }
+                new PollOptionDto { Text = "Go hiking" },
+                new PollOptionDto { Text = "Watch a movie" },
+                new PollOptionDto { Text = "Have a barbecue" }
             ]
         );
 
@@ -60,7 +60,7 @@ public class PostPollTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
         var dto = TestDataFactory.CreatePollRequestDto(
-            "Test question", [new PollOptionRequestDto { Text = "Option 1" }]);
+            "Test question", [new PollOptionDto { Text = "Option 1" }]);
 
         var result = await PostPoll.Handle(
             "g1",
@@ -86,7 +86,7 @@ public class PostPollTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
-        var dto = TestDataFactory.CreatePollRequestDto("", [new PollOptionRequestDto { Text = "Option 1" }]);
+        var dto = TestDataFactory.CreatePollRequestDto("", [new PollOptionDto { Text = "Option 1" }]);
 
         var result = await PostPoll.Handle(
             "g1",
@@ -108,7 +108,7 @@ public class PostPollTest : TestBase
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
 
-        var dto = TestDataFactory.CreatePollRequestDto("Test question", [new PollOptionRequestDto { Text = "Option 1" }]);
+        var dto = TestDataFactory.CreatePollRequestDto("Test question", [new PollOptionDto { Text = "Option 1" }]);
 
         var result = await PostPoll.Handle(
             "g1",
@@ -127,7 +127,7 @@ public class PostPollTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
-        var dto = TestDataFactory.CreatePollRequestDto("Test question", [new PollOptionRequestDto { Text = "Option 1" }]);
+        var dto = TestDataFactory.CreatePollRequestDto("Test question", [new PollOptionDto { Text = "Option 1" }]);
 
         var result = await PostPoll.Handle(
             "nonexistent-group",
