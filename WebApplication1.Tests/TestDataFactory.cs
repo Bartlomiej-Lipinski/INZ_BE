@@ -287,6 +287,18 @@ public static class TestDataFactory
 
         return list;
     }
+
+    public static EventSuggestion CreateEventSuggestion(
+        string id, string eventId, DateTime startTime, int availableUserCount)
+    {
+        return new EventSuggestion
+        {
+            Id = id,
+            EventId = eventId,
+            StartTime = startTime,
+            AvailableUserCount = availableUserCount
+        };
+    }
     
     private static string GenerateUniqueCode()
     {

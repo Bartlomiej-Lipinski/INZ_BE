@@ -34,7 +34,7 @@ public class CalculateBestDateForEvent : IEndpoint
         var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (currentUser?.Identity?.IsAuthenticated != true) return TypedResults.Unauthorized();
+        if (currentUser.Identity?.IsAuthenticated != true) return TypedResults.Unauthorized();
 
         var evt = await dbContext.Events
             .Include(e => e.Suggestions)
@@ -46,8 +46,7 @@ public class CalculateBestDateForEvent : IEndpoint
             logger.LogWarning("Event not found. EventId: {EventId}. TraceId: {TraceId}", eventId, traceId);
             return Results.NotFound();
         }
-
-
+        
         var isUserInGroup = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == evt.GroupId && gu.UserId == currentUserId, cancellationToken);
 
@@ -81,7 +80,6 @@ public class CalculateBestDateForEvent : IEndpoint
         return Results.Ok(ApiResponse<List<EventSuggestion>>.Ok(evt.Suggestions.ToList()));
     }
 
-    // ... reszta klasy bez zmian ...
     public static List<(DateTime date, int availablePeople)> GetBestDateAndTime(Event ev)
     {
         Dictionary<DateTime, HashSet<string>> dateUsers = new();

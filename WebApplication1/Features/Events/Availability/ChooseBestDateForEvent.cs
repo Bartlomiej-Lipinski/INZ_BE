@@ -13,7 +13,7 @@ public class ChooseBestDateForEvent : IEndpoint
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/events/{eventId}/{suggestionId}/choose-best-date", Handle)
-            .WithName("ChoseBestDateForEvent")
+            .WithName("ChooseBestDateForEvent")
             .WithDescription("Chooses the best date for an event based on calculated suggestions")
             .WithTags("Events")
             .RequireAuthorization()
@@ -34,7 +34,7 @@ public class ChooseBestDateForEvent : IEndpoint
         var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (currentUser?.Identity?.IsAuthenticated != true || string.IsNullOrEmpty(currentUserId))
+        if (currentUser.Identity?.IsAuthenticated != true || string.IsNullOrEmpty(currentUserId))
         {
             logger.LogWarning("Unauthorized access or missing user id. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
@@ -46,7 +46,7 @@ public class ChooseBestDateForEvent : IEndpoint
 
         if (evt == null)
         {
-            logger.LogWarning("Event not found. TraceId: {TraceId}", eventId, traceId);
+            logger.LogWarning("Event {EventId} not found. TraceId: {TraceId}", eventId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
         }
 
@@ -68,8 +68,7 @@ public class ChooseBestDateForEvent : IEndpoint
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-
-
+        
         return Results.Ok(ApiResponse<string>.Ok(null!, "Best date chosen successfully.", traceId));
     }
 }

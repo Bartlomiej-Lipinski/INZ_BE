@@ -3,12 +3,11 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events.Availability;
-using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Tests.Features.Events
+namespace WebApplication1.Tests.Features.Events.Availability
 {
-    public class ChoseBestDateForEventTest : TestBase
+    public class ChooseBestDateForEventTest : TestBase
     {
         [Fact]
         public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
@@ -29,8 +28,7 @@ namespace WebApplication1.Tests.Features.Events
             dbContext.Groups.Add(group);
             dbContext.Events.Add(evt);
             await dbContext.SaveChangesAsync();
-
-
+            
             var result = await ChooseBestDateForEvent.Handle(
                 "e1",
                 "s1",
@@ -116,12 +114,7 @@ namespace WebApplication1.Tests.Features.Events
                 DateTime.UtcNow
             );
 
-            // var suggestion = TestDataFactory.CreateEventSuggestion("s1", evt.Id, DateTime.UtcNow.AddDays(2), 3);
-            var suggestion = new EventSuggestion
-            {
-                Id = "s1",
-                StartTime = DateTime.UtcNow.AddDays(2)
-            };
+            var suggestion = TestDataFactory.CreateEventSuggestion("s1", evt.Id, DateTime.UtcNow.AddDays(2), 3);
             evt.Suggestions.Add(suggestion);
 
             dbContext.Users.Add(user);

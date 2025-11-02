@@ -42,16 +42,12 @@ public class CalculateBestDateForEventTests : TestBase
         dbContext.Events.Add(evt);
         await dbContext.SaveChangesAsync();
 
-        var httpContext = CreateHttpContext();
-        var claims = CreateClaimsPrincipal(user.Id);
-        var logger = NullLogger<CalculateBestDateForEvent>.Instance;
-
         var result = await CalculateBestDateForEvent.Handle(
             evt.Id,
             dbContext,
-            claims,
-            httpContext,
-            logger,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(),
+            NullLogger<CalculateBestDateForEvent>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<ForbidHttpResult>();
@@ -85,8 +81,7 @@ public class CalculateBestDateForEventTests : TestBase
         dbContext.GroupUsers.Add(groupUser);
         dbContext.Events.Add(evt);
         await dbContext.SaveChangesAsync();
-
-
+        
         var result = await CalculateBestDateForEvent.Handle(
             evt.Id,
             dbContext,
