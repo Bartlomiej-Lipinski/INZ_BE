@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -53,18 +54,5 @@ public class GetAllUsers : IEndpoint
 
         logger.LogInformation("Successfully retrieved {UserCount} users. TraceId: {TraceId}", users.Count, traceId);
         return Results.Ok(ApiResponse<List<UserResponseDto>>.Ok(users, null, traceId));
-    }
-
-    private record UserResponseDto
-    {
-        public string Id { get; set; } = null!;
-        public string Email { get; set; } = null!;
-        public string UserName { get; set; } = null!;
-        public string? Name { get; set; }
-        public string? Surname { get; set; }
-        public DateOnly? BirthDate { get; set; }
-        public string? Status { get; set; }
-        public string? Description { get; set; }
-        public string? Photo { get; set; }
     }
 }

@@ -12,16 +12,14 @@ public class UpdateRecommendationTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<UpdateRecommendation>.Instance;
 
         var result = await UpdateRecommendation.Handle(
             "rec1",
-            TestDataFactory.CreateUpdateRecommendationDto("New title", "Updated content"),
+            TestDataFactory.CreateRecommendationRequestDto("New title", "Updated content"),
             dbContext,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<UpdateRecommendation>.Instance,
             CancellationToken.None
         );
         
@@ -35,17 +33,14 @@ public class UpdateRecommendationTest : TestBase
         var user = TestDataFactory.CreateUser("u1", "testUser");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<UpdateRecommendation>.Instance;
-
+        
         var result = await UpdateRecommendation.Handle(
             "nonexistent",
-            TestDataFactory.CreateUpdateRecommendationDto("Title", "Content"),
+            TestDataFactory.CreateRecommendationRequestDto("Title", "Content"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<UpdateRecommendation>.Instance,
             CancellationToken.None
         );
 
@@ -71,17 +66,14 @@ public class UpdateRecommendationTest : TestBase
         dbContext.Recommendations.Add(recommendation);
 
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(otherUser.Id);
-        var logger = NullLogger<UpdateRecommendation>.Instance;
-
+        
         var result = await UpdateRecommendation.Handle(
             "rec1",
-            TestDataFactory.CreateUpdateRecommendationDto("Hacked!", "Evil update"),
+            TestDataFactory.CreateRecommendationRequestDto("Hacked!", "Evil update"),
             dbContext,
             CreateClaimsPrincipal(otherUser.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(otherUser.Id),
+            NullLogger<UpdateRecommendation>.Instance,
             CancellationToken.None
         );
 
@@ -105,13 +97,10 @@ public class UpdateRecommendationTest : TestBase
         dbContext.Recommendations.Add(recommendation);
 
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<UpdateRecommendation>.Instance;
-
+        
         var result = await UpdateRecommendation.Handle(
             "rec1",
-            TestDataFactory.CreateUpdateRecommendationDto(
+            TestDataFactory.CreateRecommendationRequestDto(
                 "Updated title",
                 "Updated content", 
                 "Books", 
@@ -120,8 +109,8 @@ public class UpdateRecommendationTest : TestBase
             ),
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<UpdateRecommendation>.Instance,
             CancellationToken.None
         );
 

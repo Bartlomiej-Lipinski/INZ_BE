@@ -13,7 +13,6 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailability>.Instance;
         
         var result = await DeleteAvailability.Handle(
             "g1",
@@ -21,7 +20,7 @@ public class DeleteAvailabilityTest : TestBase
             dbContext,
             CreateClaimsPrincipal(),
             CreateHttpContext(),
-            logger,
+            NullLogger<DeleteAvailability>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
@@ -31,7 +30,6 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailability>.Instance;
         var user = TestDataFactory.CreateUser("u1", "user");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
@@ -42,7 +40,7 @@ public class DeleteAvailabilityTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<DeleteAvailability>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -52,7 +50,6 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Return_Forbidden_When_User_Not_Member_Of_Group()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailability>.Instance;
         var user = TestDataFactory.CreateUser("u1", "User");
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         dbContext.Users.Add(user);
@@ -65,7 +62,7 @@ public class DeleteAvailabilityTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<DeleteAvailability>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
@@ -75,7 +72,6 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailability>.Instance;
         var user = TestDataFactory.CreateUser("u1", "User");
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
@@ -90,7 +86,7 @@ public class DeleteAvailabilityTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<DeleteAvailability>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -100,7 +96,6 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Availability_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailability>.Instance;
         var user = TestDataFactory.CreateUser("u1", "User");
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
@@ -118,7 +113,7 @@ public class DeleteAvailabilityTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<DeleteAvailability>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
@@ -128,7 +123,6 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Delete_Availability_When_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var logger = NullLogger<DeleteAvailability>.Instance;
         var user = TestDataFactory.CreateUser("u1", "User");
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
@@ -149,7 +143,7 @@ public class DeleteAvailabilityTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
-            logger,
+            NullLogger<DeleteAvailability>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();

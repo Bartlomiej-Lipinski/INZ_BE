@@ -12,16 +12,14 @@ public class PostCommentTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<PostComment>.Instance;
 
         var result = await PostComment.Handle(
             "rec1",
-            TestDataFactory.CreateCommentRequestDto("Recommendation", "Hello!"),
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<PostComment>.Instance,
             CancellationToken.None
         );
 
@@ -35,17 +33,14 @@ public class PostCommentTest : TestBase
         var user = TestDataFactory.CreateUser("u1", "testUser");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<PostComment>.Instance;
-
+        
         var result = await PostComment.Handle(
             "nonexistent",
             TestDataFactory.CreateCommentRequestDto("Recommendation", "Hello!"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<PostComment>.Instance,
             CancellationToken.None
         );
 
@@ -65,17 +60,14 @@ public class PostCommentTest : TestBase
             "r1", group.Id, "author", "Title", "Content", DateTime.UtcNow);
         dbContext.Recommendations.Add(target);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<PostComment>.Instance;
-
+        
         var result = await PostComment.Handle(
             "r1",
-            TestDataFactory.CreateCommentRequestDto("Recommendation", "Hello!"),
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<PostComment>.Instance,
             CancellationToken.None
         );
 
@@ -102,17 +94,14 @@ public class PostCommentTest : TestBase
         dbContext.GroupUsers.Add(membership);
 
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<PostComment>.Instance;
-
+        
         var result = await PostComment.Handle(
             "r1",
-            TestDataFactory.CreateCommentRequestDto("Recommendation", "Super!"),
+            TestDataFactory.CreateCommentRequestDto("Super!"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<PostComment>.Instance,
             CancellationToken.None
         );
 

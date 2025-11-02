@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -64,7 +65,7 @@ public class GetGroupUsers : IEndpoint
         }
 
         var users = group.GroupUsers
-            .Select(gu => new UserDto
+            .Select(gu => new UserResponseDto
             {
                 Id = gu.User.Id,
                 UserName = gu.User.UserName,
@@ -72,13 +73,6 @@ public class GetGroupUsers : IEndpoint
             })
             .ToList();
 
-        return Results.Ok(ApiResponse<IEnumerable<UserDto>>.Ok(users, null, traceId));
-    }
-    
-    public record UserDto
-    {
-        public string Id { get; init; }
-        public string UserName { get; init; }
-        public string Email { get; init; }
+        return Results.Ok(ApiResponse<IEnumerable<UserResponseDto>>.Ok(users, null, traceId));
     }
 }

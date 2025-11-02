@@ -1,21 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace WebApplication1.Infrastructure.Data.Entities.Tokens;
+﻿namespace WebApplication1.Infrastructure.Data.Entities.Tokens;
 
 public class PasswordResetToken
 {
-    [Key]
     public string Id { get; init; } = null!;
     
-    [Required]
-    public string TokenHash { get; set; } = null!; //TODO add index on db
-    
-    [Required]
+    public string TokenHash { get; set; } = null!;
     public string UserId { get; set; } = null!;
-    
-    [Required]
     public DateTime ExpiresAt { get; set; }
-    
     public bool IsUsed { get; set; } = false;
     
     public User? User { get; set; }

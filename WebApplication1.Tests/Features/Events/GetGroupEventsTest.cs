@@ -3,8 +3,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events;
-using WebApplication1.Infrastructure.Data.Entities;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Events;
@@ -29,15 +28,17 @@ public class GetGroupEventsTest : TestBase
         dbContext.Events.AddRange(evt1, evt2);
         await dbContext.SaveChangesAsync();
 
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetGroupEvents>.Instance;
-
         var result = await GetGroupEvents.Handle(
-            group.Id, dbContext, claimsPrincipal, httpContext, logger, CancellationToken.None);
+            group.Id,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<GetGroupEvents>.Instance,
+            CancellationToken.None
+        );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GetGroupEvents.EventDto>>>>();
-        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GetGroupEvents.EventDto>>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<EventResponseDto>>>>();
+        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<EventResponseDto>>>;
         ok!.Value!.Data.Should().HaveCount(2);
         ok.Value.Data.Select(e => e.Id).Should().Contain(["e1", "e2"]);
     }
@@ -52,12 +53,14 @@ public class GetGroupEventsTest : TestBase
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
 
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetGroupEvents>.Instance;
-
         var result = await GetGroupEvents.Handle(
-            group.Id, dbContext, claimsPrincipal, httpContext, logger, CancellationToken.None);
+            group.Id,
+            dbContext,
+            CreateClaimsPrincipal(user.Id), 
+            CreateHttpContext(user.Id),
+            NullLogger<GetGroupEvents>.Instance, 
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();    
     }
@@ -70,12 +73,14 @@ public class GetGroupEventsTest : TestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var claimsPrincipal = CreateClaimsPrincipal(user.Id);
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<GetGroupEvents>.Instance;
-
         var result = await GetGroupEvents.Handle(
-            "nonexistent-group", dbContext, claimsPrincipal, httpContext, logger, CancellationToken.None);
+            "nonexistent-group",
+            dbContext, 
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<GetGroupEvents>.Instance,
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
     }
@@ -85,11 +90,14 @@ public class GetGroupEventsTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
-        var httpContext = new DefaultHttpContext();
-        var logger = NullLogger<GetGroupEvents>.Instance;
-
         var result = await GetGroupEvents.Handle(
-            "any-group", dbContext, new ClaimsPrincipal(), httpContext, logger, CancellationToken.None);
+            "any-group", 
+            dbContext,
+            CreateClaimsPrincipal(),
+            CreateHttpContext(),
+            NullLogger<GetGroupEvents>.Instance,
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }

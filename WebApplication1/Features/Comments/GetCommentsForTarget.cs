@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -39,7 +40,7 @@ public class GetCommentsForTarget : IEndpoint
                 Content = c.Content,
                 UserId = c.UserId,
                 UserName = c.User.UserName,
-                CreatedAt = c.CreatedAt
+                CreatedAt = c.CreatedAt.ToLocalTime()
             })
             .ToListAsync(cancellationToken);
 
@@ -48,14 +49,5 @@ public class GetCommentsForTarget : IEndpoint
 
         return Results.Ok(ApiResponse<List<CommentResponseDto>>
             .Ok(comments, "Comments retrieved successfully.", traceId));
-    }
-
-    public record CommentResponseDto
-    {
-        public string Id { get; set; } = null!;
-        public string Content { get; set; } = null!;
-        public string UserId { get; set; } = null!;
-        public string? UserName { get; set; }
-        public DateTime CreatedAt { get; set; }
     }
 }

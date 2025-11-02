@@ -2,7 +2,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebApplication1.Features.Comments;
+using WebApplication1.Features.Comments.Dtos;
+using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -119,7 +120,7 @@ public class GetGroupRecommendations: IEndpoint
             CreatedAt = r.CreatedAt.ToLocalTime(),
             UserId = r.UserId,
             Comments = commentsByRecommendation.TryGetValue(r.Id, out var recComments)
-                ? recComments.Select(c => new GetRecommendationById.RecommendationCommentDto
+                ? recComments.Select(c => new CommentResponseDto
                 {
                     Id = c.Id,
                     UserId = c.UserId,
@@ -128,7 +129,7 @@ public class GetGroupRecommendations: IEndpoint
                 }).ToList()
                 : [],
             Reactions = reactionsByRecommendation.TryGetValue(r.Id, out var recReactions)
-                ? recReactions.Select(re => new GetRecommendationById.RecommendationReactionDto
+                ? recReactions.Select(re => new ReactionDto
                 {
                     UserId = re.UserId,
                 }).ToList()
@@ -137,20 +138,5 @@ public class GetGroupRecommendations: IEndpoint
 
         return Results.Ok(ApiResponse<List<RecommendationResponseDto>>
             .Ok(response, "Group recommendations retrieved successfully.", traceId));
-    }
-
-    
-    public record RecommendationResponseDto
-    {
-        public string Id { get; set; } = null!;
-        public string Title { get; set; } = null!;
-        public string Content { get; set; } = null!;
-        public string? Category { get; set; }
-        public string? ImageUrl { get; set; }
-        public string? LinkUrl { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public string UserId { get; set; } = null!;
-        public List<GetRecommendationById.RecommendationCommentDto> Comments { get; set; } = [];
-        public List<GetRecommendationById.RecommendationReactionDto> Reactions { get; set; } = [];
     }
 }

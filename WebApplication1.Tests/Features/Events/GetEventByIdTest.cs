@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Events;
@@ -130,9 +131,9 @@ public class GetEventByIdTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetEventById.EventResponseDto>>>();
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<EventResponseDto>>>();
 
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<GetEventById.EventResponseDto>>;
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<EventResponseDto>>;
         okResult!.Value!.Success.Should().BeTrue();
         okResult.Value.Data!.Id.Should().Be(evt.Id);
         okResult.Value.Data.Title.Should().Be(evt.Title);

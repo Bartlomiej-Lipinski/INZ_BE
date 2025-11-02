@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
@@ -14,7 +12,7 @@ public class GetAmountOfJoinRequests : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/groups/join-requests/amount/{userId}", Handle)
+        app.MapGet("/groups/join-requests/amount", Handle)
             .WithName("GetAmountOfJoinRequests")
             .WithDescription("Returns the amount of join requests for the current user")
             .WithTags("Groups")

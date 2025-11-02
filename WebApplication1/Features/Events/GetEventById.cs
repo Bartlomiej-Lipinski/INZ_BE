@@ -2,8 +2,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -89,7 +89,7 @@ public class GetEventById : IEndpoint
                 Status = ea.Status,
                 CreatedAt = ea.CreatedAt.ToLocalTime()
             }).ToList(),
-            Suggestions = evt.Suggestions?.Select(s => new EventSuggestionResponseDto
+            Suggestions = evt.Suggestions.Select(s => new EventSuggestionResponseDto
                 {
                     StartTime = s.StartTime.ToLocalTime(),
                     AvailableUserCount = s.AvailableUserCount
@@ -97,33 +97,5 @@ public class GetEventById : IEndpoint
         };
 
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(response, null, traceId));
-    }
-
-    public record EventResponseDto
-    {
-        public string Id { get; set; } = null!;
-        public string GroupId { get; set; } = null!;
-        public string UserId { get; set; } = null!;
-        public string Title { get; set; } = null!;
-        public string? Description { get; set; }
-        public string? Location { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public List<EventAvailabilityResponseDto> Availabilities { get; set; } = [];
-        public ICollection<EventSuggestionResponseDto> Suggestions { get; set; } = [];
-    }
-
-    public record EventAvailabilityResponseDto
-    {
-        public string UserId { get; set; } = null!;
-        public EventAvailabilityStatus Status { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
-    
-    public record EventSuggestionResponseDto
-    {
-        public DateTime StartTime { get; set; }
-        public int AvailableUserCount { get; set; }
     }
 }

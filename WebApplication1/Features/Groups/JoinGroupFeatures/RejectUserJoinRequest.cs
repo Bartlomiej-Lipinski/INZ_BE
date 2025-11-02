@@ -1,21 +1,20 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Diagnostics;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
-using System.Security.Claims;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.JoinGroupFeatures;
 
 public class RejectUserJoinRequest : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/groups/{groupId}/reject-join-request/{userId}", Handle)
+        app.MapDelete("/groups/{groupId}/reject-join-request/", Handle)
             .WithName("RejectUserJoinRequest")
             .WithDescription("Rejects a user's join request to a group")
             .WithTags("Groups")
@@ -24,6 +23,7 @@ public class RejectUserJoinRequest : IEndpoint
     }
     
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromBody] RejectUserJoinRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
@@ -43,41 +43,41 @@ public class RejectUserJoinRequest : IEndpoint
         }
         
         var group = await dbContext.Groups
-            .FirstOrDefaultAsync(g => g.Id == request.GroupId, cancellationToken);
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
         {
             logger.LogWarning("Group not found. GroupId: {GroupId}. TraceId: {TraceId}", 
-                request.GroupId, traceId);
+                groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
         
         var currentGroupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == currentUserId, cancellationToken);
+            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId, cancellationToken);
 
         var isAdmin = currentGroupUser?.IsAdmin == true;
         if (!isAdmin)
         {
             logger.LogWarning("User {UserId} is not admin of group {GroupId}. TraceId: {TraceId}", 
-                currentUserId, request.GroupId, traceId);
+                currentUserId, groupId, traceId);
             return Results.BadRequest(ApiResponse<string>
                 .Fail("Only group admin can reject join requests.", traceId));
         }
         
         var groupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == request.UserId, cancellationToken);
 
         if (groupUser == null)
         {
             logger.LogWarning("Join request not found. GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}",
-                request.GroupId, request.UserId, traceId);
+                groupId, request.UserId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Join request not found.", traceId));
         }
 
         if (groupUser.AcceptanceStatus != AcceptanceStatus.Pending)
         {
             logger.LogWarning("Join request is not pending. GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}",
-                request.GroupId, request.UserId, traceId);
+                groupId, request.UserId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Join request is not pending.", traceId));
         }
 
@@ -86,17 +86,7 @@ public class RejectUserJoinRequest : IEndpoint
 
         logger.LogInformation("Join request rejected successfully. " +
                               "GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}", 
-            request.GroupId, request.UserId, traceId);
+            groupId, request.UserId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Join request rejected successfully.", null, traceId));
-    }
-    
-    public record RejectUserJoinRequestDto
-    {
-        [Required]
-        [MaxLength(50)]
-        public string GroupId { get; set; }
-        [Required]
-        [MaxLength(50)]
-        public string UserId { get; set; } 
     }
 }

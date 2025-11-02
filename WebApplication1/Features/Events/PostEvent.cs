@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
@@ -53,7 +54,7 @@ public class PostEvent : IEndpoint
         if (string.IsNullOrWhiteSpace(request.Title))
             return Results.BadRequest(ApiResponse<string>.Fail("Event title is required.", traceId));
 
-        if (request.StartDate == default && !request.IsAutoScheduled)
+        if (request.StartDate == null && !request.IsAutoScheduled)
             return Results.BadRequest(ApiResponse<string>.Fail("Start date is required for manual events.",
                 traceId));
         
@@ -64,11 +65,12 @@ public class PostEvent : IEndpoint
                     "For automatic scheduling, range start, range end, and duration are required.", traceId));
 
             if (request.RangeEnd < request.RangeStart)
-                return Results.BadRequest(ApiResponse<string>.Fail("Range end cannot be earlier than range start.",
-                    traceId));
+                return Results.BadRequest(ApiResponse<string>.Fail("Range end cannot be earlier" +
+                                                                   " than range start.", traceId));
         }
 
-        if (!request.IsAutoScheduled && request.EndDate.HasValue && request.StartDate != default && request.EndDate < request.StartDate)
+        if (request is { IsAutoScheduled: false, EndDate: not null } 
+            && request.StartDate != null && request.EndDate < request.StartDate)
             return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.",
                 traceId));
 
@@ -81,11 +83,11 @@ public class PostEvent : IEndpoint
             Description = request.Description,
             Location = request.Location,
             IsAutoScheduled = request.IsAutoScheduled,
-            RangeStart = request.RangeStart?.ToUniversalTime(),
-            RangeEnd = request.RangeEnd?.ToUniversalTime(),
+            RangeStart = request.RangeStart,
+            RangeEnd = request.RangeEnd,
             DurationMinutes = request.DurationMinutes,
-            StartDate = request.StartDate.ToUniversalTime(),
-            EndDate = request.EndDate?.ToUniversalTime(),
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
             Status = request.Status,
             CreatedAt = DateTime.UtcNow
         };
@@ -105,47 +107,15 @@ public class PostEvent : IEndpoint
             Description = newEvent.Description,
             Location = newEvent.Location,
             IsAutoScheduled = newEvent.IsAutoScheduled,
-            RangeStart = newEvent.RangeStart,
-            RangeEnd = newEvent.RangeEnd,
+            RangeStart = newEvent.RangeStart?.ToLocalTime(),
+            RangeEnd = newEvent.RangeEnd?.ToLocalTime(),
             DurationMinutes = newEvent.DurationMinutes,
-            StartDate = newEvent.StartDate,
-            EndDate = newEvent.EndDate,
+            StartDate = newEvent.StartDate?.ToLocalTime(),
+            EndDate = newEvent.EndDate?.ToLocalTime(),
             Status = newEvent.Status,
-            CreatedAt = newEvent.CreatedAt
+            CreatedAt = newEvent.CreatedAt.ToLocalTime()
         };
 
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(responseDto, "Event created successfully.", traceId));
-    }
-    
-    public record EventRequestDto
-    {
-        public string Title { get; set; } = null!;
-        public string? Description { get; set; }
-        public string? Location { get; set; }
-        public bool IsAutoScheduled { get; set; }
-        public DateTime? RangeStart { get; set; }
-        public DateTime? RangeEnd { get; set; }
-        public int? DurationMinutes { get; set; }
-        public DateTime StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public EventStatus Status { get; set; }
-    }
-
-    public record EventResponseDto
-    {
-        public string Id { get; set; } = null!;
-        public string GroupId { get; set; } = null!;
-        public string UserId { get; set; } = null!;
-        public string Title { get; set; } = null!;
-        public string? Description { get; set; }
-        public string? Location { get; set; }
-        public bool IsAutoScheduled { get; set; }
-        public DateTime? RangeStart { get; set; }
-        public DateTime? RangeEnd { get; set; }
-        public int? DurationMinutes { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public EventStatus Status { get; set; }
-        public DateTime CreatedAt { get; set; }
     }
 }

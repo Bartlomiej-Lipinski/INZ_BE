@@ -1,15 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.JoinGroupFeatures;
 
 public class AcceptUserJoinRequest : IEndpoint
 {
@@ -97,15 +96,5 @@ public class AcceptUserJoinRequest : IEndpoint
         logger.LogError("Failed to save join request acceptance. GroupId: {GroupId}, UserId: {UserId}. TraceId: {TraceId}", 
             request.GroupId, request.UserId, traceId);
         return Results.Json(ApiResponse<string>.Fail("Failed to accept join request.", traceId), statusCode: 500);
-    }
-    
-    public record AcceptUserJoinRequestDto
-    {
-        [Required]
-        [MaxLength(50)]
-        public string GroupId { get; init; } = null!;
-        [Required]
-        [MaxLength(50)]
-        public string UserId { get; init; } = null!;
     }
 }

@@ -3,13 +3,13 @@ using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Groups;
+namespace WebApplication1.Features.Groups.JoinGroupFeatures;
 
 public class JoinGroup : IEndpoint
 {
@@ -24,7 +24,7 @@ public class JoinGroup : IEndpoint
     }
     
     public static async Task<IResult> Handle(
-        [FromBody] JoinGroupRequest request,
+        [FromBody] JoinGroupRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal user,
         HttpContext httpContext,
@@ -57,7 +57,8 @@ public class JoinGroup : IEndpoint
         }
         if (await dbContext.GroupUsers.AnyAsync(gu => gu.GroupId == group.Id && gu.UserId == userId, cancellationToken))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("You are already a member of this group.", traceId));
+            return Results
+                .BadRequest(ApiResponse<string>.Fail("You are already a member of this group.", traceId));
         }
 
         var groupUser = new GroupUser
@@ -73,12 +74,5 @@ public class JoinGroup : IEndpoint
 
         return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group. Awaiting admin approval.",
             null, traceId));
-    }
-
-    public record JoinGroupRequest
-    {
-        [Required]
-        [MaxLength(5)]
-        public string GroupCode { get; set; }
     }
 }

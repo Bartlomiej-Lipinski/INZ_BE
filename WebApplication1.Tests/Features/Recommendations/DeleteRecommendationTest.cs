@@ -12,15 +12,13 @@ public class DeleteRecommendationTest : TestBase
     public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var logger = NullLogger<DeleteRecommendation>.Instance;
 
         var result = await DeleteRecommendation.Handle(
             "rec1",
             dbContext,
             CreateClaimsPrincipal(),
-            httpContext,
-            logger,
+            CreateHttpContext(),
+            NullLogger<DeleteRecommendation>.Instance,
             CancellationToken.None
         );
 
@@ -34,16 +32,13 @@ public class DeleteRecommendationTest : TestBase
         var user = TestDataFactory.CreateUser("u1", "testUser");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<DeleteRecommendation>.Instance;
-
+        
         var result = await DeleteRecommendation.Handle(
             "nonexistent",
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<DeleteRecommendation>.Instance,
             CancellationToken.None
         );
 
@@ -67,16 +62,13 @@ public class DeleteRecommendationTest : TestBase
             "rec1", group.Id, author.Id, "Title", "Content", DateTime.UtcNow);
         dbContext.Recommendations.Add(recommendation);
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(other.Id);
-        var logger = NullLogger<DeleteRecommendation>.Instance;
-
+        
         var result = await DeleteRecommendation.Handle(
             "rec1",
             dbContext,
             CreateClaimsPrincipal(other.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(other.Id),
+            NullLogger<DeleteRecommendation>.Instance,
             CancellationToken.None
         );
 
@@ -105,16 +97,13 @@ public class DeleteRecommendationTest : TestBase
         dbContext.Reactions.Add(reaction);
 
         await dbContext.SaveChangesAsync();
-
-        var httpContext = CreateHttpContext(user.Id);
-        var logger = NullLogger<DeleteRecommendation>.Instance;
-
+        
         var result = await DeleteRecommendation.Handle(
             "rec1",
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            httpContext,
-            logger,
+            CreateHttpContext(user.Id),
+            NullLogger<DeleteRecommendation>.Instance,
             CancellationToken.None
         );
 

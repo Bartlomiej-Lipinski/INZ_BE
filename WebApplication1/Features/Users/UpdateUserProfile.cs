@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-
+using WebApplication1.Features.Users.Dtos;
 
 namespace WebApplication1.Features.Users;
 
@@ -23,15 +21,14 @@ public class UpdateUserProfile : IEndpoint
     }
     
     public static async Task<IResult> Handle(
+        [FromBody] UserProfileRequestDto request,
         ClaimsPrincipal currentUser,
-        [FromBody] UpdateUserProfileRequest request,
         AppDbContext dbContext,
         HttpContext httpContext,
         ILogger<UpdateUserProfile> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
@@ -71,21 +68,4 @@ public class UpdateUserProfile : IEndpoint
             userId, traceId);
         return Results.Json(ApiResponse<string>.Fail("No changes were saved.", traceId), statusCode: 500);
     }
-    
-    public record UpdateUserProfileRequest
-    {
-        [MaxLength(100)]
-        public string? Name { get; init; }
-        [MaxLength(100)]
-        public string? Surname { get; init; }
-        [DataType(DataType.Date)]
-        public DateOnly? BirthDate { get; init; }
-        [MaxLength(250)]
-        public string? Status { get; init; }
-        [MaxLength(300)]
-        public string? Description { get; init; }
-        [MaxLength(500)]
-        public string? Photo { get; init; }
-    }
-    
 }

@@ -1,9 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using WebApplication1.Features.Users;
 using WebApplication1.Shared.Responses;
 
@@ -15,12 +13,14 @@ public class DeleteUserTest: TestBase
     public async Task Handle_Should_Return_BadRequest_When_UserId_Is_Empty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var mockLogger = NullLogger<DeleteUser>.Instance;
-        var claimsPrincipal = CreateClaimsPrincipal();
 
-        var result = await DeleteUser
-            .Handle(claimsPrincipal, dbContext, httpContext, mockLogger, CancellationToken.None);
+        var result = await DeleteUser.Handle(
+            CreateClaimsPrincipal(),
+            dbContext,
+            CreateHttpContext(), 
+            NullLogger<DeleteUser>.Instance, 
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
         var badRequest = result as BadRequest<ApiResponse<string>>;
@@ -32,13 +32,15 @@ public class DeleteUserTest: TestBase
     public async Task Handle_Should_Return_NotFound_When_User_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<DeleteUser>>();
         
         var user1 = TestDataFactory.CreateUser("u1", "Test User", "test@test.com", "testUser");
-        var claimsPrincipal = CreateClaimsPrincipal(user1.Id);
-        var result = await DeleteUser
-            .Handle(claimsPrincipal, dbContext, httpContext, mockLogger.Object, CancellationToken.None);
+        var result = await DeleteUser.Handle(
+            CreateClaimsPrincipal(user1.Id), 
+            dbContext,
+            CreateHttpContext(), 
+            NullLogger<DeleteUser>.Instance,
+            CancellationToken.None
+        );
 
         result.Should().BeOfType<NotFound<ApiResponse<string>>>();
         var notFound = result as NotFound<ApiResponse<string>>;
@@ -49,8 +51,6 @@ public class DeleteUserTest: TestBase
     public async Task Handle_Should_Return_Ok_When_User_Deleted_Successfully()
     {
         var dbName = Guid.NewGuid().ToString();
-        var httpContext = CreateHttpContext();
-        var mockLogger = new Mock<ILogger<DeleteUser>>();
         
         await using (var dbContext = GetInMemoryDbContext(dbName))
         {
@@ -62,14 +62,12 @@ public class DeleteUserTest: TestBase
         {
             var users = await context2.Users.ToListAsync();
             users.Should().Contain(u => u.UserName == "testUser");
-
-            var claimsPrincipal = CreateClaimsPrincipal("u1");
-
+            
             var result = await DeleteUser.Handle(
-                claimsPrincipal, 
+                CreateClaimsPrincipal("u1"), 
                 context2, 
-                httpContext, 
-                mockLogger.Object,
+                CreateHttpContext(), 
+                NullLogger<DeleteUser>.Instance,
                 CancellationToken.None
             );
 

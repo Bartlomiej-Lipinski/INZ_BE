@@ -2,8 +2,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -24,7 +24,7 @@ public class UpdateEvent : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string eventId,
-        [FromBody] UpdateEventRequestDto request,
+        [FromBody] EventRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -89,7 +89,8 @@ public class UpdateEvent : IEndpoint
             if (!request.RangeStart.HasValue || !request.RangeEnd.HasValue || !request.DurationMinutes.HasValue)
             {
                 return Results.BadRequest(ApiResponse<string>
-                    .Fail("For automatic scheduling, range start, range end, and duration are required.", traceId));
+                    .Fail("For automatic scheduling, range start, range end, and duration are required.",
+                        traceId));
             }
         }
         
@@ -125,47 +126,15 @@ public class UpdateEvent : IEndpoint
             Description = existingEvent.Description,
             Location = existingEvent.Location,
             IsAutoScheduled = existingEvent.IsAutoScheduled,
-            RangeStart = existingEvent.RangeStart,
-            RangeEnd = existingEvent.RangeEnd,
+            RangeStart = existingEvent.RangeStart?.ToLocalTime(),
+            RangeEnd = existingEvent.RangeEnd?.ToLocalTime(),
             DurationMinutes = existingEvent.DurationMinutes,
-            StartDate = existingEvent.StartDate,
-            EndDate = existingEvent.EndDate,
+            StartDate = existingEvent.StartDate?.ToLocalTime(),
+            EndDate = existingEvent.EndDate?.ToLocalTime(),
             Status = existingEvent.Status,
-            CreatedAt = existingEvent.CreatedAt
+            CreatedAt = existingEvent.CreatedAt.ToLocalTime()
         };
 
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(responseDto, "Event updated successfully.", traceId));
-    }
-
-    public record UpdateEventRequestDto
-    {
-        public string? Title { get; set; }
-        public string? Description { get; set; }
-        public string? Location { get; set; }
-        public bool IsAutoScheduled { get; set; }
-        public DateTime? RangeStart { get; set; }
-        public DateTime? RangeEnd { get; set; }
-        public int? DurationMinutes { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public EventStatus Status { get; set; }
-    }
-
-    public record EventResponseDto
-    {
-        public string Id { get; set; } = null!;
-        public string GroupId { get; set; } = null!;
-        public string UserId { get; set; } = null!;
-        public string Title { get; set; } = null!;
-        public string? Description { get; set; }
-        public string? Location { get; set; }
-        public bool IsAutoScheduled { get; set; }
-        public DateTime? RangeStart { get; set; }
-        public DateTime? RangeEnd { get; set; }
-        public int? DurationMinutes { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public EventStatus Status { get; set; }
-        public DateTime CreatedAt { get; set; }
     }
 }

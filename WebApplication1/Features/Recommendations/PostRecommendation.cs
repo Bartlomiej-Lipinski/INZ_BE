@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Endpoints;
@@ -79,14 +80,5 @@ public class PostRecommendation : IEndpoint
 
         return Results.Ok(ApiResponse<string>
             .Ok("Recommendation created successfully.", recommendation.Id, traceId));
-    }
-
-    public record RecommendationRequestDto
-    {
-        public string Title { get; set; } = null!;
-        public string Content { get; set; } = null!;
-        public string? Category { get; set; }
-        public string? ImageUrl { get; set; }
-        public string? LinkUrl { get; set; }
     }
 }
