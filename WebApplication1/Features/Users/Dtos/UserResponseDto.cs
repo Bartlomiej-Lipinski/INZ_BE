@@ -4,7 +4,7 @@ public record UserResponseDto
 {
     public string Id { get; set; } = null!;
     public string? Email { get; set; }
-    public string? UserName { get; set; }
+    public string? Username { get; set; }
     public string? Name { get; set; }
     public string? Surname { get; set; }
     public DateOnly? BirthDate { get; set; }

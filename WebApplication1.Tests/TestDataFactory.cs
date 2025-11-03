@@ -393,6 +393,16 @@ public static class TestDataFactory
         };
     }
 
+    public static PollOption CreatePollOption(string id, string pollId, string text)
+    {
+        return new PollOption
+        {
+            Id = id,
+            PollId = pollId,
+            Text = text
+        };
+    }
+
     public static PollRequestDto CreatePollRequestDto(string question, List<PollOptionDto> options)
     {
         return new PollRequestDto

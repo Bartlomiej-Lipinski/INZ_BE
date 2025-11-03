@@ -68,7 +68,7 @@ public class GetGroupUsers : IEndpoint
             .Select(gu => new UserResponseDto
             {
                 Id = gu.User.Id,
-                UserName = gu.User.UserName,
+                Username = gu.User.UserName,
                 Email = gu.User.Email
             })
             .ToList();
