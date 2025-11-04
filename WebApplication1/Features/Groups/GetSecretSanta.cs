@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Groups;
 
-public class SecretSanta : IEndpoint
+public class GetSecretSanta : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -22,7 +23,7 @@ public class SecretSanta : IEndpoint
         [FromRoute] string groupId,
         AppDbContext context,
         HttpContext httpContext,
-        ILogger<SecretSanta> logger,
+        ILogger<GetSecretSanta> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
@@ -39,7 +40,8 @@ public class SecretSanta : IEndpoint
         {
             logger.LogWarning("Not enough users in group {GroupId} for Secret Santa. TraceId: {TraceId}",
                 groupId, traceId);
-            return Results.BadRequest(new { Message = "Not enough users in the group for Secret Santa." });
+            return Results.BadRequest(
+                ApiResponse<string>.Fail("At least two users are required in the group for Secret Santa.", traceId));
         }
 
         var userInfos = groupUsers
@@ -69,15 +71,11 @@ public class SecretSanta : IEndpoint
         {
             logger.LogWarning("Group not found {GroupId} for Secret Santa. TraceId: {TraceId}",
                 groupId, traceId);
-            return Results.NotFound(new { Message = "Group not found." });
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        if (getGroup.SecretSantaPairs != null) getGroup.SecretSantaPairs = null;
-
-        getGroup.SecretSantaPairs = pairs;
-        await context.SaveChangesAsync(cancellationToken);
-
-        return Results.Ok(new { Message = "Secret Santa pairs assigned successfully.", Pairs = pairs });
+        return Results.Ok(
+            ApiResponse<List<SecretSantaPairDto>>.Ok(pairs, "Secret Santa pairs assigned successfully", traceId));
     }
 
     public record SecretSantaPairDto(string Giver, string Receiver);
