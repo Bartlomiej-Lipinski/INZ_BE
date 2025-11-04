@@ -110,7 +110,6 @@ if (secret.Length < 32)
     throw new InvalidOperationException("JWT SecretKey must be at least 32 characters long for security.");
 
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-const string RefreshScheme = "RefreshScheme";
 
 builder.Services.AddAuthentication(opt =>
     {
@@ -142,42 +141,6 @@ builder.Services.AddAuthentication(opt =>
             IssuerSigningKey = key,
             ClockSkew = TimeSpan.Zero
         };
-    })
-    .AddJwtBearer(RefreshScheme, opt =>
-    {
-        opt.Events = new JwtBearerEvents
-        {
-            OnForbidden = context =>
-            {
-                Console.WriteLine("Forbidden: Access denied.");
-                return Task.CompletedTask;
-            },
-            OnAuthenticationFailed = context =>
-            {
-                Console.WriteLine($"Authentication failed: {context.Exception.Message}");
-                return Task.CompletedTask;
-            }
-        };
-
-        opt.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = key,
-            ValidateIssuer = !builder.Environment.IsDevelopment(),
-            ValidateAudience = !builder.Environment.IsDevelopment(),
-            ValidateLifetime = false,
-            ValidIssuer = issuer,
-            ValidAudience = audience,
-            ClockSkew = TimeSpan.Zero
-        };
-    });
-
-
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("RefreshTokenPolicy", policy =>
-    {
-        policy.AddAuthenticationSchemes(RefreshScheme)
-            .RequireAuthenticatedUser();
     });
 
 builder.Services.AddSwaggerGen(options =>
