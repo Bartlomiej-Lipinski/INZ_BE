@@ -12,7 +12,7 @@ public interface IEmailService
 internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger<PostmarkEmailService> logger)
     : IEmailService
 {
-    private readonly string _apiKey = Env.GetString("Postmark:ApiKey") ??
+    private readonly string _apiKey = Env.GetString("POSTMARK_API_KEY") ??
                                       throw new InvalidOperationException("Postmark API key not configured");
 
     private readonly string _fromEmail = configuration["Postmark:FromEmail"] ??
