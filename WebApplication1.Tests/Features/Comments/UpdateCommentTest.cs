@@ -13,6 +13,7 @@ public class UpdateCommentTest : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
         var result = await UpdateComment.Handle(
+            "g1",
             "r1",
             "c1",
             TestDataFactory.CreateCommentRequestDto("Updated"),
@@ -31,10 +32,15 @@ public class UpdateCommentTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
         var result = await UpdateComment.Handle(
+            group.Id,
             "r1",
             "c1",
             TestDataFactory.CreateCommentRequestDto("Updated"),
@@ -69,6 +75,7 @@ public class UpdateCommentTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await UpdateComment.Handle(
+            group.Id,
             target.Id,
             comment.Id,
             TestDataFactory.CreateCommentRequestDto("Updated"),

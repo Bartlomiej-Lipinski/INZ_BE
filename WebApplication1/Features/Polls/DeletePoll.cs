@@ -35,19 +35,28 @@ public class DeletePoll : IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to retrieve polls. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to delete poll. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
 
-        if (group.GroupUsers.All(gu => gu.UserId != userId))
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to delete poll in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
+        }
 
         var poll = await dbContext.Polls
             .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == groupId, cancellationToken);
@@ -56,6 +65,14 @@ public class DeletePoll : IEndpoint
         {
             logger.LogWarning("Poll {PollId} not found in group {GroupId}. TraceId: {TraceId}", pollId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Poll not found.", traceId));
+        }
+        
+        var isAdmin = groupUser.IsAdmin;
+        if (poll.CreatedByUserId != userId && !isAdmin)
+        {
+            logger.LogWarning("User {UserId} attempted to delete poll {PollId} they do not own and is not admin. " +
+                              "TraceId: {TraceId}", userId, pollId, traceId);
+            return Results.Forbid();
         }
 
         dbContext.Polls.Remove(poll);

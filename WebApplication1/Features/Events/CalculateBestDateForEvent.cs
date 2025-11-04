@@ -13,7 +13,7 @@ public class CalculateBestDateForEvent : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/events/{eventId}/calculate-best-date", Handle)
+        app.MapPost("/groups/{groupId}/events/{eventId}/calculate-best-date", Handle)
             .WithName("CalculateBestDateForEvent")
             .WithDescription("Calculates the best date for an event based on availabilities")
             .WithTags("Events")
@@ -22,6 +22,7 @@ public class CalculateBestDateForEvent : IEndpoint
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string eventId,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
@@ -30,11 +31,33 @@ public class CalculateBestDateForEvent : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (currentUser.Identity?.IsAuthenticated != true) return TypedResults.Unauthorized();
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            logger.LogWarning("Unauthorized attempt to calculate the best date for an event. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
+        }
+
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to calculate the best date for an event in group {GroupId} " +
+                              "but is not a member. TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.Forbid();
+        }
 
         var evt = await dbContext.Events
             .Include(e => e.Suggestions)
@@ -45,16 +68,6 @@ public class CalculateBestDateForEvent : IEndpoint
         {
             logger.LogWarning("Event not found. EventId: {EventId}. TraceId: {TraceId}", eventId, traceId);
             return Results.NotFound();
-        }
-        
-        var isUserInGroup = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == evt.GroupId && gu.UserId == currentUserId, cancellationToken);
-
-        if (!isUserInGroup)
-        {
-            logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
-                currentUserId, evt.GroupId, traceId);
-            return Results.Forbid();
         }
 
         if (evt.Suggestions.Count != 0)
@@ -95,7 +108,7 @@ public class CalculateBestDateForEvent : IEndpoint
                     continue;
 
                 if (!dateUsers.ContainsKey(date))
-                    dateUsers[date] = new HashSet<string>();
+                    dateUsers[date] = [];
 
                 dateUsers[date].Add(availability.UserId);
             }
@@ -104,7 +117,7 @@ public class CalculateBestDateForEvent : IEndpoint
         if (dateUsers.Count == 0)
         {
             var fallback = ev.StartDate ?? DateTime.UtcNow;
-            return new List<(DateTime, int)> { (fallback.Date.AddHours(9), 0) };
+            return [(fallback.Date.AddHours(9), 0)];
         }
 
         var topDates = dateUsers
@@ -129,7 +142,7 @@ public class CalculateBestDateForEvent : IEndpoint
 
                     var hour = dateTime.Hour;
                     if (!hourUsers[currentDate].ContainsKey(hour))
-                        hourUsers[currentDate][hour] = new HashSet<string>();
+                        hourUsers[currentDate][hour] = [];
 
                     hourUsers[currentDate][hour].Add(availability.UserId);
                 }

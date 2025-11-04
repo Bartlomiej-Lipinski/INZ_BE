@@ -42,14 +42,23 @@ public class PostEvent : IEndpoint
         }
 
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
 
-        if (group.GroupUsers.All(gu => gu.UserId != userId))
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to create event in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
+        }
 
         if (string.IsNullOrWhiteSpace(request.Title))
             return Results.BadRequest(ApiResponse<string>.Fail("Event title is required.", traceId));
@@ -69,8 +78,8 @@ public class PostEvent : IEndpoint
                                                                    " than range start.", traceId));
         }
 
-        if (request is { IsAutoScheduled: false, EndDate: not null } 
-            && request.StartDate != null && request.EndDate < request.StartDate)
+        if (request is { IsAutoScheduled: false, EndDate: not null, StartDate: not null } 
+            && request.EndDate < request.StartDate)
             return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.",
                 traceId));
 

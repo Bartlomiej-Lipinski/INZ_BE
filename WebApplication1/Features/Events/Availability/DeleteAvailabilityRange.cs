@@ -30,24 +30,33 @@ public class DeleteAvailabilityRange: IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to delete availability. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
 
-        if (group.GroupUsers.All(gu => gu.UserId != currentUserId))
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to delete event in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
+        }
 
         var evt = await dbContext.Events
             .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
@@ -56,7 +65,7 @@ public class DeleteAvailabilityRange: IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
 
         var existingRanges = await dbContext.EventAvailabilityRanges
-            .Where(ar => ar.EventId == eventId && ar.UserId == currentUserId)
+            .Where(ar => ar.EventId == eventId && ar.UserId == userId)
             .ToListAsync(cancellationToken);
 
         if (existingRanges.Count == 0)
@@ -65,9 +74,8 @@ public class DeleteAvailabilityRange: IEndpoint
         dbContext.EventAvailabilityRanges.RemoveRange(existingRanges);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation(
-            "[DeleteAvailabilityRange] User {UserId} deleted {Count} availability ranges for event {EventId}. TraceId: {TraceId}",
-            currentUserId, existingRanges.Count, eventId, traceId);
+        logger.LogInformation("User {UserId} deleted {Count} availability ranges for event {EventId}. TraceId: {TraceId}",
+            userId, existingRanges.Count, eventId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Availability ranges deleted successfully.", traceId));
     }

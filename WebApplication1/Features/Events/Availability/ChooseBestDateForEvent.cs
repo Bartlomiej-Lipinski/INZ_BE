@@ -12,7 +12,7 @@ public class ChooseBestDateForEvent : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/events/{eventId}/{suggestionId}/choose-best-date", Handle)
+        app.MapPost("/groups/{groupId}/events/{eventId}/{suggestionId}/choose-best-date", Handle)
             .WithName("ChooseBestDateForEvent")
             .WithDescription("Chooses the best date for an event based on calculated suggestions")
             .WithTags("Events")
@@ -21,6 +21,7 @@ public class ChooseBestDateForEvent : IEndpoint
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string eventId,
         [FromRoute] string suggestionId,
         AppDbContext dbContext,
@@ -30,14 +31,32 @@ public class ChooseBestDateForEvent : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (currentUser.Identity?.IsAuthenticated != true || string.IsNullOrEmpty(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized access or missing user id. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to choose the best date for an event. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
+        }
+
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to delete event in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.Forbid();
         }
 
         var evt = await dbContext.Events
@@ -48,16 +67,6 @@ public class ChooseBestDateForEvent : IEndpoint
         {
             logger.LogWarning("Event {EventId} not found. TraceId: {TraceId}", eventId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
-        }
-
-        var isUserInGroup = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == evt.GroupId && gu.UserId == currentUserId, cancellationToken);
-
-        if (!isUserInGroup)
-        {
-            logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
-                currentUserId, evt.GroupId, traceId);
-            return Results.Forbid();
         }
 
         evt.StartDate = evt.Suggestions.FirstOrDefault(s => s.Id == suggestionId)?.StartTime;

@@ -33,29 +33,31 @@ public class PostAvailability : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to set availability. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
         {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        var isMember = group.GroupUsers.Any(gu => gu.UserId == currentUserId);
-        if (!isMember)
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
         {
-            logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
-                currentUserId, groupId, traceId);
+            logger.LogWarning("User {UserId} attempted to set availability in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }
         
@@ -69,7 +71,7 @@ public class PostAvailability : IEndpoint
         }
 
         var existing = await dbContext.EventAvailabilities
-            .FirstOrDefaultAsync(ea => ea.EventId == eventId && ea.UserId == currentUserId, cancellationToken);
+            .FirstOrDefaultAsync(ea => ea.EventId == eventId && ea.UserId == userId, cancellationToken);
 
         if (existing != null)
         {
@@ -78,7 +80,7 @@ public class PostAvailability : IEndpoint
             await dbContext.SaveChangesAsync(cancellationToken);
             
             logger.LogInformation("User {UserId} updated availability for event {EventId}. TraceId: {TraceId}",
-                currentUserId, eventId, traceId);
+                userId, eventId, traceId);
 
             return Results.Ok(ApiResponse<string>.Ok("Availability updated.", traceId));
         }
@@ -86,7 +88,7 @@ public class PostAvailability : IEndpoint
         var availability = new EventAvailability
         {
             EventId = eventId, 
-            UserId = currentUserId, 
+            UserId = userId, 
             Status = request.Status, 
             CreatedAt = DateTime.UtcNow
         };
@@ -95,7 +97,7 @@ public class PostAvailability : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
         
         logger.LogInformation("User {UserId} added availability to event {EventId}. TraceId: {TraceId}",
-            currentUserId, eventId, traceId);
+            userId, eventId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Availability added.", traceId));
     }

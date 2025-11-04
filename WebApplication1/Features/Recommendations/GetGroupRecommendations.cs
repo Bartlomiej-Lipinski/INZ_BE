@@ -36,22 +36,26 @@ public class GetGroupRecommendations: IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to get group events. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to get group recommendations. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-
-        var isMember = group.GroupUsers.Any(gu => gu.UserId == userId);
-        if (!isMember)
         {
-            logger.LogWarning("User {UserId} tried to get events for group {GroupId} without membership. TraceId: {TraceId}", 
-                userId, groupId, traceId);
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to get group recommendations in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }
         

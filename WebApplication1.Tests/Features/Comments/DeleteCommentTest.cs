@@ -14,6 +14,7 @@ public class DeleteCommentTest : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
         var result = await DeleteComment.Handle(
+            "g1",
             "r1", 
             "c1",
             dbContext,
@@ -30,10 +31,15 @@ public class DeleteCommentTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
         var result = await DeleteComment.Handle(
+            group.Id,
             "r1",
             "c1",
             dbContext, 
@@ -65,6 +71,7 @@ public class DeleteCommentTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var result = await DeleteComment.Handle(
+            group.Id,
             target.Id, 
             comment.Id, 
             dbContext, 
@@ -100,6 +107,7 @@ public class DeleteCommentTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var result = await DeleteComment.Handle(
+            group.Id,
             target.Id, 
             comment.Id, 
             dbContext, 
@@ -137,6 +145,7 @@ public class DeleteCommentTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await DeleteComment.Handle(
+            group.Id,
             target.Id,
             comment.Id, 
             dbContext, 

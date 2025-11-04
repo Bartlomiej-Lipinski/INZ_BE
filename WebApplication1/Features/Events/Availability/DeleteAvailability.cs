@@ -30,29 +30,31 @@ public class DeleteAvailability : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to delete availability. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
         {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        var isMember = group.GroupUsers.Any(gu => gu.UserId == currentUserId);
-        if (!isMember)
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
         {
-            logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
-                currentUserId, groupId, traceId);
+            logger.LogWarning("User {UserId} attempted to delete availability in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }
         
@@ -66,19 +68,20 @@ public class DeleteAvailability : IEndpoint
         }
         
         var availability = await dbContext.EventAvailabilities
-            .FirstOrDefaultAsync(ea => ea.EventId == eventId && ea.UserId == currentUserId, cancellationToken);
+            .FirstOrDefaultAsync(ea => ea.EventId == eventId && ea.UserId == userId, cancellationToken);
 
         if (availability == null)
         {
             logger.LogWarning("Availability for event {EventId} not found for user {UserId}. TraceId: {TraceId}", 
-                eventId, currentUserId, traceId);
+                eventId, userId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Availability not found.", traceId));
         }
+        
         dbContext.EventAvailabilities.Remove(availability);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} deleted availability from event {EventId}." +
-                              " TraceId: {TraceId}", currentUserId, eventId, traceId);
+                              " TraceId: {TraceId}", userId, eventId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Availability deleted.", traceId));
     }

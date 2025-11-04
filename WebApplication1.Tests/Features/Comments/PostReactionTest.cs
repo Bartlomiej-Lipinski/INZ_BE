@@ -25,6 +25,7 @@ public class PostReactionTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await PostReaction.Handle(
+            group.Id,
             target.Id,
             "Recommendation",
             dbContext,
@@ -60,6 +61,7 @@ public class PostReactionTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await PostReaction.Handle(
+            group.Id,
             target.Id,
             "Recommendation",
             dbContext,
@@ -78,6 +80,7 @@ public class PostReactionTest : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
         var result = await PostReaction.Handle(
+            "g1",
             "nonexistent",
             "Recommendation",
             dbContext,
@@ -95,6 +98,7 @@ public class PostReactionTest : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
         var result = await PostReaction.Handle(
+            "g1",
             "r1",
             "Recommendation",
             dbContext,
@@ -121,6 +125,7 @@ public class PostReactionTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await PostReaction.Handle(
+            group.Id,
             target.Id,
             "Recommendation",
             dbContext,

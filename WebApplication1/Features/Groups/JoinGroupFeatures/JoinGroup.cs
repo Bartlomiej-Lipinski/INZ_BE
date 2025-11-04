@@ -26,16 +26,18 @@ public class JoinGroup : IEndpoint
     public static async Task<IResult> Handle(
         [FromBody] JoinGroupRequestDto request,
         AppDbContext dbContext,
-        ClaimsPrincipal user,
+        ClaimsPrincipal currentUser,
         HttpContext httpContext,
+        ILogger<JoinGroup> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
-        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? user.FindFirst("sub")?.Value;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrEmpty(userId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
+            logger.LogWarning("Unauthorized attempt to join group. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         

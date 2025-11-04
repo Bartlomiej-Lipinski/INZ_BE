@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
@@ -12,7 +13,7 @@ public class GetCommentsForTarget : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/comments/{targetId}", Handle)
+        app.MapGet("/groups/{groupId}/comments/{targetId}", Handle)
             .WithName("GetCommentsByTarget")
             .WithDescription("Retrieves comments for a target")
             .WithTags("Comments")
@@ -21,13 +22,42 @@ public class GetCommentsForTarget : IEndpoint
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string targetId,
         AppDbContext dbContext,
+        ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<GetCommentsForTarget> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? currentUser.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            logger.LogWarning("Unauthorized attempt. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
+        }
+
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to retrieve comments in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.Forbid();
+        }
 
         var comments = await dbContext.Comments
             .AsNoTracking()

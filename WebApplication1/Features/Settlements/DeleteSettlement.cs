@@ -40,14 +40,23 @@ public class DeleteSettlement : IEndpoint
         }
 
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
 
-        if (group.GroupUsers.All(gu => gu.UserId != userId))
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to delete settlement in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
+        }
         
         var settlement = await dbContext.Settlements
             .FirstOrDefaultAsync(s => s.Id == settlementId && s.FromUserId == userId, cancellationToken);

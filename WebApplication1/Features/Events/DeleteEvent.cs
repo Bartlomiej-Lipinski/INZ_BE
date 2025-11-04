@@ -30,16 +30,17 @@ public class DeleteEvent : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to delete event. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
@@ -49,11 +50,11 @@ public class DeleteEvent : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == currentUserId);
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
         if (groupUser == null)
         {
             logger.LogWarning("User {UserId} attempted to delete event in group {GroupId} but is not a member. " +
-                              "TraceId: {TraceId}", currentUserId, groupId, traceId);
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }
 
@@ -67,10 +68,10 @@ public class DeleteEvent : IEndpoint
         }
 
         var isAdmin = groupUser.IsAdmin;
-        if (evt.UserId != currentUserId && !isAdmin)
+        if (evt.UserId != userId && !isAdmin)
         {
             logger.LogWarning("User {UserId} attempted to delete event {EventId} they do not own and is not admin. " +
-                              "TraceId: {TraceId}", currentUserId, eventId, traceId);
+                              "TraceId: {TraceId}", userId, eventId, traceId);
             return Results.Forbid();
         }
 
@@ -78,7 +79,7 @@ public class DeleteEvent : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} deleted event {EventId} from group {GroupId}. TraceId: {TraceId}",
-            currentUserId, eventId, groupId, traceId);
+            userId, eventId, groupId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Event deleted successfully.", eventId, traceId));
     }

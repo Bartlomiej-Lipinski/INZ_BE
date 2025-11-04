@@ -12,7 +12,7 @@ public class DeleteComment : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/comments/{targetId}/{commentId}", Handle)
+        app.MapDelete("/groups/{groupId}/comments/{targetId}/{commentId}", Handle)
             .WithName("DeleteComment")
             .WithDescription("Deletes a comment from a target. Allowed for comment author and target author.")
             .WithTags("Comments")
@@ -21,6 +21,7 @@ public class DeleteComment : IEndpoint
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string targetId,
         [FromRoute] string commentId,
         AppDbContext dbContext,
@@ -30,13 +31,32 @@ public class DeleteComment : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to delete comment {CommentId}. TraceId: {TraceId}", commentId, traceId);
             return Results.Unauthorized();
+        }
+        
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+        
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to delete comment in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.Forbid();
         }
 
         var comment = await dbContext.Comments
@@ -52,15 +72,15 @@ public class DeleteComment : IEndpoint
         var isTargetOwner = comment.TargetType switch
         {
             "Recommendation" => await dbContext.Recommendations
-                .AnyAsync(r => r.Id == targetId && r.UserId == currentUserId, cancellationToken),
+                .AnyAsync(r => r.Id == targetId && r.UserId == userId, cancellationToken),
 
             _ => false
         };
         
-        if (comment.UserId != currentUserId && !isTargetOwner)
+        if (comment.UserId != userId && !isTargetOwner)
         {
             logger.LogWarning("User {UserId} attempted to delete comment {CommentId} without permission. TraceId: {TraceId}",
-                currentUserId, commentId, traceId);
+                userId, commentId, traceId);
             return Results.Forbid();
         }
 
@@ -68,7 +88,7 @@ public class DeleteComment : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} deleted comment {CommentId} from target {TargetId}." +
-                              " TraceId: {TraceId}", currentUserId, commentId, targetId, traceId);
+                              " TraceId: {TraceId}", userId, commentId, targetId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Comment deleted successfully.", comment.Id, traceId));
     }

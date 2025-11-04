@@ -18,13 +18,21 @@ public class JoinGroupTest : TestBase
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
-        await GenerateCodeToJoinGroup
-            .Handle("g1", dbContext, CreateHttpContext(user.Id), NullLogger<GenerateCodeToJoinGroup>.Instance, CancellationToken.None);
+        await GenerateCodeToJoinGroup.Handle(
+            "g1",
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<GenerateCodeToJoinGroup>.Instance, 
+            CancellationToken.None
+        );
+        
         await JoinGroup.Handle(
             TestDataFactory.CreateJoinGroupRequest(group.Code),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
+            NullLogger<JoinGroup>.Instance, 
             CancellationToken.None
         );
         
@@ -47,6 +55,7 @@ public class JoinGroupTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
+            NullLogger<JoinGroup>.Instance, 
             CancellationToken.None
         );
         
@@ -70,6 +79,7 @@ public class JoinGroupTest : TestBase
         await GenerateCodeToJoinGroup.Handle(
             "g1",
             dbContext,
+            CreateClaimsPrincipal(),
             CreateHttpContext(),
             NullLogger<GenerateCodeToJoinGroup>.Instance, 
             CancellationToken.None
@@ -88,6 +98,7 @@ public class JoinGroupTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user1.Id),
             CreateHttpContext(),
+            NullLogger<JoinGroup>.Instance, 
             CancellationToken.None
         );
         
@@ -106,22 +117,18 @@ public class JoinGroupTest : TestBase
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         var user = TestDataFactory.CreateUser(id: "user1");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
+        dbContext.Users.Add(user);
+        dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
         await GenerateCodeToJoinGroup.Handle(
             "g1", 
             dbContext,
+            CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id), 
             NullLogger<GenerateCodeToJoinGroup>.Instance, 
-            CancellationToken.None
-        );
-        
-        await JoinGroup.Handle(
-            TestDataFactory.CreateJoinGroupRequest(group.Code), 
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
             CancellationToken.None
         );
         
@@ -130,6 +137,7 @@ public class JoinGroupTest : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
+            NullLogger<JoinGroup>.Instance, 
             CancellationToken.None
         );
         
