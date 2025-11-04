@@ -29,11 +29,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Expense> Expenses { get; set; } = null!;
     public DbSet<ExpenseBeneficiary> ExpenseBeneficiaries { get; set; } = null!;
     public DbSet<Settlement> Settlements { get; set; } = null!;
-     
+
+    public DbSet<Message> Messages { get; set; } = null!;
+
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
+
         builder.Entity<RefreshToken>(entity =>
         {
             entity.HasKey(r => r.Id);
@@ -48,23 +51,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.Property(g => g.Code).IsRequired();
             entity.HasIndex(g => g.Code).IsUnique();
         });
-        
+
         builder.Entity<GroupUser>(entity =>
         {
             entity.HasKey(gu => gu.Id);
             entity.Property(gu => gu.IsAdmin).IsRequired();
-            
+
             entity.HasOne(gu => gu.Group)
                 .WithMany(g => g.GroupUsers)
                 .HasForeignKey(gu => gu.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             entity.HasOne(gu => gu.User)
                 .WithMany()
                 .HasForeignKey(gu => gu.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         builder.Entity<PasswordResetToken>(entity =>
         {
             entity.HasKey(p => p.Id);
@@ -94,7 +97,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasIndex(e => e.ExpiresAt);
             entity.HasIndex(e => e.UserId);
         });
-        
+
         builder.Entity<Recommendation>(entity =>
         {
             entity.HasKey(r => r.Id);
@@ -112,19 +115,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<Comment>(entity =>
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Content).IsRequired().HasMaxLength(1000);
             entity.HasIndex(c => new { c.TargetType, c.TargetId });
-            
+
             entity.HasOne(c => c.User)
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<Reaction>(entity =>
         {
             entity.HasKey(r => new { r.TargetId, r.UserId });
@@ -135,7 +138,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<Event>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -174,7 +177,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<EventAvailabilityRange>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -191,7 +194,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<EventSuggestion>(entity =>
         {
             entity.HasKey(es => es.Id);
@@ -203,7 +206,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(es => es.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<Expense>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -218,7 +221,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(e => e.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<ExpenseBeneficiary>(entity =>
         {
             entity.HasKey(eb => new { eb.ExpenseId, eb.UserId });
@@ -229,7 +232,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(eb => eb.ExpenseId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<Settlement>(entity =>
         {
             entity.HasKey(s => s.Id);
@@ -240,5 +243,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(s => s.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        builder.Entity<Message>()
+            .HasOne(m => m.Group)
+            .WithMany()
+            .HasForeignKey(m => m.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
