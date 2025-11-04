@@ -38,18 +38,18 @@ internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger
 
             if (sendResult.Status == PostmarkStatus.Success)
             {
-                logger.LogInformation("Email sent successfully to {To} with subject {Subject}", to, subject);
+                logger.LogInformation("Email sent successfully  with subject {Subject}", subject);
             }
             else
             {
-                logger.LogError("Failed to send email to {To}. Status: {Status}, Message: {Message}",
-                    to, sendResult.Status, sendResult.Message);
+                logger.LogError("Failed to send email. Status: {Status}, Message: {Message}",
+                    sendResult.Status, sendResult.Message);
                 throw new InvalidOperationException($"Failed to send email: {sendResult.Message}");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error sending email to {To}", to);
+            logger.LogError(ex, "Error sending email");
             throw;
         }
     }
@@ -126,18 +126,18 @@ internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger
 
             if (sendResult.Status == PostmarkStatus.Success)
             {
-                logger.LogInformation("Two-factor code sent successfully to {Email}", email);
+                logger.LogInformation("Two-factor code sent successfully");
             }
             else
             {
-                logger.LogError("Failed to send two-factor code to {Email}. Status: {Status}, Message: {Message}",
-                    email, sendResult.Status, sendResult.Message);
+                logger.LogError("Failed to send two-factor code. Status: {Status}, Message: {Message}",
+                    email, sendResult.Status);
                 throw new InvalidOperationException($"Failed to send two-factor code: {sendResult.Message}");
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error sending two-factor code to {Email}", email);
+            logger.LogError(ex, "Error sending two-factor code");
             throw;
         }
     }
