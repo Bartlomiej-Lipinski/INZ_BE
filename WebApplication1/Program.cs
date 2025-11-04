@@ -77,14 +77,14 @@ builder.Services.AddCors(options =>
     });
 });
 
-var sendGridKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
-if (string.IsNullOrEmpty(sendGridKey))
-    throw new InvalidOperationException("SENDGRID_API_KEY is missing from environment.");
+var postmarkApiKey = Environment.GetEnvironmentVariable("POSTMARK_API_KEY");
+if (string.IsNullOrEmpty(postmarkApiKey))
+    throw new InvalidOperationException("POSTMARK_API_KEY is missing from environment.");
 
 var emailSettingsSection = builder.Configuration.GetSection("PostmarkSettings");
 builder.Services.Configure<EmailSettings>(options =>
 {
-    options.ApiKey = sendGridKey;
+    options.ApiKey = postmarkApiKey;
     options.SenderEmail = emailSettingsSection["SenderEmail"] ?? throw new InvalidOperationException();
     options.SenderName = emailSettingsSection["SenderName"] ?? throw new InvalidOperationException();
 });

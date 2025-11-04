@@ -1,10 +1,18 @@
-﻿using PostmarkDotNet;
-using WebApplication1.Features.Auth.Services;
+﻿using DotNetEnv;
+using PostmarkDotNet;
+
+namespace WebApplication1.Features.Auth.Services;
+
+public interface IEmailService
+{
+    Task SendAsync(string to, string subject, string body);
+    Task SendTwoFactorCodeAsync(string email, string code, string? userName = null);
+}
 
 internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger<PostmarkEmailService> logger)
     : IEmailService
 {
-    private readonly string _apiKey = configuration["Postmark:ApiKey"] ??
+    private readonly string _apiKey = Env.GetString("Postmark:ApiKey") ??
                                       throw new InvalidOperationException("Postmark API key not configured");
 
     private readonly string _fromEmail = configuration["Postmark:FromEmail"] ??
