@@ -81,7 +81,7 @@ var postmarkApiKey = Environment.GetEnvironmentVariable("POSTMARK_API_KEY");
 if (string.IsNullOrEmpty(postmarkApiKey))
     throw new InvalidOperationException("POSTMARK_API_KEY is missing from environment.");
 
-var emailSettingsSection = builder.Configuration.GetSection("PostmarkSettings");
+var emailSettingsSection = builder.Configuration.GetSection("Postmark");
 builder.Services.Configure<EmailSettings>(options =>
 {
     options.ApiKey = postmarkApiKey;
