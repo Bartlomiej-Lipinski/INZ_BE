@@ -2,21 +2,19 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebApplication1.Features.Polls.Dtos;
-using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Polls;
 
-public class GetPollById : IEndpoint
+public class DeletePoll : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/groups/{groupId}/polls/{pollId}", Handle)
-            .WithName("GetPollById")
-            .WithDescription("Retrieves a single poll by its ID within a group")
+        app.MapDelete("/groups/{groupId}/polls/{pollId}", Handle)
+            .WithName("DeletePoll")
+            .WithDescription("Deletes a specific poll from a group")
             .WithTags("Polls")
             .RequireAuthorization()
             .WithOpenApi();
@@ -28,7 +26,7 @@ public class GetPollById : IEndpoint
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
-        ILogger<GetPollById> logger,
+        ILogger<DeletePoll> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
@@ -37,7 +35,7 @@ public class GetPollById : IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to retrieve polls. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
@@ -52,9 +50,6 @@ public class GetPollById : IEndpoint
             return Results.Forbid();
 
         var poll = await dbContext.Polls
-            .AsNoTracking()
-            .Include(p => p.Options)
-            .ThenInclude(o => o.VotedUsers)
             .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == groupId, cancellationToken);
 
         if (poll == null)
@@ -63,22 +58,12 @@ public class GetPollById : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Poll not found.", traceId));
         }
 
-        var response = new PollResponseDto
-        {
-            CreatedByUserId = poll.CreatedByUserId,
-            Question = poll.Question,
-            CreatedAt = poll.CreatedAt.ToLocalTime(),
-            Options = poll.Options.Select(o => new PollOptionDto
-            {
-                Text = o.Text,
-                VotedUsers = o.VotedUsers.Select(u => new UserResponseDto
-                {
-                    Id = u.Id,
-                    Username = u.UserName
-                }).ToList()
-            }).ToList()
-        };
+        dbContext.Polls.Remove(poll);
+        await dbContext.SaveChangesAsync(cancellationToken);
         
-        return Results.Ok(ApiResponse<PollResponseDto>.Ok(response, "Poll retrieved successfully.", traceId));
+        logger.LogInformation("User {UserId} deleted poll {PollId} from group {GroupId}. TraceId: {TraceId}",
+            userId, pollId, groupId, traceId);
+
+        return Results.Ok(ApiResponse<string>.Ok("Poll deleted successfully.", pollId, traceId));
     }
 }
