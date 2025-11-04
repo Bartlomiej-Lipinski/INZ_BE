@@ -58,21 +58,56 @@ internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger
     {
         try
         {
-            var greeting = string.IsNullOrEmpty(userName) ? "Hello" : $"Hello {userName}";
             var subject = "Your Two-Factor Authentication Code";
-            var textBody =
-                $"{greeting},\n\nYour two-factor authentication code is: {code}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, please ignore this email.";
-            var htmlBody = $@"
-                <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>
-                    <h2>Two-Factor Authentication</h2>
-                    <p>{greeting},</p>
-                    <p>Your two-factor authentication code is:</p>
-                    <div style='background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0;'>
-                        <span style='font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #333;'>{code}</span>
+            var htmlContent = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset='utf-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <title>Two-Factor Authentication Code</title>
+            </head>
+            <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;'>
+                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;'>
+                    <h1 style='color: white; margin: 0; font-size: 28px;'>Two-Factor Authentication</h1>
+                </div>
+                <div style='background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;'>
+                    <h2 style='color: #333; margin-top: 0;'>Hello {userName ?? "User"}!</h2>
+                    <p style='font-size: 16px; color: #555;'>Your verification code is:</p>
+                    
+                    <div style='background: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>
+                        <h1 style='color: #2196F3; font-family: monospace; letter-spacing: 8px; font-size: 36px; margin: 0; font-weight: bold;'>{code}</h1>
                     </div>
-                    <p>This code will expire in <strong>10 minutes</strong>.</p>
-                    <p style='color: #666; font-size: 14px;'>If you didn't request this code, please ignore this email.</p>
-                </div>";
+                    
+                    <div style='background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0;'>
+                        <p style='margin: 0; color: #856404;'>
+                            <strong>⏰ This code will expire in 5 minutes.</strong>
+                        </p>
+                    </div>
+                    
+                    <p style='color: #666; font-size: 14px; margin-top: 30px;'>
+                        If you didn't request this code, please ignore this email or contact our support team.
+                    </p>
+                    
+                    <hr style='border: none; height: 1px; background: #eee; margin: 30px 0;'>
+                    
+                    <p style='color: #999; font-size: 12px; text-align: center;'>
+                        This is an automated message, please do not reply to this email.
+                    </p>
+                </div>
+            </body>
+            </html>";
+
+            var plainTextContent = $@"
+            Two-Factor Authentication Code
+            
+            Hello {userName ?? "User"}!
+            
+            Your verification code is: {code}
+            
+            This code will expire in 5 minutes.
+            
+            If you didn't request this code, please ignore this email.";
 
             var message = new PostmarkMessage
             {
@@ -80,8 +115,8 @@ internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger
                 From = _fromEmail,
                 TrackOpens = false,
                 Subject = subject,
-                TextBody = textBody,
-                HtmlBody = htmlBody,
+                TextBody = plainTextContent,
+                HtmlBody = htmlContent,
                 MessageStream = "outbound",
                 Tag = "Two-Factor-Authentication"
             };
