@@ -13,7 +13,7 @@ public class PostReaction : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/reactions/{targetId}/{targetType}", Handle)
+        app.MapPost("/groups/{groupId}/reactions/{targetId}/{targetType}", Handle)
             .WithName("PostReaction")
             .WithDescription("Adds or removes a like reaction to a target by a group member")
             .WithTags("Reactions")
@@ -22,6 +22,7 @@ public class PostReaction : IEndpoint
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string targetId,
         [FromRoute] string targetType,
         AppDbContext dbContext,
@@ -31,13 +32,32 @@ public class PostReaction : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to react to target. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
+        }
+        
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to add or remove a reaction in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.Forbid();
         }
 
         var target = targetType switch
@@ -55,19 +75,9 @@ public class PostReaction : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Target not found.", traceId));
         }
 
-        var isMember = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == target.GroupId && gu.UserId == currentUserId, cancellationToken);
-
-        if (!isMember)
-        {
-            logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
-                currentUserId, target.GroupId, traceId);
-            return Results.Forbid();
-        }
-
         var existingReaction = await dbContext.Reactions
             .FirstOrDefaultAsync(rr => rr.TargetId == targetId 
-                                       && rr.UserId == currentUserId, cancellationToken);
+                                       && rr.UserId == userId, cancellationToken);
 
         if (existingReaction != null)
         {
@@ -75,7 +85,7 @@ public class PostReaction : IEndpoint
             await dbContext.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation("User {UserId} removed reaction from target {TargetId}. TraceId: {TraceId}",
-                currentUserId, targetId, traceId);
+                userId, targetId, traceId);
 
             return Results.Ok(ApiResponse<string>.Ok("Reaction removed.", traceId));
         }
@@ -84,14 +94,14 @@ public class PostReaction : IEndpoint
         {
             TargetId = targetId,
             TargetType = targetType,
-            UserId = currentUserId,
+            UserId = userId,
         };
 
         dbContext.Reactions.Add(reaction);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} added reaction to target {TargetId}. TraceId: {TraceId}",
-            currentUserId, targetId, traceId);
+            userId, targetId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Reaction added.", traceId));
     }

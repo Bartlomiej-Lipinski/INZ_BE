@@ -32,10 +32,10 @@ public class PostRecommendation : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to post recommendation. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
@@ -47,14 +47,23 @@ public class PostRecommendation : IEndpoint
             return Results.BadRequest(ApiResponse<string>.Fail("GroupId, Title and Content are required.", 
                 traceId));
         }
+        
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
-        var member = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId, cancellationToken);
-
-        if (member == null)
+        if (group == null)
         {
-            logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
-                currentUserId, groupId, traceId);
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to post recommendation in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }
 
@@ -62,7 +71,7 @@ public class PostRecommendation : IEndpoint
         {
             Id = Guid.NewGuid().ToString(),
             GroupId = groupId,
-            UserId = currentUserId,
+            UserId = userId,
             Title = request.Title.Trim(),
             Content = request.Content.Trim(),
             Category = request.Category?.Trim(),
@@ -76,7 +85,7 @@ public class PostRecommendation : IEndpoint
 
         logger.LogInformation(
             "User {UserId} added new recommendation {RecommendationId} in group {GroupId}. TraceId: {TraceId}",
-            currentUserId, recommendation.Id, groupId, traceId);
+            userId, recommendation.Id, groupId, traceId);
 
         return Results.Ok(ApiResponse<string>
             .Ok("Recommendation created successfully.", recommendation.Id, traceId));

@@ -9,5 +9,5 @@ public class PasswordResetToken
     public DateTime ExpiresAt { get; set; }
     public bool IsUsed { get; set; } = false;
     
-    public User? User { get; set; }
+    public User User { get; set; } = null!;
 }

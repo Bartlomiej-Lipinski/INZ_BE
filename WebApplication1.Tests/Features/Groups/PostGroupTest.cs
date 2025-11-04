@@ -13,11 +13,15 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Name_Is_Missing()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
+        var user = TestDataFactory.CreateUser("u1", "testUser");
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
         var result = await PostGroup.Handle(
-            CreateHttpContext("user1"),
+            CreateHttpContext(user.Id),
             TestDataFactory.CreateGroupRequestDto("",  "#FFF"),
             dbContext,
+            CreateClaimsPrincipal(user.Id),
             NullLogger<PostGroup>.Instance,
             CancellationToken.None
         );
@@ -36,6 +40,7 @@ public class PostGroupTest : TestBase
             CreateHttpContext(), 
             TestDataFactory.CreateGroupRequestDto("Test Group",  "#FFF"), 
             dbContext,
+            CreateClaimsPrincipal(),
             NullLogger<PostGroup>.Instance,
             CancellationToken.None
         );
@@ -47,12 +52,17 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Create_Group_And_Assign_User_As_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var user = TestDataFactory.CreateUser("u1", "testUser");
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+        
         var dto = TestDataFactory.CreateGroupRequestDto("My Group",  "#FFF");
         
         var result = await PostGroup.Handle(
-            CreateHttpContext("user1"),
+            CreateHttpContext(user.Id),
             dto, 
             dbContext,
+            CreateClaimsPrincipal(user.Id),
             NullLogger<PostGroup>.Instance,
             CancellationToken.None
         );
@@ -72,7 +82,7 @@ public class PostGroupTest : TestBase
         group.Should().NotBeNull();
 
         var groupUser =
-            await dbContext.GroupUsers.FirstOrDefaultAsync(gu => gu.UserId == "user1" && gu.GroupId == group.Id);
+            await dbContext.GroupUsers.FirstOrDefaultAsync(gu => gu.UserId == user.Id && gu.GroupId == group.Id);
         groupUser.Should().NotBeNull();
         groupUser.IsAdmin.Should().BeTrue();
     }

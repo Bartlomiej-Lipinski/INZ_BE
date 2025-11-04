@@ -11,14 +11,19 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldGenerateUniqueCode()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group", "#FFFFFF");
+        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
+        dbContext.Users.Add(user);
+        dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
         var result = await GenerateCodeToJoinGroup.Handle(
             "g1", 
             dbContext,
-            CreateHttpContext(),
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
             NullLogger<GenerateCodeToJoinGroup>.Instance, 
             CancellationToken.None
         );
@@ -40,11 +45,15 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnNotFound_WhenGroupDoesNotExist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var user = TestDataFactory.CreateUser("u1", "testUser");
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
         
         var result = await GenerateCodeToJoinGroup.Handle(
             "non-existent", 
             dbContext,
-            CreateHttpContext(),
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
             NullLogger<GenerateCodeToJoinGroup>.Instance,
             CancellationToken.None
         );
@@ -60,11 +69,15 @@ public class GenerateCodeToJoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenGroupIdIsEmpty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var user = TestDataFactory.CreateUser("u1", "testUser");
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
         
         var result = await GenerateCodeToJoinGroup.Handle(
             "",
             dbContext,
-            CreateHttpContext(), 
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id), 
             NullLogger<GenerateCodeToJoinGroup>.Instance, 
             CancellationToken.None
         );

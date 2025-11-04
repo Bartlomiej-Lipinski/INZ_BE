@@ -28,11 +28,16 @@ public class GetJoinRequestsForAdmins : IEndpoint
         ILogger<GetJoinRequestsForAdmins> logger,
         CancellationToken cancellationToken)
     {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
-        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            logger.LogWarning("Unauthorized attempt to retrieve requests. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
+        }
+        
         logger.LogInformation("Fetching join requests for admin user: {UserId}. TraceId: {TraceId}", userId, traceId);
 
         var adminGroupIds = await dbContext.GroupUsers
@@ -50,8 +55,14 @@ public class GetJoinRequestsForAdmins : IEndpoint
                          !gu.IsAdmin)
             .Include(gu => gu.Group)
             .Include(gu => gu.User)
-            .Select(gu => new JoinRequestResponseDto(gu.Group.Id, gu.Group.Name, gu.UserId, gu.User.UserName))
-            .ToListAsync(cancellationToken);
+            .Select(gu => new JoinRequestResponseDto
+            {
+                GroupId = gu.GroupId, 
+                GroupName = gu.Group.Name,
+                UserId = gu.UserId,
+                UserName = gu.User.UserName
+                
+            }).ToListAsync(cancellationToken);
 
 
         logger.LogInformation("Found {RequestCount} pending join requests for admin user: {UserId}. TraceId: {TraceId}",

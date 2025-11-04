@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
@@ -22,11 +23,20 @@ public class GenerateCodeToJoinGroup : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         AppDbContext dbContext,
+        ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<GenerateCodeToJoinGroup> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            logger.LogWarning("Unauthorized attempt to generate code. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
+        }
 
         if (string.IsNullOrWhiteSpace(groupId))
         {
@@ -35,6 +45,7 @@ public class GenerateCodeToJoinGroup : IEndpoint
         }
 
         var group = await dbContext.Groups
+            .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
@@ -42,7 +53,15 @@ public class GenerateCodeToJoinGroup : IEndpoint
             logger.LogWarning("Group not found. GroupId: {GroupId}, TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
-
+        
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to generate code in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.Forbid();
+        }
+        
         group.Code = GenerateUniqueCode(dbContext, group.Id);
         group.CodeExpirationTime = DateTime.UtcNow.AddMinutes(5);
         dbContext.Groups.Update(group);

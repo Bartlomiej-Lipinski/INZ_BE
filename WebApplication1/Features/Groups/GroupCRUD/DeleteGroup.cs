@@ -29,10 +29,10 @@ public class DeleteGroup : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to delete group. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
@@ -49,13 +49,13 @@ public class DeleteGroup : IEndpoint
         }
 
         var currentGroupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId, cancellationToken);
+            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == userId, cancellationToken);
 
         var isAdmin = currentGroupUser?.IsAdmin == true;
         if (!isAdmin)
         {
             logger.LogWarning("User {UserId} is not admin of group {GroupId}. TraceId: {TraceId}", 
-                currentUserId, groupId, traceId);
+                userId, groupId, traceId);
             return Results.Forbid();
         }
 
@@ -63,7 +63,7 @@ public class DeleteGroup : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Group {GroupId} deleted by user {UserId}. TraceId: {TraceId}", 
-            groupId, currentUserId, traceId);
+            groupId, userId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Group deleted successfully.", traceId));
     }

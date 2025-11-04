@@ -14,10 +14,15 @@ public class CalculateBestDateForEventTests : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
 
         var result = await CalculateBestDateForEvent.Handle(
+            group.Id,
             "non-existent-id",
             dbContext,
             CreateClaimsPrincipal(user.Id),
@@ -43,6 +48,7 @@ public class CalculateBestDateForEventTests : TestBase
         await dbContext.SaveChangesAsync();
 
         var result = await CalculateBestDateForEvent.Handle(
+            group.Id,
             evt.Id,
             dbContext,
             CreateClaimsPrincipal(user.Id),
@@ -83,6 +89,7 @@ public class CalculateBestDateForEventTests : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await CalculateBestDateForEvent.Handle(
+            group.Id,
             evt.Id,
             dbContext,
             CreateClaimsPrincipal(user.Id),

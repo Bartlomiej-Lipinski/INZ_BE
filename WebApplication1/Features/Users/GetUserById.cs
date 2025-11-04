@@ -54,7 +54,7 @@ public class GetUserById : IEndpoint
             .Select(u => new UserResponseDto
             {
                 Id = u.Id,
-                UserName = u.UserName!,
+                Username = u.UserName!,
                 Email = u.Email!,
                 Name = u.Name,
                 Surname = u.Surname,

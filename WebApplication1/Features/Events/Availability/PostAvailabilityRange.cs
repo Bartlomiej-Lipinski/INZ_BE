@@ -33,29 +33,31 @@ public class PostAvailabilityRange : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
         
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to set availability. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
         {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        var isMember = group.GroupUsers.Any(gu => gu.UserId == currentUserId);
-        if (!isMember)
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
         {
-            logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
-                currentUserId, groupId, traceId);
+            logger.LogWarning("User {UserId} attempted to set availability in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }
         
@@ -70,14 +72,14 @@ public class PostAvailabilityRange : IEndpoint
         }
         
         var existingRanges = await dbContext.EventAvailabilityRanges
-            .Where(ar => ar.EventId == eventId && ar.UserId == currentUserId)
+            .Where(ar => ar.EventId == eventId && ar.UserId == userId)
             .ToListAsync(cancellationToken);
 
         if (existingRanges.Count != 0)
         {
             dbContext.EventAvailabilityRanges.RemoveRange(existingRanges);
             logger.LogInformation("Removed {Count} old availability ranges for user {UserId} in event {EventId}." +
-                                  " TraceId: {TraceId}", existingRanges.Count, currentUserId, eventId, traceId);
+                                  " TraceId: {TraceId}", existingRanges.Count, userId, eventId, traceId);
         }
         
         var addedRanges = new List<EventAvailabilityRange>();
@@ -111,7 +113,7 @@ public class PostAvailabilityRange : IEndpoint
             {
                 Id = Guid.NewGuid().ToString(),
                 EventId = eventId,
-                UserId = currentUserId,
+                UserId = userId,
                 AvailableFrom = r.AvailableFrom,
                 AvailableTo = r.AvailableTo
             });
@@ -120,8 +122,8 @@ public class PostAvailabilityRange : IEndpoint
         await dbContext.EventAvailabilityRanges.AddRangeAsync(addedRanges, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("[PostAvailabilityRanges] User {UserId} added {Count} availability ranges for event {EventId}." +
-                              " TraceId: {TraceId}", currentUserId, addedRanges.Count, eventId, traceId);
+        logger.LogInformation("User {UserId} added {Count} availability ranges for event {EventId}." +
+                              " TraceId: {TraceId}", userId, addedRanges.Count, eventId, traceId);
 
         var responseDtos = addedRanges.Select(r => new AvailabilityRangeResponseDto
         {

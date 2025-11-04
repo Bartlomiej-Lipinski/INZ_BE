@@ -25,40 +25,33 @@ public class AcceptUserJoinRequest : IEndpoint
     public static async Task<IResult> Handle(
         [FromBody] AcceptUserJoinRequestDto request,
         AppDbContext dbContext,
-        ClaimsPrincipal? user,
+        ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<AcceptUserJoinRequest> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
-        if (user == null)
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Null user principal in AcceptUserJoinRequest. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-        
-        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                            ?? user.FindFirst("sub")?.Value;
-        
-        if (string.IsNullOrEmpty(currentUserId))
-        {
-            logger.LogWarning("No user ID found in claims for AcceptUserJoinRequest. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to accept request. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         
         logger.LogInformation("Processing join request acceptance. " +
                               "GroupId: {GroupId}, UserId: {UserId}, AdminId: {AdminId}. TraceId: {TraceId}", 
-            request.GroupId, request.UserId, currentUserId, traceId);
+            request.GroupId, request.UserId, userId, traceId);
         
         var admin = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == currentUserId && gu.IsAdmin,
+            .FirstOrDefaultAsync(gu => gu.GroupId == request.GroupId && gu.UserId == userId && gu.IsAdmin,
                 cancellationToken);
         
         if (admin == null)
         {
             logger.LogWarning("User {UserId} is not admin of group {GroupId}. TraceId: {TraceId}", 
-                currentUserId, request.GroupId, traceId);
+                userId, request.GroupId, traceId);
             return Results.BadRequest(ApiResponse<string>
                 .Fail("Only group admin can accept join requests.", traceId));
         }

@@ -42,22 +42,39 @@ public class DeleteExpense : IEndpoint
         }
         
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
 
-        if (group.GroupUsers.All(gu => gu.UserId != userId))
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to delete expense in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
+        }
         
         var expense = await dbContext.Expenses
             .FirstOrDefaultAsync(e => e.Id == expenseId, cancellationToken);
         
         if (expense == null)
         {
-            logger.LogWarning("Expense {EventId} not found in group {GroupId}. TraceId: {TraceId}", expenseId, groupId, traceId);
+            logger.LogWarning("Expense {ExpenseId} not found in group {GroupId}. TraceId: {TraceId}", expenseId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Expense not found.", traceId));
+        }
+        
+        var isAdmin = groupUser.IsAdmin;
+        if (expense.PaidByUserId != userId && !isAdmin)
+        {
+            logger.LogWarning("User {UserId} attempted to delete expense {ExpenseId} they do not own and is not admin. " +
+                              "TraceId: {TraceId}", userId, expenseId, traceId);
+            return Results.Forbid();
         }
         
         dbContext.Expenses.Remove(expense);

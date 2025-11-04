@@ -20,7 +20,7 @@ public class Event
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     
-    public EventStatus Status { get; set; } = EventStatus.Planning;
+    public EventStatus Status { get; set; }
     
     public DateTime CreatedAt { get; set; }
     
