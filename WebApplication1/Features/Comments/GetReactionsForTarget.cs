@@ -36,7 +36,7 @@ public class GetReactionsForTarget: IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to delete event. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to get reactions. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
@@ -54,7 +54,7 @@ public class GetReactionsForTarget: IEndpoint
         var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
         if (groupUser == null)
         {
-            logger.LogWarning("User {UserId} attempted to delete event in group {GroupId} but is not a member. " +
+            logger.LogWarning("User {UserId} attempted to get reactions in group {GroupId} but is not a member. " +
                               "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }

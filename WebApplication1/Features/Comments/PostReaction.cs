@@ -55,7 +55,7 @@ public class PostReaction : IEndpoint
         var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
         if (groupUser == null)
         {
-            logger.LogWarning("User {UserId} attempted to remove a like reaction in group {GroupId} but is not a member. " +
+            logger.LogWarning("User {UserId} attempted to add or remove a reaction in group {GroupId} but is not a member. " +
                               "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }

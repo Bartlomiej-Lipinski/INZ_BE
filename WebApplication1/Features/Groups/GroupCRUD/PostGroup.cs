@@ -36,7 +36,7 @@ public class PostGroup : IEndpoint
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to delete event. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to create group. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 

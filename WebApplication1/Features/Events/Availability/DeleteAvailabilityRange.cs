@@ -53,7 +53,7 @@ public class DeleteAvailabilityRange: IEndpoint
         var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
         if (groupUser == null)
         {
-            logger.LogWarning("User {UserId} attempted to delete event in group {GroupId} but is not a member. " +
+            logger.LogWarning("User {UserId} attempted to delete availability range in group {GroupId} but is not a member. " +
                               "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }

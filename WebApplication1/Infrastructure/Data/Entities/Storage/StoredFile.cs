@@ -13,5 +13,5 @@ public class StoredFile
     public string UploadedById { get; set; } = null!;
     public DateTime UploadedAt { get; set; }
         
-    private User UploadedBy { get; set; } = null!;
+    public User UploadedBy { get; set; } = null!;
 }
