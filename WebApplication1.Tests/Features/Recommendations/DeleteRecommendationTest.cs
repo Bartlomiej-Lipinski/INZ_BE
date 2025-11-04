@@ -14,6 +14,7 @@ public class DeleteRecommendationTest : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
         var result = await DeleteRecommendation.Handle(
+            "g1",
             "rec1",
             dbContext,
             CreateClaimsPrincipal(),
@@ -30,10 +31,15 @@ public class DeleteRecommendationTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
         var result = await DeleteRecommendation.Handle(
+            group.Id,
             "nonexistent",
             dbContext,
             CreateClaimsPrincipal(user.Id),
@@ -64,6 +70,7 @@ public class DeleteRecommendationTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await DeleteRecommendation.Handle(
+            group.Id,
             "rec1",
             dbContext,
             CreateClaimsPrincipal(other.Id),
@@ -99,6 +106,7 @@ public class DeleteRecommendationTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await DeleteRecommendation.Handle(
+            group.Id,
             "rec1",
             dbContext,
             CreateClaimsPrincipal(user.Id),

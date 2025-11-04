@@ -3,12 +3,14 @@ using WebApplication1.Features.Auth;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Features.Polls.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 
@@ -377,6 +379,36 @@ public static class TestDataFactory
             Amount = amount,
             IsEvenSplit = isEvenSplit,
             Beneficiaries = beneficiaries
+        };
+    }
+
+    public static Poll CreatePoll(string id, string groupId, string userId, string question)
+    {
+        return new Poll
+        {
+            Id = id,
+            GroupId = groupId,
+            CreatedByUserId = userId,
+            Question = question
+        };
+    }
+
+    public static PollOption CreatePollOption(string id, string pollId, string text)
+    {
+        return new PollOption
+        {
+            Id = id,
+            PollId = pollId,
+            Text = text
+        };
+    }
+
+    public static PollRequestDto CreatePollRequestDto(string question, List<PollOptionDto> options)
+    {
+        return new PollRequestDto
+        {
+            Question = question,
+            Options = options
         };
     }
     

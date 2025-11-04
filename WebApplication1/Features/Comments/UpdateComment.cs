@@ -13,7 +13,7 @@ public class UpdateComment : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/comments/{targetId}/{commentId}", Handle)
+        app.MapPut("/groups/{groupId}/comments/{targetId}/{commentId}", Handle)
             .WithName("UpdateComment")
             .WithDescription("Updates an existing comment for a target")
             .WithTags("Comments")
@@ -22,6 +22,7 @@ public class UpdateComment : IEndpoint
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string targetId,
         [FromRoute] string commentId,
         [FromBody] CommentRequestDto request,
@@ -32,14 +33,33 @@ public class UpdateComment : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to update comment {CommentId}. TraceId: {TraceId}", 
                 commentId, traceId);
             return Results.Unauthorized();
+        }
+        
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to update comment in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.Forbid();
         }
 
         if (string.IsNullOrWhiteSpace(request.Content))
@@ -57,10 +77,10 @@ public class UpdateComment : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Comment not found.", traceId));
         }
 
-        if (comment.UserId != currentUserId)
+        if (comment.UserId != userId)
         {
             logger.LogWarning("User {UserId} tried to edit comment {CommentId} without permission. TraceId: {TraceId}",
-                currentUserId, commentId, traceId);
+                userId, commentId, traceId);
             return Results.Forbid();
         }
 
@@ -68,7 +88,7 @@ public class UpdateComment : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} updated comment {CommentId}. TraceId: {TraceId}",
-            currentUserId, commentId, traceId);
+            userId, commentId, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok("Comment updated successfully.", comment.Id, traceId));
     }

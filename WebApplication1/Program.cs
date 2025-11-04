@@ -13,7 +13,6 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
-using WebApplication1.Shared.Middlewares;
 
 DotNetEnv.Env.Load();
 
@@ -215,7 +214,6 @@ builder.Services.AddEndpoints();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseCors("AllowFrontend");
 app.UseRateLimiter();
 if (app.Environment.IsDevelopment())

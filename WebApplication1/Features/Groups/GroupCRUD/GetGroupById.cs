@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Groups.Dtos;
@@ -25,10 +26,19 @@ public class GetGroupById : IEndpoint
         [FromRoute] string id,
         AppDbContext dbContext,
         HttpContext httpContext,
+        ClaimsPrincipal currentUser,
         ILogger<GetGroupById> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            logger.LogWarning("Unauthorized attempt to get group. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
+        }
 
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -38,14 +48,17 @@ public class GetGroupById : IEndpoint
 
         logger.LogInformation("Fetching group with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
 
-        var group = await dbContext.Groups.AsNoTracking().FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == id, cancellationToken);
 
         if (group == null)
         {
             logger.LogWarning("Group not found with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found", traceId));
         }
-
+        
         var dto = new GroupResponseDto
         {
             Id = group.Id,

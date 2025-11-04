@@ -99,7 +99,7 @@ public class AcceptUserJoinRequestTest : TestBase
         var result = await AcceptUserJoinRequest.Handle(
             TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
             dbContext,
-            null,
+            CreateClaimsPrincipal(),
             CreateHttpContext(),
             NullLogger<AcceptUserJoinRequest>.Instance, 
             CancellationToken.None

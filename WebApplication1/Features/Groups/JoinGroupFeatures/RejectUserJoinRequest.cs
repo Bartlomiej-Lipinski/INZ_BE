@@ -32,34 +32,34 @@ public class RejectUserJoinRequest : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                            ?? currentUser.FindFirst("sub")?.Value;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrEmpty(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to reject join request. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to reject request. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
         
         var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
         {
-            logger.LogWarning("Group not found. GroupId: {GroupId}. TraceId: {TraceId}", 
-                groupId, traceId);
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
         
         var currentGroupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId, cancellationToken);
+            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == userId, cancellationToken);
 
         var isAdmin = currentGroupUser?.IsAdmin == true;
         if (!isAdmin)
         {
             logger.LogWarning("User {UserId} is not admin of group {GroupId}. TraceId: {TraceId}", 
-                currentUserId, groupId, traceId);
+                userId, groupId, traceId);
             return Results.BadRequest(ApiResponse<string>
                 .Fail("Only group admin can reject join requests.", traceId));
         }

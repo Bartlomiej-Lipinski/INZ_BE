@@ -26,23 +26,25 @@ public class PostGroup : IEndpoint
         HttpContext httpContext, 
         [FromBody] GroupRequestDto requestDto,
         AppDbContext dbContext,
+        ClaimsPrincipal currentUser,
         ILogger<PostGroup> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            logger.LogWarning("Unauthorized attempt to create group. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
+        }
 
         if (string.IsNullOrWhiteSpace(requestDto.Name) || string.IsNullOrWhiteSpace(requestDto.Color))
         {
             logger.LogWarning("Invalid group data provided. Name: {Name}, Color: {Color}. TraceId: {TraceId}", 
                 requestDto.Name, requestDto.Color, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Name and Color are required", traceId));
-        }
-
-        var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to create group. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
         }
 
         logger.LogInformation("Creating new group '{GroupName}' for user {UserId}. TraceId: {TraceId}", 

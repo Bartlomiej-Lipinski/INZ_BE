@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Recommendations;
 using WebApplication1.Features.Recommendations.Dtos;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
@@ -14,6 +15,7 @@ public class GetRecommendationByIdTest : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
         var result = await GetRecommendationById.Handle(
+            "g1",
             "nonexistent",
             dbContext,
             CreateClaimsPrincipal("test"),
@@ -30,13 +32,11 @@ public class GetRecommendationByIdTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
-        dbContext.Users.Add(user);
-        
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
-        
-        var member = TestDataFactory.CreateGroupUser(group.Id, user.Id);
-        dbContext.GroupUsers.Add(member);
+        dbContext.Users.Add(user);
+        dbContext.GroupUsers.Add(groupUser);
 
         var recommendation = TestDataFactory.CreateRecommendation(
             "r1",
@@ -54,10 +54,10 @@ public class GetRecommendationByIdTest : TestBase
 
         var reaction = TestDataFactory.CreateReaction(recommendation.Id, "Recommendation", user.Id);
         dbContext.Reactions.Add(reaction);
-
         await dbContext.SaveChangesAsync();
         
         var result = await GetRecommendationById.Handle(
+            group.Id,
             recommendation.Id,
             dbContext,
             CreateClaimsPrincipal(user.Id),

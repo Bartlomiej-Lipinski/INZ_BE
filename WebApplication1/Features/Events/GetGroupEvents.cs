@@ -40,17 +40,21 @@ public class GetGroupEvents : IEndpoint
         }
 
         var group = await dbContext.Groups
+            .AsNoTracking()
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-
-        var isMember = group.GroupUsers.Any(gu => gu.UserId == userId);
-        if (!isMember)
         {
-            logger.LogWarning("User {UserId} tried to get events for group {GroupId} without membership." +
-                              " TraceId: {TraceId}", userId, groupId, traceId);
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to get group events, but is not a member. " +
+                              "TraceId: {TraceId}", userId, traceId);
             return Results.Forbid();
         }
 

@@ -1,6 +1,6 @@
 ﻿namespace WebApplication1.Features.Groups.Dtos;
 
-public record JoinRequestResponseDto(string GuGroupId, string GroupName, string GuUserId, string? UserUserName)
+public record JoinRequestResponseDto
 {
     public string GroupId { get; init; } = null!;
     public string GroupName { get; init; }

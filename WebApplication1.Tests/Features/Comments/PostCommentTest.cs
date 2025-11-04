@@ -14,6 +14,7 @@ public class PostCommentTest : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
         var result = await PostComment.Handle(
+            "g1",
             "rec1",
             TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
@@ -31,10 +32,15 @@ public class PostCommentTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
         var result = await PostComment.Handle(
+            group.Id,
             "nonexistent",
             TestDataFactory.CreateCommentRequestDto("Recommendation", "Hello!"),
             dbContext,
@@ -62,6 +68,7 @@ public class PostCommentTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await PostComment.Handle(
+            group.Id,
             "r1",
             TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
@@ -96,6 +103,7 @@ public class PostCommentTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await PostComment.Handle(
+            group.Id,
             "r1",
             TestDataFactory.CreateCommentRequestDto("Super!"),
             dbContext,

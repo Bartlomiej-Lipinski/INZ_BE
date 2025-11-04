@@ -12,7 +12,7 @@ public class DeleteRecommendation : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/recommendations/{recommendationId}", Handle)
+        app.MapDelete("/groups/{groupId}/recommendations/{recommendationId}", Handle)
             .WithName("DeleteRecommendation")
             .WithDescription("Deletes a recommendation and its related comments and reactions")
             .WithTags("Recommendations")
@@ -21,6 +21,7 @@ public class DeleteRecommendation : IEndpoint
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string recommendationId,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
@@ -29,13 +30,32 @@ public class DeleteRecommendation : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                            ?? currentUser.FindFirst("sub")?.Value;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
             logger.LogWarning("Unauthorized attempt to delete recommendation. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
+        }
+
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (group == null)
+        {
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to delete recommendation in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.Forbid();
         }
         
         var recommendation = await dbContext.Recommendations
@@ -47,10 +67,11 @@ public class DeleteRecommendation : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Recommendation not found.", traceId));
         }
         
-        if (recommendation.UserId != currentUserId)
+        var isAdmin = groupUser.IsAdmin;
+        if (recommendation.UserId != userId && !isAdmin)
         {
-            logger.LogWarning("User {UserId} tried to delete recommendation {RecommendationId} not owned by them. " +
-                              "TraceId: {TraceId}", currentUserId, recommendationId, traceId);
+            logger.LogWarning("User {UserId} attempted to delete recommendation {Id} they do not own and is not admin. " +
+                              "TraceId: {TraceId}", userId, recommendationId, traceId);
             return Results.Forbid();
         }
         
@@ -81,8 +102,9 @@ public class DeleteRecommendation : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Recommendation {RecommendationId} deleted by user {UserId}. TraceId: {TraceId}", 
-            recommendationId, currentUserId, traceId);
+            recommendationId, userId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok("Recommendation deleted successfully.", recommendationId, traceId));
+        return Results.Ok(ApiResponse<string>
+            .Ok("Recommendation deleted successfully.", recommendationId, traceId));
     }
 }

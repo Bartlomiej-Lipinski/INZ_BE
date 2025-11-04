@@ -31,7 +31,7 @@ public class GetUserByIdTest: TestBase
         var okResult = result as Ok<ApiResponse<UserResponseDto>>;
         okResult!.Value!.Success.Should().BeTrue();
         okResult.Value.Data!.Id.Should().Be("user1");
-        okResult.Value.Data.UserName.Should().Be("testUser");
+        okResult.Value.Data.Username.Should().Be("testUser");
         okResult.Value.Data.Email.Should().Be("test@test.com");
         okResult.Value.TraceId.Should().Be("test-trace-id");
     }

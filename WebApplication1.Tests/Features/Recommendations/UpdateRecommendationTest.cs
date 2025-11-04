@@ -14,6 +14,7 @@ public class UpdateRecommendationTest : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
         var result = await UpdateRecommendation.Handle(
+            "g1",
             "rec1",
             TestDataFactory.CreateRecommendationRequestDto("New title", "Updated content"),
             dbContext,
@@ -31,10 +32,15 @@ public class UpdateRecommendationTest : TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
+        dbContext.Groups.Add(group);
+        dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
         var result = await UpdateRecommendation.Handle(
+            group.Id,
             "nonexistent",
             TestDataFactory.CreateRecommendationRequestDto("Title", "Content"),
             dbContext,
@@ -68,6 +74,7 @@ public class UpdateRecommendationTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await UpdateRecommendation.Handle(
+            group.Id,
             "rec1",
             TestDataFactory.CreateRecommendationRequestDto("Hacked!", "Evil update"),
             dbContext,
@@ -99,6 +106,7 @@ public class UpdateRecommendationTest : TestBase
         await dbContext.SaveChangesAsync();
         
         var result = await UpdateRecommendation.Handle(
+            group.Id,
             "rec1",
             TestDataFactory.CreateRecommendationRequestDto(
                 "Updated title",

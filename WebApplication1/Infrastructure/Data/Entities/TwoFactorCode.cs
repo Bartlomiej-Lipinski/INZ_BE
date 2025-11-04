@@ -11,4 +11,6 @@ public class TwoFactorCode
     public bool IsUsed { get; set; }
     public string? IpAddress { get; set; }
     public string? UserAgent { get; set; }
+    
+    public User User { get; set; } = null!;
 }
