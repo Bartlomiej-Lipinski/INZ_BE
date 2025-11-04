@@ -1,5 +1,6 @@
 using System.Text;
 using System.Threading.RateLimiting;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using WebApplication1.Extensions;
 using WebApplication1.Features.Auth.Services;
+using WebApplication1.Features.Groups.Chat;
 using WebApplication1.Infrastructure.Configuration;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
@@ -15,7 +17,7 @@ using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Middlewares;
 
-DotNetEnv.Env.Load();
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,7 +30,8 @@ builder.Services.AddScoped<IEmailService, SendGridEmailService>();
 builder.Services.AddLoginSecurity();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
-
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddRateLimiter(options =>
 {
     // Global limiter: 20 requests/min/IP
@@ -112,62 +115,62 @@ var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
 const string RefreshScheme = "RefreshScheme";
 
 builder.Services.AddAuthentication(opt =>
-{
-    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(opt =>
-{
-    opt.Events = new JwtBearerEvents
     {
-        OnMessageReceived = context =>
+        opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(opt =>
+    {
+        opt.Events = new JwtBearerEvents
         {
-            var accessToken = context.Request.Cookies["access_token"];
-            if (!string.IsNullOrEmpty(accessToken))
-                context.Token = accessToken;
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Cookies["access_token"];
+                if (!string.IsNullOrEmpty(accessToken))
+                    context.Token = accessToken;
 
-            return Task.CompletedTask;
-        }
-    };
+                return Task.CompletedTask;
+            }
+        };
 
-    opt.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = !builder.Environment.IsDevelopment(),
-        ValidateAudience = !builder.Environment.IsDevelopment(),
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        IssuerSigningKey = key,
-        ClockSkew = TimeSpan.Zero
-    };
-})
-.AddJwtBearer(RefreshScheme, opt =>
-{
-    opt.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
+        opt.TokenValidationParameters = new TokenValidationParameters
         {
-            var refreshToken = context.Request.Cookies["refresh_token"];
-            if (!string.IsNullOrEmpty(refreshToken))
-                context.Token = refreshToken;
-
-            return Task.CompletedTask;
-        }
-    };
-
-    opt.TokenValidationParameters = new TokenValidationParameters
+            ValidateIssuer = !builder.Environment.IsDevelopment(),
+            ValidateAudience = !builder.Environment.IsDevelopment(),
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = key,
+            ClockSkew = TimeSpan.Zero
+        };
+    })
+    .AddJwtBearer(RefreshScheme, opt =>
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = key,
-        ValidateIssuer = !builder.Environment.IsDevelopment(),
-        ValidateAudience = !builder.Environment.IsDevelopment(),
-        ValidateLifetime = false,
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        ClockSkew = TimeSpan.Zero
-    };
-});
+        opt.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var refreshToken = context.Request.Cookies["refresh_token"];
+                if (!string.IsNullOrEmpty(refreshToken))
+                    context.Token = refreshToken;
+
+                return Task.CompletedTask;
+            }
+        };
+
+        opt.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = key,
+            ValidateIssuer = !builder.Environment.IsDevelopment(),
+            ValidateAudience = !builder.Environment.IsDevelopment(),
+            ValidateLifetime = false,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
 
 builder.Services.AddAuthorizationBuilder()
@@ -217,12 +220,14 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 app.UseMiddleware<ApiExceptionMiddleware>();
 app.UseCors("AllowFrontend");
+app.MapHub<ChatHub>("/api/hubs/chat");
 app.UseRateLimiter();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 var uploadsFolder = builder.Configuration["Storage:UploadsFolder"] ?? Path.Combine("wwwroot", "uploads");
 var uploadsPath = Path.IsPathRooted(uploadsFolder)
     ? uploadsFolder

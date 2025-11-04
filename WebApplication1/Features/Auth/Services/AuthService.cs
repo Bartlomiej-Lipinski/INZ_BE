@@ -23,8 +23,6 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
 {
     public async Task<(string token, string refreshToken)> GenerateTokensAsync(User user)
     {
-        // Implementation for generating tokens
-        // This is a placeholder implementation
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
@@ -33,7 +31,7 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Auth:Key"]
                                                                   ?? throw new InvalidOperationException()));
         //TODO fine tune token expiration times
-        var token = new JwtSecurityToken(claims: claims,expires:DateTime.UtcNow.AddMinutes(15),
+        var token = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddMinutes(15),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         var refresh = new RefreshToken()
@@ -56,12 +54,12 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
         {
             return;
         }
-        
+
         var tokenId = Guid.NewGuid();
         var randomBytes = RandomNumberGenerator.GetBytes(32);
         var randomPart = Convert.ToBase64String(randomBytes);
         var rawToken = $"{tokenId}:{randomPart}";
-        
+
         var tokenHash = ComputeSha256Base64(rawToken);
         var expiresAt = DateTime.UtcNow.AddHours(1);
 
@@ -76,27 +74,26 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
 
         await context.PasswordResetTokens.AddAsync(tokenEntity);
         await context.SaveChangesAsync();
-        
+
         var resetLink = $"/reset-password?token={Uri.EscapeDataString(rawToken)}"; //TODO add frontend base url
         var emailBody = $"Kliknij w link, aby zresetować hasło:\n\n{resetLink}\n\nLink wygasa za 1 godzinę.";
         await emailService.SendAsync(user.Email!, "Reset hasła", emailBody);
     }
-    
+
     public async Task<bool> ResetPasswordAsync(string token, string newPassword)
     {
         if (string.IsNullOrWhiteSpace(token)) return false;
-        
+
         var tokenHash = ComputeSha256Base64(token);
-        
+
         var tokenRecord = await context.PasswordResetTokens
             .Include(t => t.User)
-            .FirstOrDefaultAsync(
-                t => t.TokenHash == tokenHash && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
+            .FirstOrDefaultAsync(t => t.TokenHash == tokenHash && !t.IsUsed && t.ExpiresAt > DateTime.UtcNow);
 
         var user = tokenRecord?.User;
         if (user == null)
             return false;
-        
+
         var passwordHasher = new PasswordHasher<User>();
         user.PasswordHash = passwordHasher.HashPassword(user, newPassword);
 
