@@ -28,6 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Folder Include="Features\Timeline\" />
       <Folder Include="Migrations\" />
       <Folder Include="Storage\" />
     </ItemGroup>

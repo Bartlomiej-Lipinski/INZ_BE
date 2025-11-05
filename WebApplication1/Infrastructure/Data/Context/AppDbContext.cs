@@ -32,6 +32,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Settlement> Settlements { get; set; } = null!;
     public DbSet<Poll> Polls { get; set; } = null!;
     public DbSet<PollOption> PollOptions { get; set; } = null!;
+    public DbSet<TimelineCustomEvent> TimelineCustomEvents { get; set; } = null!;
      
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -393,6 +394,26 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                         j.HasKey("UserId", "PollOptionId");
                         j.ToTable("UserPollOptions");
                     });
+        });
+        
+        builder.Entity<TimelineCustomEvent>(entity =>
+        {
+            entity.HasKey(tcs => tcs.Id);
+            entity.Property(tcs => tcs.GroupId).IsRequired();
+            entity.Property(tcs => tcs.CreatedByUserId).IsRequired();
+            entity.Property(tcs => tcs.Title).IsRequired().HasMaxLength(100);
+            entity.Property(tcs => tcs.Date).IsRequired();
+            entity.Property(tcs => tcs.Description).HasMaxLength(255);
+
+            entity.HasOne(tcs => tcs.Group)
+                .WithMany(g => g.TimelineCustomEvents)
+                .HasForeignKey(tcs => tcs.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(tcs => tcs.User)
+                .WithMany(u => u.TimelineCustomEvents)
+                .HasForeignKey(tcs => tcs.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
