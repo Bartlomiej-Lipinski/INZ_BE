@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
@@ -27,6 +28,35 @@ public class GetSecretSanta : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+        var currentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? httpContext.User.FindFirst("sub")?.Value;
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            logger.LogWarning("Unauthorized attempt to access Secret Santa. TraceId: {TraceId}", traceId);
+            return Results.Unauthorized();
+        }
+
+        var getGroup = await context.Groups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+        if (getGroup == null)
+        {
+            logger.LogWarning("Group not found {GroupId} for Secret Santa. TraceId: {TraceId}",
+                groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
+        }
+
+        var isUserInGroup = await context.GroupUsers
+            .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId, cancellationToken);
+
+        if (!isUserInGroup)
+        {
+            logger.LogWarning(
+                "User {UserId} attempted to access Secret Santa for group {GroupId} without membership. TraceId: {TraceId}",
+                currentUserId, groupId, traceId);
+            return Results.Forbid();
+        }
 
         logger.LogInformation("Secret Santa assignment requested for GroupId: {GroupId}. TraceId: {TraceId}",
             groupId, traceId);
@@ -64,15 +94,6 @@ public class GetSecretSanta : IEndpoint
 
         logger.LogInformation("Secret Santa pairs assigned for GroupId: {GroupId}. TraceId: {TraceId}",
             groupId, traceId);
-
-        var getGroup = await context.Groups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
-
-        if (getGroup == null)
-        {
-            logger.LogWarning("Group not found {GroupId} for Secret Santa. TraceId: {TraceId}",
-                groupId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-        }
 
         return Results.Ok(
             ApiResponse<List<SecretSantaPairDto>>.Ok(pairs, "Secret Santa pairs assigned successfully", traceId));
