@@ -63,7 +63,7 @@ public class GetSecretSanta : IEndpoint
 
         var groupUsers = await context.GroupUsers
             .Include(gu => gu.User)
-            .Where(gu => gu.GroupId == groupId)
+            .Where(gu => gu.GroupId == groupId && gu.AcceptanceStatus == AcceptanceStatus.Accepted)
             .ToListAsync(cancellationToken);
 
         if (groupUsers.Count < 2)
