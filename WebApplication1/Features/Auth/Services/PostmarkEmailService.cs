@@ -38,7 +38,7 @@ internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger
 
             if (sendResult.Status == PostmarkStatus.Success)
             {
-                logger.LogInformation("Email sent successfully  with subject {Subject}", subject);
+                logger.LogInformation("Email sent successfully with subject {Subject}", subject);
             }
             else
             {
