@@ -32,7 +32,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Settlement> Settlements { get; set; } = null!;
     public DbSet<Poll> Polls { get; set; } = null!;
     public DbSet<PollOption> PollOptions { get; set; } = null!;
-    public DbSet<TimelineCustomEvent> TimelineCustomEvents { get; set; } = null!;
+    public DbSet<TimelineEvent> TimelineEvents { get; set; } = null!;
      
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -86,7 +86,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(p => p.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             
-            entity.HasMany(g => g.TimelineCustomEvents)
+            entity.HasMany(g => g.TimelineEvents)
                 .WithOne(tce => tce.Group)
                 .HasForeignKey(tce => tce.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -401,18 +401,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                     });
         });
         
-        builder.Entity<TimelineCustomEvent>(entity =>
+        builder.Entity<TimelineEvent>(entity =>
         {
-            entity.HasKey(tce => tce.Id);
-            entity.Property(tce => tce.GroupId).IsRequired();
-            entity.Property(tce => tce.Type).IsRequired();
-            entity.Property(tce => tce.Title).IsRequired().HasMaxLength(100);
-            entity.Property(tce => tce.Date).IsRequired();
-            entity.Property(tce => tce.Description).HasMaxLength(255);
+            entity.HasKey(te => te.Id);
+            entity.Property(te => te.GroupId).IsRequired();
+            entity.Property(te => te.Type).IsRequired();
+            entity.Property(te => te.Title).IsRequired().HasMaxLength(100);
+            entity.Property(te => te.Date).IsRequired();
+            entity.Property(te => te.Description).HasMaxLength(255);
 
-            entity.HasOne(tce => tce.Group)
-                .WithMany(g => g.TimelineCustomEvents)
-                .HasForeignKey(tce => tce.GroupId)
+            entity.HasOne(te => te.Group)
+                .WithMany(g => g.TimelineEvents)
+                .HasForeignKey(te => te.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

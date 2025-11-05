@@ -26,14 +26,14 @@ public class GetTimelineTest : TestBase
             null, 
             DateTime.Now
         );
-        var customEvent = TestDataFactory.CreateTimelineCustomEvent(
+        var customEvent = TestDataFactory.CreateTimelineEvent(
             "ce1", group.Id, "Anniversary", DateTime.UtcNow.AddDays(5));
 
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);
         dbContext.GroupUsers.Add(groupUser);
         dbContext.Events.Add(groupEvent);
-        dbContext.TimelineCustomEvents.Add(customEvent);
+        dbContext.TimelineEvents.Add(customEvent);
         await dbContext.SaveChangesAsync();
 
         var result = await GetTimeline.Handle(

@@ -2,7 +2,7 @@
 
 namespace WebApplication1.Infrastructure.Data.Entities;
 
-public record TimelineCustomEvent
+public record TimelineEvent
 {
     public string Id { get; set; } = null!;
     public string GroupId { get; set; } = null!;
@@ -18,8 +18,6 @@ public record TimelineCustomEvent
 public enum EventType
 {
     Birthday,
-    TaskDeadline,
-    BetDeadline,
     GroupEvent,
     ImportantDate
 }

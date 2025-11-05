@@ -19,5 +19,5 @@ public class Group
     public ICollection<Expense> Expenses { get; set; } = new List<Expense>();
     public ICollection<Settlement> Settlements { get; set; } = new List<Settlement>();
     public ICollection<Poll> Polls { get; set; } = new List<Poll>();
-    public ICollection<TimelineCustomEvent> TimelineCustomEvents { get; set; } = new List<TimelineCustomEvent>();
+    public ICollection<TimelineEvent> TimelineEvents { get; set; } = new List<TimelineEvent>();
 }

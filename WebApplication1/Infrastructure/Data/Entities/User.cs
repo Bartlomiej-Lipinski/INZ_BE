@@ -48,5 +48,4 @@ public class User : IdentityUser
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<Recommendation> Recommendations { get; set; } = new List<Recommendation>();
     public ICollection<TwoFactorCode> TwoFactorCodes { get; set; } = new List<TwoFactorCode>();
-    public ICollection<TimelineCustomEvent> TimelineCustomEvents { get; set; } = new List<TimelineCustomEvent>();
 }

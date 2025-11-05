@@ -44,7 +44,7 @@ public class GetTimeline : IEndpoint
             .Include(g => g.GroupUsers)
             .ThenInclude(gu => gu.User)
             .Include(g => g.Events)
-            .Include(g => g.TimelineCustomEvents)
+            .Include(g => g.TimelineEvents)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
@@ -81,7 +81,7 @@ public class GetTimeline : IEndpoint
                 Type = EventType.GroupEvent
             }).ToList();
         
-        var customEvents = group.TimelineCustomEvents
+        var customEvents = group.TimelineEvents
             .Select(e => new TimelineEventResponseDto
             {
                 Id = Guid.NewGuid().ToString(),
