@@ -131,7 +131,7 @@ internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger
             else
             {
                 logger.LogError("Failed to send two-factor code. Status: {Status}, Message: {Message}",
-                    email, sendResult.Status);
+                    sendResult.Status, sendResult.Message);
                 throw new InvalidOperationException($"Failed to send two-factor code: {sendResult.Message}");
             }
         }
