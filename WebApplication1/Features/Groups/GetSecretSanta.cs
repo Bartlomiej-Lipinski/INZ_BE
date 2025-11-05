@@ -2,7 +2,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -22,48 +24,44 @@ public class GetSecretSanta : IEndpoint
 
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
-        AppDbContext context,
+        ClaimsPrincipal currentUser,
+        AppDbContext dbContext,
         HttpContext httpContext,
         ILogger<GetSecretSanta> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                     ?? currentUser.FindFirst("sub")?.Value;
 
-        var currentUserId = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                            ?? httpContext.User.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(currentUserId))
+        if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to access Secret Santa. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt. TraceId: {TraceId}", traceId);
             return Results.Unauthorized();
         }
 
-        var getGroup = await context.Groups.FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+        var group = await dbContext.Groups
+            .AsNoTracking()
+            .Include(g => g.GroupUsers)
+            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
-        if (getGroup == null)
+        if (group == null)
         {
-            logger.LogWarning("Group not found {GroupId} for Secret Santa. TraceId: {TraceId}",
-                groupId, traceId);
+            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        var isUserInGroup = await context.GroupUsers
-            .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId, cancellationToken);
-
-        if (!isUserInGroup)
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        if (groupUser == null)
         {
-            logger.LogWarning(
-                "User {UserId} attempted to access Secret Santa for group {GroupId} without membership. TraceId: {TraceId}",
-                currentUserId, groupId, traceId);
+            logger.LogWarning("User {UserId} attempted to retrieve event in group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
         }
 
-        logger.LogInformation("Secret Santa assignment requested for GroupId: {GroupId}. TraceId: {TraceId}",
-            groupId, traceId);
-
-        var groupUsers = await context.GroupUsers
+        var groupUsers = await dbContext.GroupUsers
             .Include(gu => gu.User)
-            .Where(gu => gu.GroupId == groupId)
+            .Where(gu => gu.GroupId == groupId && gu.AcceptanceStatus == AcceptanceStatus.Accepted)
             .ToListAsync(cancellationToken);
 
         if (groupUsers.Count < 2)
@@ -88,16 +86,15 @@ public class GetSecretSanta : IEndpoint
 
         var receivers = shuffled.Skip(1).Append(shuffled.First()).ToList();
 
-        var pairs = new List<SecretSantaPairDto>();
+        var pairs = new List<GetSecretSantaResponseDto>();
         for (var i = 0; i < shuffled.Count; i++)
-            pairs.Add(new SecretSantaPairDto(shuffled[i].FullName, receivers[i].FullName));
+            pairs.Add(new GetSecretSantaResponseDto(shuffled[i].FullName, receivers[i].FullName));
 
         logger.LogInformation("Secret Santa pairs assigned for GroupId: {GroupId}. TraceId: {TraceId}",
             groupId, traceId);
 
         return Results.Ok(
-            ApiResponse<List<SecretSantaPairDto>>.Ok(pairs, "Secret Santa pairs assigned successfully", traceId));
+            ApiResponse<List<GetSecretSantaResponseDto>>.Ok(pairs, "Secret Santa pairs assigned successfully",
+                traceId));
     }
-
-    public record SecretSantaPairDto(string Giver, string Receiver);
 }

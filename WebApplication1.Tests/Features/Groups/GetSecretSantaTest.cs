@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Groups;
+using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Groups;
@@ -23,6 +24,7 @@ public class GetSecretSantaTest : TestBase
 
         var result = await GetSecretSanta.Handle(
             group.Id,
+            CreateClaimsPrincipal(),
             dbContext,
             CreateHttpContext(user.Id),
             NullLogger<GetSecretSanta>.Instance,
@@ -47,6 +49,7 @@ public class GetSecretSantaTest : TestBase
 
         var result = await GetSecretSanta.Handle(
             "g-no-group",
+            CreateClaimsPrincipal(),
             dbContext,
             CreateHttpContext(user1.Id),
             NullLogger<GetSecretSanta>.Instance,
@@ -73,15 +76,15 @@ public class GetSecretSantaTest : TestBase
 
         var result = await GetSecretSanta.Handle(
             group.Id,
+            CreateClaimsPrincipal(),
             dbContext,
             CreateHttpContext(user1.Id),
             NullLogger<GetSecretSanta>.Instance,
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Ok<ApiResponse<List<GetSecretSanta.SecretSantaPairDto>>>>();
-
-        var okResult = result as Ok<ApiResponse<List<GetSecretSanta.SecretSantaPairDto>>>;
+        result.Should().BeOfType<Ok<ApiResponse<List<GetSecretSantaResponseDto>>>>();
+        var okResult = result as Ok<ApiResponse<List<GetSecretSantaResponseDto>>>;
         okResult!.Value!.Success.Should().BeTrue();
         okResult.Value.Data.Should().NotBeNull();
         okResult.Value.Data!.Count.Should().Be(2);
