@@ -17,8 +17,7 @@ public class UpdateRecommendation : IEndpoint
             .WithName("UpdateRecommendation")
             .WithDescription("Updates an existing recommendation if the user is the author.")
             .WithTags("Recommendations")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

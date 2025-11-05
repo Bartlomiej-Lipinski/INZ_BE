@@ -18,8 +18,7 @@ public class GetUserById : IEndpoint
             .WithName("GetUserById")
             .WithDescription("Returns a user by ID")
             .WithTags("Users")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

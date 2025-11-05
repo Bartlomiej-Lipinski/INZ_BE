@@ -18,8 +18,7 @@ public class PostAvailabilityRange : IEndpoint
             .WithName("PostAvailabilityRange")
             .WithDescription("Adds an availability range for a user within an event")
             .WithTags("Availability")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

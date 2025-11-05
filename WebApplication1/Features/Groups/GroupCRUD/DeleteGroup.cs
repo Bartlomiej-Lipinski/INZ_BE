@@ -16,8 +16,7 @@ public class DeleteGroup : IEndpoint
             .WithName("DeleteGroup")
             .WithDescription("Deletes a specific group")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

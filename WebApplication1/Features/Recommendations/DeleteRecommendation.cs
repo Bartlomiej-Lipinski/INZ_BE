@@ -16,8 +16,7 @@ public class DeleteRecommendation : IEndpoint
             .WithName("DeleteRecommendation")
             .WithDescription("Deletes a recommendation and its related comments and reactions")
             .WithTags("Recommendations")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

@@ -18,8 +18,7 @@ public class GetPollById : IEndpoint
             .WithName("GetPollById")
             .WithDescription("Retrieves a single poll by its ID within a group")
             .WithTags("Polls")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

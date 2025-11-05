@@ -18,8 +18,7 @@ public class PostPoll : IEndpoint
             .WithName("PostPoll")
             .WithDescription("Creates a new poll within a group by a member")
             .WithTags("Polls")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

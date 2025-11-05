@@ -16,8 +16,7 @@ public class DeleteUserFromGroup : IEndpoint
             .WithName("DeleteUserFromGroup")
             .WithDescription("Deletes a user from a group")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,

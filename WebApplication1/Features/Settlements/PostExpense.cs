@@ -19,8 +19,7 @@ public class PostExpense : IEndpoint
             .WithName("PostExpense")
             .WithDescription("Creates a new expense within a group by a member")
             .WithTags("Settlements")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

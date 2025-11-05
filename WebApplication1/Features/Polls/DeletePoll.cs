@@ -16,8 +16,7 @@ public class DeletePoll : IEndpoint
             .WithName("DeletePoll")
             .WithDescription("Deletes a specific poll from a group")
             .WithTags("Polls")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

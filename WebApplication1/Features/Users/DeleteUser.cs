@@ -17,8 +17,7 @@ public class DeleteUser : IEndpoint
             .WithName("DeleteUser")
             .WithDescription("Deletes a user by username")
             .WithTags("Users")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

@@ -17,8 +17,7 @@ public class GetUserSettlements :IEndpoint
             .WithName("GetUserSettlements")
             .WithDescription("Retrieves all settlements for current user for a specific group")
             .WithTags("Settlements")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

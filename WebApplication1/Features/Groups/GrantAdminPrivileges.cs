@@ -17,8 +17,7 @@ public class GrantAdminPrivileges : IEndpoint
             .WithName("GrantAdminPrivileges")
             .WithDescription("Grants admin Privileges to a user in a group")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     public static async Task<IResult> Handle(
         [FromBody] GrantAdminPrivilegesDto request,

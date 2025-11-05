@@ -17,8 +17,7 @@ public class UpdateEvent : IEndpoint
             .WithName("UpdateEvent")
             .WithDescription("Updates an existing event in a group")
             .WithTags("Events")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

@@ -16,8 +16,7 @@ public class DeleteEvent : IEndpoint
             .WithName("DeleteEvent")
             .WithDescription("Deletes a specific event from a group")
             .WithTags("Events")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

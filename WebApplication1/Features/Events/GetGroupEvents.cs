@@ -17,8 +17,7 @@ public class GetGroupEvents : IEndpoint
             .WithName("GetGroupEvents")
             .WithDescription("Retrieves all events for a specific group")
             .WithTags("Events")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

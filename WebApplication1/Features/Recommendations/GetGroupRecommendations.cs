@@ -18,8 +18,7 @@ public class GetGroupRecommendations: IEndpoint
             .WithName("GetGroupRecommendations")
             .WithDescription("Retrieves all recommendations for a specific group")
             .WithTags("Recommendations")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

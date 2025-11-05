@@ -18,8 +18,7 @@ public class PostAvailability : IEndpoint
             .WithName("PostAvailability")
             .WithDescription("Creates or updates user's availability for an event")
             .WithTags("Availabilities")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

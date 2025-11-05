@@ -16,8 +16,7 @@ public class UpdateUserTwoFactorVerificationStatus : IEndpoint
         .WithName("UpdateUserTwoFactorVerificationStatus")
         .WithSummary("Updates the two-factor verification status of a user.")
         .WithDescription("Enables or disables two-factor verification for a specified user.")
-        .RequireAuthorization()
-        .WithOpenApi();
+        .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

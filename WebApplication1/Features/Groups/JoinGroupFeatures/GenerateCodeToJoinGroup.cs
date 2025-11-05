@@ -16,8 +16,7 @@ public class GenerateCodeToJoinGroup : IEndpoint
             .WithName("GenerateCodeToJoinGroup")
             .WithDescription("Generates a new code to join a group")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

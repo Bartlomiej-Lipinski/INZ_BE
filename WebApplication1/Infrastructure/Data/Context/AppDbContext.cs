@@ -86,6 +86,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(p => p.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             
+            entity.HasMany(g => g.TimelineCustomEvents)
+                .WithOne(tce => tce.Group)
+                .HasForeignKey(tce => tce.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
             entity.HasIndex(g => g.Code).IsUnique();
         });
         
@@ -398,21 +403,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         
         builder.Entity<TimelineCustomEvent>(entity =>
         {
-            entity.HasKey(tcs => tcs.Id);
-            entity.Property(tcs => tcs.GroupId).IsRequired();
-            entity.Property(tcs => tcs.CreatedByUserId).IsRequired();
-            entity.Property(tcs => tcs.Title).IsRequired().HasMaxLength(100);
-            entity.Property(tcs => tcs.Date).IsRequired();
-            entity.Property(tcs => tcs.Description).HasMaxLength(255);
+            entity.HasKey(tce => tce.Id);
+            entity.Property(tce => tce.GroupId).IsRequired();
+            entity.Property(tce => tce.Type).IsRequired();
+            entity.Property(tce => tce.Title).IsRequired().HasMaxLength(100);
+            entity.Property(tce => tce.Date).IsRequired();
+            entity.Property(tce => tce.Description).HasMaxLength(255);
 
-            entity.HasOne(tcs => tcs.Group)
+            entity.HasOne(tce => tce.Group)
                 .WithMany(g => g.TimelineCustomEvents)
-                .HasForeignKey(tcs => tcs.GroupId)
-                .OnDelete(DeleteBehavior.Cascade);
-            
-            entity.HasOne(tcs => tcs.User)
-                .WithMany(u => u.TimelineCustomEvents)
-                .HasForeignKey(tcs => tcs.CreatedByUserId)
+                .HasForeignKey(tce => tce.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

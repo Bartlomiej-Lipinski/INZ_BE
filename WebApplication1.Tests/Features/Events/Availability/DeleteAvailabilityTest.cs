@@ -100,7 +100,7 @@ public class DeleteAvailabilityTest : TestBase
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, user.Id, "Test Event", null, null, DateTime.UtcNow);
+            "e1", group.Id, user.Id, "Test Event", null, DateTime.UtcNow, null, DateTime.UtcNow);
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);
         dbContext.GroupUsers.Add(groupUser);
@@ -127,7 +127,7 @@ public class DeleteAvailabilityTest : TestBase
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, user.Id, "Test Event", null, null, DateTime.UtcNow);
+            "e1", group.Id, user.Id, "Test Event", null, DateTime.UtcNow, null, DateTime.UtcNow);
         var availability = TestDataFactory.CreateEventAvailability(
             evt.Id, user.Id, EventAvailabilityStatus.Going, DateTime.UtcNow);
         dbContext.Users.Add(user);

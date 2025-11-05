@@ -18,8 +18,7 @@ public class PostComment : IEndpoint
             .WithName("PostComment")
             .WithDescription("Adds a comment to a target by a group member")
             .WithTags("Comments")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

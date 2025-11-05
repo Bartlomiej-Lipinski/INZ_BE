@@ -17,8 +17,7 @@ public class DeleteExpense : IEndpoint
             .WithName("DeleteExpense")
             .WithDescription("Deletes a specific expense from a group")
             .WithTags("Settlements")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

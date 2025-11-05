@@ -17,8 +17,7 @@ public class GetGroupPolls : IEndpoint
             .WithName("GetGroupPolls")
             .WithDescription("Retrieves all polls for a specific group")
             .WithTags("Polls")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

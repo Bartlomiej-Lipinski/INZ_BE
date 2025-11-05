@@ -21,6 +21,7 @@ public class ChooseBestDateForEventTest : TestBase
             "owner-id",
             "Test Event",
             "Details",
+            DateTime.UtcNow,
             "Online",
             DateTime.UtcNow
         );
@@ -81,6 +82,7 @@ public class ChooseBestDateForEventTest : TestBase
             user.Id,
             "Test Event",
             "Details",
+            DateTime.UtcNow,
             "Online",
             DateTime.UtcNow
         );
@@ -117,6 +119,7 @@ public class ChooseBestDateForEventTest : TestBase
             user.Id,
             "Test Event",
             "Details",
+            DateTime.UtcNow,
             "Online",
             DateTime.UtcNow
         );

@@ -18,8 +18,7 @@ public class PostEvent : IEndpoint
             .WithName("PostEvent")
             .WithDescription("Creates a new event for a group")
             .WithTags("Events")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

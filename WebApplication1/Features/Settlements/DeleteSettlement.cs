@@ -16,8 +16,7 @@ public class DeleteSettlement : IEndpoint
             .WithName("DeleteSettlement")
             .WithDescription("Deletes a specific settlement marking it as paid")
             .WithTags("Settlements")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

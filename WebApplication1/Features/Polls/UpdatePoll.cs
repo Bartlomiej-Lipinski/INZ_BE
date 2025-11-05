@@ -19,8 +19,7 @@ public class UpdatePoll : IEndpoint
             .WithName("UpdatePoll")
             .WithDescription("Updates an existing poll in a group")
             .WithTags("Polls")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

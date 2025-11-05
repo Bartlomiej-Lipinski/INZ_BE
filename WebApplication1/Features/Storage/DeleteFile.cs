@@ -16,8 +16,7 @@ namespace WebApplication1.Features.Storage
                 .WithName("DeleteFile")
                 .WithDescription("Delete file by id")
                 .WithTags("Storage")
-                .RequireAuthorization()
-                .WithOpenApi();
+                .RequireAuthorization();
         }
 
         public static async Task<IResult> Handle(

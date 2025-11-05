@@ -17,8 +17,7 @@ public class GetEventById : IEndpoint
             .WithName("GetEventById")
             .WithDescription("Retrieves a single event by its ID within a group")
             .WithTags("Events")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

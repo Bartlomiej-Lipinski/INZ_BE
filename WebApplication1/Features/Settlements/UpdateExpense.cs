@@ -19,8 +19,7 @@ public class UpdateExpense : IEndpoint
             .WithName("UpdateExpense")
             .WithDescription("Updates an existing expense in a group")
             .WithTags("Settlements")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

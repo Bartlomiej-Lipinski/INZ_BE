@@ -16,8 +16,7 @@ public class ChooseBestDateForEvent : IEndpoint
             .WithName("ChooseBestDateForEvent")
             .WithDescription("Chooses the best date for an event based on calculated suggestions")
             .WithTags("Events")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

@@ -18,8 +18,7 @@ public class RejectUserJoinRequest : IEndpoint
             .WithName("RejectUserJoinRequest")
             .WithDescription("Rejects a user's join request to a group")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

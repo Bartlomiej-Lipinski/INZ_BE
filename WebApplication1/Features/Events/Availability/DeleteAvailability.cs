@@ -16,8 +16,7 @@ public class DeleteAvailability : IEndpoint
             .WithName("DeleteAvailability")
             .WithDescription("Deletes user's availability for an event")
             .WithTags("Availabilities")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

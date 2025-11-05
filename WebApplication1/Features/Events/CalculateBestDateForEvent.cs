@@ -17,8 +17,7 @@ public class CalculateBestDateForEvent : IEndpoint
             .WithName("CalculateBestDateForEvent")
             .WithDescription("Calculates the best date for an event based on availabilities")
             .WithTags("Events")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

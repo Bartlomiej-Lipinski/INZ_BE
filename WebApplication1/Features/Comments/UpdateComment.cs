@@ -17,8 +17,7 @@ public class UpdateComment : IEndpoint
             .WithName("UpdateComment")
             .WithDescription("Updates an existing comment for a target")
             .WithTags("Comments")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

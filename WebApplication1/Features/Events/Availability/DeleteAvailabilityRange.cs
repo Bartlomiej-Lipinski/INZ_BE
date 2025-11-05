@@ -16,8 +16,7 @@ public class DeleteAvailabilityRange: IEndpoint
             .WithName("DeleteAvailabilityRange")
             .WithDescription("Deletes all availability ranges for the current user within an event")
             .WithTags("Availability")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

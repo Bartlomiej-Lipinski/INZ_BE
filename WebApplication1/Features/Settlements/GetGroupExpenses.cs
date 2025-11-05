@@ -17,8 +17,7 @@ public class GetGroupExpenses : IEndpoint
             .WithName("GetGroupExpenses")
             .WithDescription("Retrieves all expenses for a specific group")
             .WithTags("Settlements")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

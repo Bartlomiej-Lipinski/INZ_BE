@@ -18,8 +18,7 @@ public class GetRecommendationById : IEndpoint
             .WithName("GetRecommendationById")
             .WithDescription("Retrieves a single recommendation by its ID")
             .WithTags("Recommendations")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

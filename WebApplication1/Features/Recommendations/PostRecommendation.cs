@@ -18,8 +18,7 @@ public class PostRecommendation : IEndpoint
             .WithName("PostRecommendation")
             .WithDescription("Creates a new recommendation within a group by a member")
             .WithTags("Recommendations")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

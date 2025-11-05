@@ -17,8 +17,7 @@ public class GetUserGroups : IEndpoint
         app.MapGet("/users/groups",Handle)
             .WithName("GetUserGroups")
             .WithDescription("Returns groups for the currently logged-in user")
-            .WithTags("Groups")
-            .WithOpenApi();
+            .WithTags("Groups");
     }
 
     public static async Task<ApiResponse<IEnumerable<GroupResponseDto>>> Handle(

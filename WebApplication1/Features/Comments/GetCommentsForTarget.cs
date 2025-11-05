@@ -17,8 +17,7 @@ public class GetCommentsForTarget : IEndpoint
             .WithName("GetCommentsByTarget")
             .WithDescription("Retrieves comments for a target")
             .WithTags("Comments")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

@@ -19,8 +19,7 @@ namespace WebApplication1.Features.Storage
                 .WithTags("Storage")
                 .RequireAuthorization()
                 .DisableAntiforgery()
-                .Accepts<IFormFile>("multipart/form-data")
-                .WithOpenApi();
+                .Accepts<IFormFile>("multipart/form-data");
         }
 
         public static async Task<IResult> Handle(

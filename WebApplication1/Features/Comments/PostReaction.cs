@@ -17,8 +17,7 @@ public class PostReaction : IEndpoint
             .WithName("PostReaction")
             .WithDescription("Adds or removes a like reaction to a target by a group member")
             .WithTags("Reactions")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

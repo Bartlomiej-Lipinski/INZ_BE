@@ -17,8 +17,7 @@ public class GetReactionsForTarget: IEndpoint
             .WithName("GetReactionsForTarget")
             .WithDescription("Retrieves reactions for a target")
             .WithTags("Reactions")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

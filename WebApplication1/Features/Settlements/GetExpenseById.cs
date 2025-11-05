@@ -17,8 +17,7 @@ public class GetExpenseById : IEndpoint
             .WithName("GetExpenseById")
             .WithDescription("Retrieves a single expense by its ID")
             .WithTags("Settlements")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

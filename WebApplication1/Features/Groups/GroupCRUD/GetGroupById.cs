@@ -18,8 +18,7 @@ public class GetGroupById : IEndpoint
             .WithName("GetGroupById")
             .WithDescription("Returns a group by ID")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(

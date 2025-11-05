@@ -16,8 +16,7 @@ public class DeleteComment : IEndpoint
             .WithName("DeleteComment")
             .WithDescription("Deletes a comment from a target. Allowed for comment author and target author.")
             .WithTags("Comments")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(
