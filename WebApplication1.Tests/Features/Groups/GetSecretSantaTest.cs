@@ -83,8 +83,8 @@ public class GetSecretSantaTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Ok<ApiResponse<List<GetSecretSantaResponseDto>>>>();
-        var okResult = result as Ok<ApiResponse<List<GetSecretSantaResponseDto>>>;
+        result.Should().BeOfType<Ok<ApiResponse<List<SecretSantaResponseDto>>>>();
+        var okResult = result as Ok<ApiResponse<List<SecretSantaResponseDto>>>;
         okResult!.Value!.Success.Should().BeTrue();
         okResult.Value.Data.Should().NotBeNull();
         okResult.Value.Data!.Count.Should().Be(2);

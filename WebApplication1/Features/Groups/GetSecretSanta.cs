@@ -15,11 +15,10 @@ public class GetSecretSanta : IEndpoint
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
         app.MapPost("/groups/{groupId}/secret-santa", Handle)
-            .WithName("SecretSanta")
+            .WithName("GetSecretSanta")
             .WithDescription("Assigns Secret Santa pairs within a group")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(
@@ -86,15 +85,21 @@ public class GetSecretSanta : IEndpoint
 
         var receivers = shuffled.Skip(1).Append(shuffled.First()).ToList();
 
-        var pairs = new List<GetSecretSantaResponseDto>();
+        var pairs = new List<SecretSantaResponseDto>();
         for (var i = 0; i < shuffled.Count; i++)
-            pairs.Add(new GetSecretSantaResponseDto(shuffled[i].FullName, receivers[i].FullName));
+            pairs.Add(new SecretSantaResponseDto
+            { 
+                Giver = shuffled[i].FullName, 
+                Receiver = receivers[i].FullName
+                
+            }
+        );
 
         logger.LogInformation("Secret Santa pairs assigned for GroupId: {GroupId}. TraceId: {TraceId}",
             groupId, traceId);
 
         return Results.Ok(
-            ApiResponse<List<GetSecretSantaResponseDto>>.Ok(pairs, "Secret Santa pairs assigned successfully",
+            ApiResponse<List<SecretSantaResponseDto>>.Ok(pairs, "Secret Santa pairs assigned successfully",
                 traceId));
     }
 }
