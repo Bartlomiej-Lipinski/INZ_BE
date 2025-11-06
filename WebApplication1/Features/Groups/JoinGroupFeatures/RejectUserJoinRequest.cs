@@ -52,7 +52,10 @@ public class RejectUserJoinRequest : IEndpoint
         }
         
         var currentGroupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(
+                gu => gu.GroupId == groupId 
+                      && gu.UserId == userId 
+                      && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
 
         var isAdmin = currentGroupUser?.IsAdmin == true;
         if (!isAdmin)

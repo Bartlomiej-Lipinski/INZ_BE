@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
@@ -54,7 +55,8 @@ public class UpdateExpense : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        var groupUser = group.GroupUsers
+            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
         if (groupUser == null)
         {
             logger.LogWarning("User {UserId} attempted to update expense in group {GroupId} but is not a member. " +
