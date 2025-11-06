@@ -145,7 +145,7 @@ public class AuthController(
         }
     }
 
-    [Authorize("RefreshTokenPolicy")]
+    [AllowAnonymous]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(RefreshRequest request, CancellationToken cancellationToken)
     {
