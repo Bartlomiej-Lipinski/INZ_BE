@@ -250,9 +250,9 @@ public class CalculateBestDateForEventTests : TestBase
             user1.Id, 
             "Test Event",
             "Description",
-            DateTime.UtcNow,
+            startDate,
             "Location",
-            startDate
+            DateTime.UtcNow
         );
         evt.EndDate = startDate.AddDays(5);
         evt.Availabilities = new List<EventAvailability>
