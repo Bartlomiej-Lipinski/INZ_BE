@@ -1,5 +1,6 @@
 using System.Text;
 using System.Threading.RateLimiting;
+using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,7 @@ using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 
-DotNetEnv.Env.Load();
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IStorageService, LocalStorageService>();
-builder.Services.AddScoped<IEmailService, SendGridEmailService>();
+builder.Services.AddScoped<IEmailService, PostmarkEmailService>();
 builder.Services.AddLoginSecurity();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
@@ -75,14 +76,14 @@ builder.Services.AddCors(options =>
     });
 });
 
-var sendGridKey = Environment.GetEnvironmentVariable("SENDGRID_API_KEY");
-if (string.IsNullOrEmpty(sendGridKey))
-    throw new InvalidOperationException("SENDGRID_API_KEY is missing from environment.");
+var postmarkApiKey = Environment.GetEnvironmentVariable("POSTMARK_API_KEY");
+if (string.IsNullOrEmpty(postmarkApiKey))
+    throw new InvalidOperationException("POSTMARK_API_KEY is missing from environment.");
 
-var emailSettingsSection = builder.Configuration.GetSection("SendGrid");
+var emailSettingsSection = builder.Configuration.GetSection("Postmark");
 builder.Services.Configure<EmailSettings>(options =>
 {
-    options.ApiKey = sendGridKey;
+    options.ApiKey = postmarkApiKey;
     options.SenderEmail = emailSettingsSection["SenderEmail"] ?? throw new InvalidOperationException();
     options.SenderName = emailSettingsSection["SenderName"] ?? throw new InvalidOperationException();
 });
@@ -108,72 +109,37 @@ if (secret.Length < 32)
     throw new InvalidOperationException("JWT SecretKey must be at least 32 characters long for security.");
 
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
-const string RefreshScheme = "RefreshScheme";
 
 builder.Services.AddAuthentication(opt =>
-{
-    opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(opt =>
-{
-    opt.Events = new JwtBearerEvents
     {
-        OnMessageReceived = context =>
+        opt.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        opt.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(opt =>
+    {
+        opt.Events = new JwtBearerEvents
         {
-            var accessToken = context.Request.Cookies["access_token"];
-            if (!string.IsNullOrEmpty(accessToken))
-                context.Token = accessToken;
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Cookies["access_token"];
+                if (!string.IsNullOrEmpty(accessToken))
+                    context.Token = accessToken;
 
-            return Task.CompletedTask;
-        }
-    };
+                return Task.CompletedTask;
+            }
+        };
 
-    opt.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = !builder.Environment.IsDevelopment(),
-        ValidateAudience = !builder.Environment.IsDevelopment(),
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        IssuerSigningKey = key,
-        ClockSkew = TimeSpan.Zero
-    };
-})
-.AddJwtBearer(RefreshScheme, opt =>
-{
-    opt.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
+        opt.TokenValidationParameters = new TokenValidationParameters
         {
-            var refreshToken = context.Request.Cookies["refresh_token"];
-            if (!string.IsNullOrEmpty(refreshToken))
-                context.Token = refreshToken;
-
-            return Task.CompletedTask;
-        }
-    };
-
-    opt.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = key,
-        ValidateIssuer = !builder.Environment.IsDevelopment(),
-        ValidateAudience = !builder.Environment.IsDevelopment(),
-        ValidateLifetime = false,
-        ValidIssuer = issuer,
-        ValidAudience = audience,
-        ClockSkew = TimeSpan.Zero
-    };
-});
-
-
-builder.Services.AddAuthorizationBuilder()
-    .AddPolicy("RefreshTokenPolicy", policy =>
-    {
-        policy.AddAuthenticationSchemes(RefreshScheme)
-            .RequireAuthenticatedUser();
+            ValidateIssuer = !builder.Environment.IsDevelopment(),
+            ValidateAudience = !builder.Environment.IsDevelopment(),
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
+            IssuerSigningKey = key,
+            ClockSkew = TimeSpan.Zero
+        };
     });
 
 builder.Services.AddSwaggerGen(options =>
@@ -221,10 +187,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-var uploadsFolder = builder.Configuration["Storage:UploadsFolder"] ?? Path.Combine("wwwroot", "uploads");
-var uploadsPath = Path.IsPathRooted(uploadsFolder)
-    ? uploadsFolder
-    : Path.Combine(Directory.GetCurrentDirectory(), uploadsFolder);
+
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
@@ -233,10 +197,10 @@ if (!Directory.Exists(uploadsPath))
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
-    RequestPath = "/api/storage",
+    RequestPath = "/uploads",
     OnPrepareResponse = ctx =>
     {
-        if (!(ctx.Context.User.Identity?.IsAuthenticated ?? false))
+        if (!ctx.Context.User.Identity?.IsAuthenticated ?? true)
         {
             ctx.Context.Response.StatusCode = 401;
             ctx.Context.Response.ContentLength = 0;

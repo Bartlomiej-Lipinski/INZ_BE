@@ -28,13 +28,12 @@ public class AuthController(
     ILogger<AuthController> logger)
     : ControllerBase
 {
-
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] ExtendedLoginRequest request)
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-        
+
         if (!ModelState.IsValid)
         {
             logger.LogWarning("Invalid login request data. TraceId: {TraceId}", traceId);
@@ -43,9 +42,9 @@ public class AuthController(
 
         var userIp = GetUserIpAddress();
         var userAgent = Request.Headers.UserAgent.FirstOrDefault();
-        
+
         logger.LogInformation("Login attempt. TraceId: {TraceId}", traceId);
-        
+
         try
         {
             var requiresCaptcha = await loginAttemptService
@@ -90,12 +89,12 @@ public class AuthController(
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody]UserRequestDto request)
+    public async Task<IActionResult> Register([FromBody] UserRequestDto request)
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-        
+
         logger.LogInformation("Registration attempt. TraceId: {TraceId}", traceId);
-        
+
         try
         {
             if (string.IsNullOrEmpty(request.Name) || string.IsNullOrEmpty(request.Surname) ||
@@ -131,7 +130,7 @@ public class AuthController(
 
             if (result.Succeeded)
             {
-                logger.LogInformation("User successfully registered with ID: {UserId}. TraceId: {TraceId}", 
+                logger.LogInformation("User successfully registered with ID: {UserId}. TraceId: {TraceId}",
                     user.Id, traceId);
                 return Ok(ApiResponse<string>.Ok(user.Id, "User registered successfully", traceId));
             }
@@ -146,15 +145,15 @@ public class AuthController(
             return StatusCode(500, ApiResponse<string>.Fail("An error occurred during registration", traceId));
         }
     }
-    
-    [Authorize("RefreshTokenPolicy")]
+
+    [AllowAnonymous]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh(RefreshRequest request, CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-        
+
         logger.LogInformation("Token refresh attempt. TraceId: {TraceId}", traceId);
-        
+
         try
         {
             var token = await dbContext.RefreshTokens
@@ -169,7 +168,7 @@ public class AuthController(
             var user = await userManager.FindByIdAsync(token.UserId);
             if (user is null)
             {
-                logger.LogWarning("User not found for refresh token. UserId: {UserId}. TraceId: {TraceId}", 
+                logger.LogWarning("User not found for refresh token. UserId: {UserId}. TraceId: {TraceId}",
                     token.UserId, traceId);
                 return Unauthorized(ApiResponse<string>.Fail("User not found", traceId));
             }
@@ -181,7 +180,7 @@ public class AuthController(
             var (newAccessToken, newRefreshToken) = await authorizationService.GenerateTokensAsync(user);
             SetAuthCookies(newAccessToken, newRefreshToken);
 
-            logger.LogInformation("Token successfully refreshed for user: {UserId}. TraceId: {TraceId}", 
+            logger.LogInformation("Token successfully refreshed for user: {UserId}. TraceId: {TraceId}",
                 user.Id, traceId);
 
             return Ok(ApiResponse<string>.Ok(user.Id, "Token refreshed successfully", traceId));
@@ -192,14 +191,14 @@ public class AuthController(
             return StatusCode(500, ApiResponse<string>.Fail("An error occurred during token refresh", traceId));
         }
     }
-    
+
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-        
+
         logger.LogInformation("Logout attempt. TraceId: {TraceId}", traceId);
-        
+
         try
         {
             var accessToken = Request.Cookies["access_token"];
@@ -235,7 +234,7 @@ public class AuthController(
             return StatusCode(500, ApiResponse<string>.Fail("An error occurred during logout", traceId));
         }
     }
-    
+
     [Authorize]
     [HttpGet("secret")]
     public IActionResult Secret()
@@ -244,7 +243,7 @@ public class AuthController(
         return Ok(ApiResponse<string>
             .Ok("This is a secret message only for authenticated users.", traceId: traceId));
     }
-    
+
     [AllowAnonymous]
     [HttpPost("password-reset-request")]
     public async Task<IActionResult> RequestPasswordReset([FromBody] PasswordResetRequest dto)
@@ -258,18 +257,17 @@ public class AuthController(
             return Ok(ApiResponse<string>.Ok("If the email exists, a reset link has been sent.", traceId: traceId));
         await userManager.UpdateSecurityStampAsync(user);
         var tokens = dbContext.RefreshTokens.Where(t => t.UserId == user.Id && !t.IsRevoked);
-        
+
         foreach (var token in tokens)
         {
             token.IsRevoked = true;
-            
         }
-        
+
         await dbContext.SaveChangesAsync();
 
         return Ok(ApiResponse<string>.Ok("If the email exists, a reset link has been sent.", traceId: traceId));
     }
-    
+
     [AllowAnonymous]
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordResponse dto)
@@ -287,7 +285,7 @@ public class AuthController(
         await dbContext.SaveChangesAsync();
         return Ok(ApiResponse<string>.Ok("Password has been reset successfully.", traceId: traceId));
     }
-    
+
     [HttpGet("captcha-required")]
     public async Task<IActionResult> CheckCaptchaRequired([FromQuery] string email)
     {
@@ -304,7 +302,7 @@ public class AuthController(
 
         return Ok(ApiResponse<bool>.Ok(requiresCaptcha, traceId: traceId));
     }
-    
+
     [AllowAnonymous]
     [HttpPost("verify-2fa")]
     public async Task<IActionResult> VerifyTwoFactor([FromBody] TwoFactorVerificationRequest request)
@@ -337,7 +335,8 @@ public class AuthController(
             var (token, refreshToken) = await authorizationService.GenerateTokensAsync(user);
             SetAuthCookies(token, refreshToken);
 
-            logger.LogInformation("2FA verification successful for user: {UserId}. TraceId: {TraceId}", user.Id, traceId);
+            logger.LogInformation("2FA verification successful for user: {UserId}. TraceId: {TraceId}", user.Id,
+                traceId);
             return Ok(ApiResponse<string>.Ok(user.Id, "2FA verification successful", traceId));
         }
         catch (Exception ex)
@@ -346,7 +345,7 @@ public class AuthController(
             return StatusCode(500, ApiResponse<string>.Fail("An error occurred during verification", traceId));
         }
     }
-    
+
     [AllowAnonymous]
     [HttpPost("resend-2fa")]
     public async Task<IActionResult> ResendTwoFactorCode([FromBody] TwoFactorRequest request)
@@ -387,14 +386,14 @@ public class AuthController(
             return StatusCode(500, ApiResponse<string>.Fail("An error occurred during 2FA code resend", traceId));
         }
     }
-    
+
     private string GetUserIpAddress()
     {
-        return (Request.Headers.TryGetValue("X-Forwarded-For", out var value) 
-            ? value.FirstOrDefault()?.Split(',')[0].Trim() 
+        return (Request.Headers.TryGetValue("X-Forwarded-For", out var value)
+            ? value.FirstOrDefault()?.Split(',')[0].Trim()
             : HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown") ?? string.Empty;
     }
-    
+
     private void SetAuthCookies(string token, string refreshToken)
     {
         Response.Cookies.Append("access_token", token, new CookieOptions
@@ -404,7 +403,7 @@ public class AuthController(
             SameSite = SameSiteMode.Strict,
             Expires = DateTime.UtcNow.AddMinutes(15)
         });
-                
+
         Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
         {
             HttpOnly = true,
@@ -413,7 +412,7 @@ public class AuthController(
             Expires = DateTime.UtcNow.AddDays(2)
         });
     }
-    
+
     private static string ValidatePassword(string password)
     {
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
@@ -428,16 +427,17 @@ public class AuthController(
         if (!password.Any(char.IsDigit))
             return "Hasło musi zawierać co najmniej jedną cyfrę.";
 
-        return password.All(char.IsLetterOrDigit) ? "Hasło musi zawierać co najmniej jeden znak specjalny." : string.Empty;
+        return password.All(char.IsLetterOrDigit)
+            ? "Hasło musi zawierać co najmniej jeden znak specjalny."
+            : string.Empty;
     }
-    
+
     public class UserRequestDto
     {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = null!;
-        [Required]
-        public string UserName { get; set; } = null!;
+        [Required] [EmailAddress] public string Email { get; set; } = null!;
+
+        [Required] public string UserName { get; set; } = null!;
+
         public string? Name { get; set; }
         public string? Surname { get; set; }
         public DateOnly? BirthDate { get; set; }
