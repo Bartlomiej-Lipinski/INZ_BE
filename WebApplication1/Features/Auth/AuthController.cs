@@ -13,7 +13,6 @@ using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Auth;
 
-// zmienić rodzaj zwracanych danych żeby nie było zwracanego tokena i refresh tokena w odpowiedzi
 [EnableRateLimiting("AuthPolicy")]
 [Controller]
 [Route("api/[controller]")]

@@ -32,11 +32,12 @@ public class CalculateBestDateForEvent : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                            ?? currentUser.FindFirst("sub")?.Value;
+                     ?? currentUser.FindFirst("sub")?.Value;
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            logger.LogWarning("Unauthorized attempt to calculate the best date for an event. TraceId: {TraceId}", traceId);
+            logger.LogWarning("Unauthorized attempt to calculate the best date for an event. TraceId: {TraceId}",
+                traceId);
             return Results.Unauthorized();
         }
 
@@ -104,9 +105,6 @@ public class CalculateBestDateForEvent : IEndpoint
                  date <= availability.AvailableTo.Date;
                  date = date.AddDays(1))
             {
-                if (date < ev.StartDate || date > ev.EndDate)
-                    continue;
-
                 if (!dateUsers.ContainsKey(date))
                     dateUsers[date] = [];
 
@@ -116,7 +114,7 @@ public class CalculateBestDateForEvent : IEndpoint
 
         if (dateUsers.Count == 0)
         {
-            var fallback = ev.StartDate ?? DateTime.UtcNow;
+            var fallback = ev.RangeStart ?? DateTime.UtcNow;
             return [(fallback.Date.AddHours(9), 0)];
         }
 

@@ -13,7 +13,7 @@ public class GetIsAdmin : IEndpoint
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/group/{groupId}/isAdmin", Handle)
-                        .WithName("GetIsGroupAdmin")
+            .WithName("GetIsGroupAdmin")
             .WithDescription("Checks if User is Admin of given group")
             .WithTags("Groups")
             .RequireAuthorization()
