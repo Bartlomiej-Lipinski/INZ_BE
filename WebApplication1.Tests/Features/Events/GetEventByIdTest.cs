@@ -111,6 +111,7 @@ public class GetEventByIdTest : TestBase
             user.Id, 
             "Test Event", 
             "Some details", 
+            DateTime.UtcNow,
             "Online", 
             DateTime.UtcNow
         );

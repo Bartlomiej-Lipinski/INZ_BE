@@ -108,7 +108,7 @@ public class PostAvailabilityTest : TestBase
         var group = TestDataFactory.CreateGroup("g1", "test");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, user.Id, "test", null, null, DateTime.UtcNow);
+            "e1", group.Id, user.Id, "test", null, DateTime.UtcNow, null, DateTime.UtcNow);
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);
         dbContext.GroupUsers.Add(groupUser);
@@ -144,7 +144,7 @@ public class PostAvailabilityTest : TestBase
         var group = TestDataFactory.CreateGroup("g1", "test");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, user.Id, "test", null, null, DateTime.UtcNow);
+            "e1", group.Id, user.Id, "test", null, DateTime.UtcNow, null, DateTime.UtcNow);
         var existing = TestDataFactory.CreateEventAvailability(
             evt.Id, user.Id, EventAvailabilityStatus.Going, DateTime.UtcNow);
         dbContext.Users.Add(user);

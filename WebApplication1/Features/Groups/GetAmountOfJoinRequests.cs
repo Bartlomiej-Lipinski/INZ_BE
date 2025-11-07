@@ -16,8 +16,7 @@ public class GetAmountOfJoinRequests : IEndpoint
             .WithName("GetAmountOfJoinRequests")
             .WithDescription("Returns the amount of join requests for the current user")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(

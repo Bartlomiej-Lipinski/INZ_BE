@@ -32,6 +32,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Settlement> Settlements { get; set; } = null!;
     public DbSet<Poll> Polls { get; set; } = null!;
     public DbSet<PollOption> PollOptions { get; set; } = null!;
+    public DbSet<TimelineEvent> TimelineEvents { get; set; } = null!;
      
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -83,6 +84,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasMany(g => g.Polls)
                 .WithOne(p => p.Group)
                 .HasForeignKey(p => p.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.TimelineEvents)
+                .WithOne(tce => tce.Group)
+                .HasForeignKey(tce => tce.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             
             entity.HasIndex(g => g.Code).IsUnique();
@@ -393,6 +399,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                         j.HasKey("UserId", "PollOptionId");
                         j.ToTable("UserPollOptions");
                     });
+        });
+        
+        builder.Entity<TimelineEvent>(entity =>
+        {
+            entity.HasKey(te => te.Id);
+            entity.Property(te => te.GroupId).IsRequired();
+            entity.Property(te => te.Type).IsRequired();
+            entity.Property(te => te.Title).IsRequired().HasMaxLength(100);
+            entity.Property(te => te.Date).IsRequired();
+            entity.Property(te => te.Description).HasMaxLength(255);
+
+            entity.HasOne(te => te.Group)
+                .WithMany(g => g.TimelineEvents)
+                .HasForeignKey(te => te.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

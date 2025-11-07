@@ -14,8 +14,7 @@ namespace WebApplication1.Features.Storage
                 .WithName("GetFile")
                 .WithDescription("Download file by id")
                 .WithTags("Storage")
-                .RequireAuthorization()
-                .WithOpenApi();
+                .RequireAuthorization();
         }
 
         public static async Task<IResult> Handle(

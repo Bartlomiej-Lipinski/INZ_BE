@@ -16,8 +16,7 @@ public class GetAllUsers : IEndpoint
         app.MapGet("/users", Handle)
             .WithName("GetAllUsers")
             .WithDescription("Returns all users")
-            .WithTags("Users")
-            .WithOpenApi();
+            .WithTags("Users");
     }
 
     public static async Task<IResult> Handle(

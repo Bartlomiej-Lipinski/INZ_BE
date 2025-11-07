@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -17,8 +18,7 @@ public class UpdateRecommendation : IEndpoint
             .WithName("UpdateRecommendation")
             .WithDescription("Updates an existing recommendation if the user is the author.")
             .WithTags("Recommendations")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(
@@ -52,7 +52,8 @@ public class UpdateRecommendation : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
+        var groupUser = group.GroupUsers
+            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
         if (groupUser == null)
         {
             logger.LogWarning("User {UserId} attempted to update recommendation in group {GroupId} but is not a member. " +

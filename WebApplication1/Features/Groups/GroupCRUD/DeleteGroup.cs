@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -16,8 +17,7 @@ public class DeleteGroup : IEndpoint
             .WithName("DeleteGroup")
             .WithDescription("Deletes a specific group")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(
@@ -49,7 +49,10 @@ public class DeleteGroup : IEndpoint
         }
 
         var currentGroupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(
+                gu => gu.GroupId == groupId 
+                      && gu.UserId == userId 
+                      && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
 
         var isAdmin = currentGroupUser?.IsAdmin == true;
         if (!isAdmin)

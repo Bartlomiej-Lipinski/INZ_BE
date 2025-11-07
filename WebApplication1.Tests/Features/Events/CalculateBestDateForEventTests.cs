@@ -39,8 +39,16 @@ public class CalculateBestDateForEventTests : TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var user = TestDataFactory.CreateUser("u1", "testUser");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var evt = TestDataFactory.CreateEvent("e1", "g1", "u1", "Test Event", "Description", "Location",
-            DateTime.UtcNow.AddDays(1));
+        var evt = TestDataFactory.CreateEvent(
+            "e1", 
+            "g1",
+            "u1", 
+            "Test Event", 
+            "Description", 
+            DateTime.UtcNow, 
+            "Location", 
+            DateTime.UtcNow.AddDays(1)
+        );
 
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);
@@ -69,8 +77,16 @@ public class CalculateBestDateForEventTests : TestBase
         var startDate = new DateTime(2024, 1, 1);
         var endDate = new DateTime(2024, 1, 7);
 
-        var evt = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Test Event", "Description", "Location",
-            startDate);
+        var evt = TestDataFactory.CreateEvent(
+            "e1",
+            group.Id,
+            user.Id, 
+            "Test Event", 
+            "Description",
+            startDate, 
+            "Location", 
+            DateTime.UtcNow
+        );
         evt.EndDate = endDate;
         evt.Availabilities = new List<EventAvailability>
         {
@@ -112,8 +128,16 @@ public class CalculateBestDateForEventTests : TestBase
         var user2 = TestDataFactory.CreateUser("user-2", "User2");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
 
-        var evt = TestDataFactory.CreateEvent("e1", group.Id, user1.Id, "Test Event", "Description", "Location",
-            startDate);
+        var evt = TestDataFactory.CreateEvent(
+            "e1",
+            group.Id, 
+            user1.Id,
+            "Test Event", 
+            "Description", 
+            startDate, 
+            "Location",
+            DateTime.UtcNow
+        );
         evt.EndDate = startDate.AddDays(7);
         evt.Availabilities = new List<EventAvailability>
         {
@@ -143,8 +167,16 @@ public class CalculateBestDateForEventTests : TestBase
         var user = TestDataFactory.CreateUser("u1", "User1");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
 
-        var evt = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Test Event", "Description", "Location",
-            startDate);
+        var evt = TestDataFactory.CreateEvent(
+            "e1",
+            group.Id,
+            user.Id,
+            "Test Event", 
+            "Description",
+            DateTime.UtcNow,
+            "Location",
+            startDate
+        );
         evt.StartDate = startDate;
         evt.EndDate = startDate.AddDays(7);
         evt.Availabilities = new List<EventAvailability>();
@@ -168,8 +200,16 @@ public class CalculateBestDateForEventTests : TestBase
         var user3 = TestDataFactory.CreateUser("user-3", "User3");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
 
-        var evt = TestDataFactory.CreateEvent("e1", group.Id, user1.Id, "Test Event", "Description", "Location",
-            startDate);
+        var evt = TestDataFactory.CreateEvent(
+            "e1",
+            group.Id, 
+            user1.Id, 
+            "Test Event", 
+            "Description",
+            startDate,
+            "Location",
+            DateTime.UtcNow
+        );
         evt.EndDate = startDate.AddDays(2);
         evt.Availabilities = new List<EventAvailability>
         {
@@ -204,8 +244,16 @@ public class CalculateBestDateForEventTests : TestBase
         var user3 = TestDataFactory.CreateUser("user-3", "User3");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
 
-        var evt = TestDataFactory.CreateEvent("e1", group.Id, user1.Id, "Test Event", "Description", "Location",
-            startDate);
+        var evt = TestDataFactory.CreateEvent(
+            "e1",
+            group.Id,
+            user1.Id, 
+            "Test Event",
+            "Description",
+            startDate,
+            "Location",
+            DateTime.UtcNow
+        );
         evt.EndDate = startDate.AddDays(5);
         evt.Availabilities = new List<EventAvailability>
         {

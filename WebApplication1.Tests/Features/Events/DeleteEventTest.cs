@@ -110,7 +110,7 @@ public class DeleteEventTest : TestBase
         );
 
         var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, owner.Id, "Event title", null, null, DateTime.UtcNow);
+            "e1", group.Id, owner.Id, "Event title", null, DateTime.UtcNow, null, DateTime.UtcNow);
         dbContext.Events.Add(evt);
         await dbContext.SaveChangesAsync();
 
@@ -138,7 +138,7 @@ public class DeleteEventTest : TestBase
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(owner.Id, group.Id));
 
         var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, owner.Id, "Event title", null, null, DateTime.UtcNow);
+            "e1", group.Id, owner.Id, "Event title", null, DateTime.UtcNow, null, DateTime.UtcNow);
         dbContext.Events.Add(evt);
         await dbContext.SaveChangesAsync();
 
@@ -173,7 +173,7 @@ public class DeleteEventTest : TestBase
         );
 
         var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, owner.Id, "Event title", null, null, DateTime.UtcNow);
+            "e1", group.Id, owner.Id, "Event title", null, DateTime.UtcNow, null, DateTime.UtcNow);
         dbContext.Events.Add(evt);
         await dbContext.SaveChangesAsync();
 

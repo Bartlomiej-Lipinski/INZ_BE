@@ -18,8 +18,7 @@ public class RejectUserJoinRequest : IEndpoint
             .WithName("RejectUserJoinRequest")
             .WithDescription("Rejects a user's join request to a group")
             .WithTags("Groups")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(
@@ -53,7 +52,10 @@ public class RejectUserJoinRequest : IEndpoint
         }
         
         var currentGroupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(gu => gu.GroupId == groupId && gu.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(
+                gu => gu.GroupId == groupId 
+                      && gu.UserId == userId 
+                      && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
 
         var isAdmin = currentGroupUser?.IsAdmin == true;
         if (!isAdmin)

@@ -16,8 +16,7 @@ public class UpdateUserProfile : IEndpoint
             .WithName("UpdateUserProfile")
             .WithDescription("Updates a user's profile")
             .WithTags("Users")
-            .RequireAuthorization()
-            .WithOpenApi();
+            .RequireAuthorization();
     }
     
     public static async Task<IResult> Handle(
