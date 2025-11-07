@@ -16,7 +16,8 @@ public class GetIsAdmin : IEndpoint
             .WithName("GetIsGroupAdmin")
             .WithDescription("Checks if User is Admin of given group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithOpenApi();
     }
 
     public static async Task<IResult> Handle(

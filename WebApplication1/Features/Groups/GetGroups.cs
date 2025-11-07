@@ -16,7 +16,8 @@ public class GetGroups : IEndpoint
             .WithName("GetGroups")
             .WithDescription("Returns all groups")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithOpenApi();
     }
     
     public static async Task<IResult> Handle(AppDbContext context, CancellationToken dbc)

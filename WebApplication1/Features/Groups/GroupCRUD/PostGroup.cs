@@ -18,7 +18,8 @@ public class PostGroup : IEndpoint
             .WithName("CreateGroup")
             .WithDescription("Creates a new group and assigns the current user as admin")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithOpenApi();
     }
     
     public static async Task<IResult> Handle(

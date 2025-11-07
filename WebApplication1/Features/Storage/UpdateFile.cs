@@ -17,7 +17,8 @@ namespace WebApplication1.Features.Storage
                 .WithDescription("Replace existing file")
                 .WithTags("Storage")
                 .RequireAuthorization()
-                .Accepts<IFormFile>("multipart/form-data");
+                .Accepts<IFormFile>("multipart/form-data")
+                .WithOpenApi();
         }
 
         public static async Task<IResult> Handle(

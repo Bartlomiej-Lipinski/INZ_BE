@@ -17,7 +17,8 @@ public class GetJoinRequestsForAdmins : IEndpoint
             .WithName("GetJoinRequestsForAdmins")
             .WithDescription("Returns join requests for group admins")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithOpenApi();
     }
 
     public static async Task<IResult> Handle(

@@ -6,7 +6,6 @@ using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Features.Polls.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Features.Settlements.Dtos;
-using WebApplication1.Features.Timeline.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
@@ -85,12 +84,7 @@ public static class TestDataFactory
     }
 
     public static User CreateUser(
-        string? id = null,
-        string? name = null,
-        string? email = null,
-        string? userName = null,
-        string? surname = null, 
-        DateOnly? birthDate = null)
+        string? id = null, string? name = null, string? email = null, string? userName = null, string? surname = null)
     {
         ArgumentNullException.ThrowIfNull(id, nameof(id));
         return new User
@@ -99,8 +93,7 @@ public static class TestDataFactory
             Name = name,
             Email = email,
             UserName = userName ?? name,
-            Surname = surname,
-            BirthDate = birthDate
+            Surname = surname
         };
     }
 
@@ -203,13 +196,7 @@ public static class TestDataFactory
     }
 
     public static Event CreateEvent(
-        string id,
-        string groupId,
-        string userId,
-        string title,
-        string? description,
-        DateTime? startDate, 
-        string? location, 
+        string id, string groupId, string userId, string title, string? description, string? location,
         DateTime createdAt)
     {
         return new Event
@@ -218,7 +205,6 @@ public static class TestDataFactory
             GroupId = groupId,
             UserId = userId,
             Title = title,
-            StartDate = startDate,
             Description = description,
             Location = location,
             CreatedAt = createdAt
@@ -423,28 +409,6 @@ public static class TestDataFactory
         {
             Question = question,
             Options = options
-        };
-    }
-
-    public static TimelineEvent CreateTimelineEvent(string id, string groupId, string title, DateTime date)
-    {
-        return new TimelineEvent
-        {
-            Id = id,
-            GroupId = groupId,
-            Title = title,
-            Date = date
-        };
-    }
-
-    public static TimelineEventRequestDto CreateTimelineEventRequestDto(
-        string title, DateTime date, string? description = null)
-    {
-        return new TimelineEventRequestDto
-        {
-            Title = title,
-            Date = date,
-            Description = description
         };
     }
     

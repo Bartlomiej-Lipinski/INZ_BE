@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -18,7 +17,8 @@ public class PostReaction : IEndpoint
             .WithName("PostReaction")
             .WithDescription("Adds or removes a like reaction to a target by a group member")
             .WithTags("Reactions")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithOpenApi();
     }
 
     public static async Task<IResult> Handle(
@@ -52,8 +52,7 @@ public class PostReaction : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
         }
 
-        var groupUser = group.GroupUsers
-            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
+        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
         if (groupUser == null)
         {
             logger.LogWarning("User {UserId} attempted to add or remove a reaction in group {GroupId} but is not a member. " +

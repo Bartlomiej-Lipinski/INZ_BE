@@ -17,7 +17,8 @@ public class GetGroupUsers : IEndpoint
             .WithName("GetGroupUsers")
             .WithDescription("Retrieves all users for a specific group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithOpenApi();
     }
     
     public static async Task<IResult> Handle(

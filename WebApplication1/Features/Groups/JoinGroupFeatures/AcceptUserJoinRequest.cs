@@ -18,7 +18,8 @@ public class AcceptUserJoinRequest : IEndpoint
             .WithName("AcceptUserJoinRequest")
             .WithDescription("Accepts a user's join request to a group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithOpenApi();
     }
     
     public static async Task<IResult> Handle(

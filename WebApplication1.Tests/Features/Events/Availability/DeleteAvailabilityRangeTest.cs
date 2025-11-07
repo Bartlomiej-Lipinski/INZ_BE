@@ -102,8 +102,7 @@ public class DeleteAvailabilityRangeTest : TestBase
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
-        var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, user.Id, "Test Event", null, DateTime.UtcNow, null, DateTime.UtcNow);
+        var evt = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Test Event", null, null, DateTime.UtcNow);
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);
         dbContext.GroupUsers.Add(groupUser);
@@ -131,8 +130,7 @@ public class DeleteAvailabilityRangeTest : TestBase
         var user = TestDataFactory.CreateUser("u1", "TestUser");
         var group = TestDataFactory.CreateGroup("g1", "TestGroup");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
-        var evt = TestDataFactory.CreateEvent(
-            "e1", group.Id, user.Id, "Test Event", null, DateTime.UtcNow, null, DateTime.UtcNow);
+        var evt = TestDataFactory.CreateEvent("e1", group.Id, user.Id, "Test Event", null, null, DateTime.UtcNow);
 
         var existing = TestDataFactory.CreateEventAvailabilityRange(
             evt.Id, user.Id, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));

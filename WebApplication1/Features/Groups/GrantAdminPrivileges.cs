@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -18,7 +17,8 @@ public class GrantAdminPrivileges : IEndpoint
             .WithName("GrantAdminPrivileges")
             .WithDescription("Grants admin Privileges to a user in a group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .WithOpenApi();
     }
     public static async Task<IResult> Handle(
         [FromBody] GrantAdminPrivilegesDto request,
@@ -61,10 +61,8 @@ public class GrantAdminPrivileges : IEndpoint
         }
         
         var groupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(
-                gu => gu.GroupId==request.GroupId 
-                      && gu.UserId == request.UserId 
-                      && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
+            .FirstOrDefaultAsync(gu => gu.GroupId==request.GroupId && gu.UserId == request.UserId,
+                cancellationToken);
 
         if (groupUser == null)
         {
