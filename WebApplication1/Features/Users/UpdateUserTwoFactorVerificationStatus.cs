@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Users;
@@ -28,8 +29,7 @@ public class UpdateUserTwoFactorVerificationStatus : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
+        var userId = currentUser.GetUserId();
 
         logger.LogInformation("Attempting to update two-factor status for user ID: {UserId}. TraceId: {TraceId}",
             userId, traceId);

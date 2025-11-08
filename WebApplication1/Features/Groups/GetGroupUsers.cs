@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Groups;
@@ -29,8 +30,7 @@ public class GetGroupUsers : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
+        var userId = currentUser.GetUserId();
         
         var isCurrentUserMemberOfGroup = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == userId, cancellationToken);

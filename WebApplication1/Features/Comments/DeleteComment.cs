@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Comments;
@@ -17,7 +18,8 @@ public class DeleteComment : IEndpoint
             .WithName("DeleteComment")
             .WithDescription("Deletes a comment from a target. Allowed for comment author and target author.")
             .WithTags("Comments")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<DeleteComment>();
     }
 
     public static async Task<IResult> Handle(
@@ -31,8 +33,7 @@ public class DeleteComment : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                            ?? currentUser.FindFirst("sub")?.Value;
+        var userId = currentUser.GetUserId();
         
         var group = await dbContext.Groups
             .AsNoTracking()

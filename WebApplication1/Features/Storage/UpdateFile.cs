@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Storage;
@@ -31,8 +32,7 @@ public class UpdateFile : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                            ?? currentUser.FindFirst("sub")?.Value;
+        var currentUserId = currentUser.GetUserId();
 
         var record = await dbContext.StoredFiles.FindAsync([id], cancellationToken);
         if (record == null)

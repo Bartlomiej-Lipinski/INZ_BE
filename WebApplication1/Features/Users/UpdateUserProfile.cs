@@ -5,6 +5,7 @@ using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 using System.Security.Claims;
 using WebApplication1.Features.Users.Dtos;
+using WebApplication1.Shared.Extensions;
 
 namespace WebApplication1.Features.Users;
 
@@ -28,8 +29,7 @@ public class UpdateUserProfile : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
+        var userId = currentUser.GetUserId();
 
         logger.LogInformation("Attempting to update profile for user ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 
