@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
@@ -8,7 +7,6 @@ using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Users;
 //TODO: Delete this code in production, this is just for testing purposes
-[ApiExplorerSettings(GroupName = "Users")]
 public class GetAllUsers : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)

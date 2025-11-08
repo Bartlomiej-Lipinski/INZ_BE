@@ -27,15 +27,8 @@ public class GetAmountOfJoinRequests : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
-        
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("User ID not found in claims. TraceId: {TraceId}", traceId);
-            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
-        }
 
         var adminGroupIds = await dbContext.GroupUsers
             .Where(gu => gu.UserId == userId && gu.IsAdmin)

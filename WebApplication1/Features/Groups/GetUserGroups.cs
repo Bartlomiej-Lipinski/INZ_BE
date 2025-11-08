@@ -28,14 +28,8 @@ public class GetUserGroups : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userId))
-        {
-            return ApiResponse<IEnumerable<GroupResponseDto>>.Fail("Unauthorized", traceId);
-        }
 
         var groups = await dbContext.GroupUsers.AsNoTracking()
             .AsQueryable()

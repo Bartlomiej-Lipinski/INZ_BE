@@ -31,15 +31,10 @@ public class GetGroupUsers : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to get group users. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
         
         var isCurrentUserMemberOfGroup = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == userId, cancellationToken);
+        
         if (!isCurrentUserMemberOfGroup)
         {
             logger.LogWarning("User {UserId} tried to get users for group {GroupId} without membership. TraceId: {TraceId}", 

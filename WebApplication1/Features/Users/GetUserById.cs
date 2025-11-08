@@ -9,7 +9,6 @@ using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Users;
 
-[ApiExplorerSettings(GroupName = "Users")]
 public class GetUserById : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
@@ -30,15 +29,9 @@ public class GetUserById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
         var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
         
-        if (string.IsNullOrWhiteSpace(id))
-        {
-            logger.LogWarning("Invalid user ID provided. TraceId: {TraceId}", traceId);
-            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
-        }
         if (currentUserId != id)
         {
             logger.LogWarning("Unauthorized access attempt to user ID: {UserId}. TraceId: {TraceId}", id, traceId);

@@ -32,12 +32,6 @@ public class GenerateCodeToJoinGroup : IEndpoint
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to generate code. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
         if (string.IsNullOrWhiteSpace(groupId))
         {
             logger.LogWarning("Group ID is null or empty. TraceId: {TraceId}", traceId);

@@ -28,15 +28,8 @@ public class UpdateUserTwoFactorVerificationStatus : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized two-factor status update attempt. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
 
         logger.LogInformation("Attempting to update two-factor status for user ID: {UserId}. TraceId: {TraceId}",
             userId, traceId);

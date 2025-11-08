@@ -23,27 +23,14 @@ public class GrantAdminPrivileges : IEndpoint
     public static async Task<IResult> Handle(
         [FromBody] GrantAdminPrivilegesDto request,
         AppDbContext dbContext,
-        ClaimsPrincipal? user,
+        ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<GrantAdminPrivileges> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
-        if (user == null)
-        {
-            logger.LogWarning("Null user principal in GrantAdminPrivileges. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-        
-        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                            ?? user.FindFirst("sub")?.Value;
-        
-        if (string.IsNullOrEmpty(currentUserId))
-        {
-            logger.LogWarning("No user ID found in claims for GrantAdminPrivlages. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
+        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value 
+                            ?? currentUser.FindFirst("sub")?.Value;
         
         logger.LogInformation("Processing admin privilege grant. " +
                               "GroupId: {GroupId}, UserId: {UserId}, AdminId: {AdminId}. TraceId: {TraceId}", 

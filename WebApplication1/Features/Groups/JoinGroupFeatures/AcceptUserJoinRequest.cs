@@ -32,12 +32,6 @@ public class AcceptUserJoinRequest : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to accept request. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
         
         logger.LogInformation("Processing join request acceptance. " +
                               "GroupId: {GroupId}, UserId: {UserId}, AdminId: {AdminId}. TraceId: {TraceId}", 

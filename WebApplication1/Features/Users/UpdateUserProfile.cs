@@ -31,12 +31,6 @@ public class UpdateUserProfile : IEndpoint
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized profile update attempt. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
         logger.LogInformation("Attempting to update profile for user ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 
         var user = await dbContext.Users.FindAsync([userId], cancellationToken);

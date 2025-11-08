@@ -33,12 +33,6 @@ public class PostGroup : IEndpoint
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to create group. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
         if (string.IsNullOrWhiteSpace(requestDto.Name) || string.IsNullOrWhiteSpace(requestDto.Color))
         {
             logger.LogWarning("Invalid group data provided. Name: {Name}, Color: {Color}. TraceId: {TraceId}", 

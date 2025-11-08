@@ -34,12 +34,6 @@ public class UpdateGroup : IEndpoint
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to update group. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
         var group = await dbContext.Groups
             .Include(g => g.GroupUsers)
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);

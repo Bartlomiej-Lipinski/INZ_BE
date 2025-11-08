@@ -32,12 +32,6 @@ public class DeleteGroup : IEndpoint
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to delete group. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
         var group = await dbContext.Groups
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 

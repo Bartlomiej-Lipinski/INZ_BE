@@ -6,55 +6,46 @@ using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Features.Storage
+namespace WebApplication1.Features.Storage;
+
+public class DeleteFile : IEndpoint
 {
-    public class DeleteFile : IEndpoint
+    public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        public void RegisterEndpoint(IEndpointRouteBuilder app)
+        app.MapDelete("/files/{id}", Handle)
+            .WithName("DeleteFile")
+            .WithDescription("Delete file by id")
+            .WithTags("Storage")
+            .RequireAuthorization();
+    }
+
+    public static async Task<IResult> Handle(
+        [FromRoute] string id,
+        AppDbContext dbContext,
+        IStorageService storage,
+        ClaimsPrincipal currentUser,
+        HttpContext httpContext,
+        ILogger<DeleteFile> logger,
+        CancellationToken cancellationToken)
+    {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? currentUser.FindFirst("sub")?.Value;
+
+        var record = await dbContext.StoredFiles.FindAsync([id], cancellationToken);
+        if (record == null)
         {
-            app.MapDelete("/files/{id}", Handle)
-                .WithName("DeleteFile")
-                .WithDescription("Delete file by id")
-                .WithTags("Storage")
-                .RequireAuthorization();
+            logger.LogInformation("File {Id} not found for delete. TraceId: {TraceId}", id, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("File not found.", traceId));
         }
 
-        public static async Task<IResult> Handle(
-            [FromRoute] string id,
-            AppDbContext dbContext,
-            IStorageService storage,
-            ClaimsPrincipal currentUser,
-            HttpContext httpContext,
-            ILogger<DeleteFile> logger,
-            CancellationToken cancellationToken)
-        {
-            var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-            var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                                ?? currentUser.FindFirst("sub")?.Value;
+        await storage.DeleteFileAsync(record.Url, cancellationToken);
 
-            if (string.IsNullOrWhiteSpace(currentUserId))
-            {
-                logger.LogWarning("Unauthorized delete attempt. TraceId: {TraceId}", traceId);
-                return Results.Unauthorized();
-            }
+        dbContext.StoredFiles.Remove(record);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
-            var record = await dbContext.StoredFiles.FindAsync(new object[] { id }, cancellationToken);
-            if (record == null)
-            {
-                logger.LogInformation("File {Id} not found for delete. TraceId: {TraceId}", id, traceId);
-                return Results.NotFound(ApiResponse<string>.Fail("File not found.", traceId));
-            }
+        logger.LogInformation("User {UserId} deleted file {FileId}. TraceId: {TraceId}", currentUserId, id, traceId);
 
-            // remove physical file
-            await storage.DeleteFileAsync(record.Url, cancellationToken);
-
-            // remove record from database
-            dbContext.StoredFiles.Remove(record);
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            logger.LogInformation("User {UserId} deleted file {FileId}. TraceId: {TraceId}", currentUserId, id, traceId);
-
-            return Results.Ok(ApiResponse<string>.Ok(null, "File deleted.", traceId));
-        }
+        return Results.Ok(ApiResponse<string>.Ok(null!, "File deleted.", traceId));
     }
 }

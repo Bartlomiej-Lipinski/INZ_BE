@@ -34,19 +34,6 @@ public class PostRecommendation : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                             ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to post recommendation. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
-        if (string.IsNullOrWhiteSpace(groupId) || string.IsNullOrWhiteSpace(request.Title) ||
-            string.IsNullOrWhiteSpace(request.Content))
-        {
-            return Results.BadRequest(ApiResponse<string>.Fail("GroupId, Title and Content are required.", 
-                traceId));
-        }
         
         var group = await dbContext.Groups
             .AsNoTracking()
@@ -66,6 +53,13 @@ public class PostRecommendation : IEndpoint
             logger.LogWarning("User {UserId} attempted to post recommendation in group {GroupId} but is not a member. " +
                               "TraceId: {TraceId}", userId, groupId, traceId);
             return Results.Forbid();
+        }
+        
+        if (string.IsNullOrWhiteSpace(groupId) || string.IsNullOrWhiteSpace(request.Title) ||
+            string.IsNullOrWhiteSpace(request.Content))
+        {
+            return Results.BadRequest(ApiResponse<string>.Fail("GroupId, Title and Content are required.", 
+                traceId));
         }
 
         var recommendation = new Recommendation

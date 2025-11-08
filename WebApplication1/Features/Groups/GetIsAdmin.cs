@@ -31,12 +31,6 @@ public class GetIsAdmin : IEndpoint
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
 
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to check admin status. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
         logger.LogInformation("Checking admin status for user ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 
         var userIsAdmin = await context.GroupUsers

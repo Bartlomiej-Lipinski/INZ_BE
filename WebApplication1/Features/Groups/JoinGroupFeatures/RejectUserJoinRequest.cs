@@ -33,12 +33,6 @@ public class RejectUserJoinRequest : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to reject request. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
         
         var group = await dbContext.Groups
             .AsNoTracking()

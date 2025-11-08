@@ -32,12 +32,6 @@ public class JoinGroup : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
                      ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to join group. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
         
         if (string.IsNullOrWhiteSpace(request.GroupCode))
         {
