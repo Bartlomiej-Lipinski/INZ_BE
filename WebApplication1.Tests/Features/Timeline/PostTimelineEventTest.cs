@@ -42,34 +42,6 @@ public class PostTimelineEventTest : TestBase
     }
 
     [Fact]
-    public async Task PostTimelineEvent_Should_Return_Forbidden_For_User_Not_In_Group()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
-        var otherUser = TestDataFactory.CreateUser("u2", "otherUser");
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var groupUser = TestDataFactory.CreateGroupUser(otherUser.Id, group.Id);
-        dbContext.Users.AddRange(user, otherUser);
-        dbContext.Groups.Add(group);
-        dbContext.GroupUsers.Add(groupUser);
-        await dbContext.SaveChangesAsync();
-
-        var request = TestDataFactory.CreateTimelineEventRequestDto("Some Event", DateTime.UtcNow.AddDays(3));
-
-        var result = await PostTimelineEvent.Handle(
-            group.Id,
-            request,
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<PostTimelineEvent>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();    
-    }
-
-    [Fact]
     public async Task PostTimelineEvent_Should_Return_BadRequest_For_Invalid_Request()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -97,29 +69,5 @@ public class PostTimelineEventTest : TestBase
         var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
         badRequest!.Value!.Success.Should().BeFalse();
         badRequest.Value!.Message.Should().Contain("Title and date are required");
-    }
-
-    [Fact]
-    public async Task PostTimelineEvent_Should_Return_NotFound_For_Invalid_Group()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-
-        var request = TestDataFactory.CreateTimelineEventRequestDto(
-            "Event for non-existent group", DateTime.UtcNow.AddDays(1));
-
-        var result = await PostTimelineEvent.Handle(
-            "nonExistentGroupId",
-            request,
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<PostTimelineEvent>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
     }
 }

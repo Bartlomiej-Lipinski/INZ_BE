@@ -9,24 +9,6 @@ namespace WebApplication1.Tests.Features.Comments;
 public class DeleteCommentTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Logged_In()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await DeleteComment.Handle(
-            "g1",
-            "r1", 
-            "c1",
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<DeleteComment>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-    
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Comment_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

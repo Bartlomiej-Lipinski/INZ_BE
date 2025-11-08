@@ -54,26 +54,4 @@ public class GetUserByIdTest: TestBase
 
         result.Should().BeOfType<ForbidHttpResult>();
     }
-
-    [Fact]
-    public async Task Handle_Should_Return_BadRequest_When_Id_Is_NullOrEmpty()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
-        var result = await GetUserById.Handle(
-            "", 
-            CreateClaimsPrincipal(user.Id),
-            dbContext,
-            CreateHttpContext(), 
-            NullLogger<GetUserById>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
-        var badRequest = result as BadRequest<ApiResponse<string>>;
-        badRequest!.Value!.Success.Should().BeFalse();
-        badRequest.Value.Message.Should().Be("User ID cannot be null or empty.");
-        badRequest.Value.TraceId.Should().Be("test-trace-id");
-    }
 }

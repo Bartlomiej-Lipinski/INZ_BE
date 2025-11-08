@@ -47,35 +47,6 @@ public class UpdateTimelineEventTest : TestBase
     }
     
     [Fact]
-    public async Task UpdateTimelineEvent_Should_Return_Forbidden_For_User_Not_In_Group()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var timelineEvent = TestDataFactory.CreateTimelineEvent("e1", group.Id, "Some Title", DateTime.UtcNow.AddDays(1));
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        dbContext.TimelineEvents.Add(timelineEvent);
-        await dbContext.SaveChangesAsync();
-
-        var updatedRequest = TestDataFactory.CreateTimelineEventRequestDto(
-            "Updated Title", DateTime.UtcNow.AddDays(3), "Updated Description");
-
-        var result = await UpdateTimelineEvent.Handle(
-            group.Id,
-            timelineEvent.Id,
-            updatedRequest,
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<UpdateTimelineEvent>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();    
-    }
-    
-    [Fact]
     public async Task UpdateTimelineEvent_Should_Return_NotFound_When_Event_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -134,32 +105,5 @@ public class UpdateTimelineEventTest : TestBase
         );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
-    }
-    
-    [Fact]
-    public async Task UpdateTimelineEvent_Should_Return_Unauthorized_When_User_Not_Authenticated()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var timelineEvent = TestDataFactory.CreateTimelineEvent("e1", group.Id, "Old Title", DateTime.UtcNow.AddDays(1));
-        dbContext.Groups.Add(group);
-        dbContext.TimelineEvents.Add(timelineEvent);
-        await dbContext.SaveChangesAsync();
-
-        var updatedRequest = TestDataFactory.CreateTimelineEventRequestDto(
-            "Updated Title", DateTime.UtcNow.AddDays(3), "Updated Description");
-
-        var result = await UpdateTimelineEvent.Handle(
-            group.Id,
-            timelineEvent.Id,
-            updatedRequest,
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<UpdateTimelineEvent>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
 }

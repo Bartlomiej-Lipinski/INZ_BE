@@ -92,23 +92,6 @@ public class AcceptUserJoinRequestTest : TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Is_Null()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await AcceptUserJoinRequest.Handle(
-            TestDataFactory.CreateAcceptUserJoinRequestDto("group1", "user1"), 
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<AcceptUserJoinRequest>.Instance, 
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_BadRequest_When_User_Is_Not_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

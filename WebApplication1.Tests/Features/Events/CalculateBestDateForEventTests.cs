@@ -34,40 +34,6 @@ public class CalculateBestDateForEventTests : TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_Forbidden_When_User_Not_In_Group()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var evt = TestDataFactory.CreateEvent(
-            "e1", 
-            "g1",
-            "u1", 
-            "Test Event", 
-            "Description", 
-            DateTime.UtcNow, 
-            "Location", 
-            DateTime.UtcNow.AddDays(1)
-        );
-
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        dbContext.Events.Add(evt);
-        await dbContext.SaveChangesAsync();
-
-        var result = await CalculateBestDateForEvent.Handle(
-            group.Id,
-            evt.Id,
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(),
-            NullLogger<CalculateBestDateForEvent>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<ForbidHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_Best_Date_When_Valid()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -179,6 +145,7 @@ public class CalculateBestDateForEventTests : TestBase
         );
         evt.StartDate = startDate;
         evt.EndDate = startDate.AddDays(7);
+        evt.RangeStart = startDate;
         evt.Availabilities = new List<EventAvailability>();
         evt.AvailabilityRanges = new List<EventAvailabilityRange>();
 

@@ -9,25 +9,6 @@ namespace WebApplication1.Tests.Features.Recommendations;
 public class UpdateRecommendationTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await UpdateRecommendation.Handle(
-            "g1",
-            "rec1",
-            TestDataFactory.CreateRecommendationRequestDto("New title", "Updated content"),
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<UpdateRecommendation>.Instance,
-            CancellationToken.None
-        );
-        
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-    
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Recommendation_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

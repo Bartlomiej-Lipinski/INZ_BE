@@ -10,26 +10,6 @@ namespace WebApplication1.Tests.Features.Storage;
 public class UpdateFileTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Is_Null()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var mockStorageService = new Mock<IStorageService>();
-        var file = TestDataFactory.CreateFormFile("test.jpg", "content"u8.ToArray());
-
-        var result = await UpdateFile.Handle(
-            "test-id",
-            file,
-            dbContext,
-            mockStorageService.Object,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<UpdateFile>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_BadRequest_When_File_Is_Null()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

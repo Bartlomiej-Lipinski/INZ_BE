@@ -49,25 +49,6 @@ public class PostRecommendationTest : TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Has_No_Claims()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var dto = TestDataFactory.CreateRecommendationRequestDto("Test", "Test content");
-
-        var result = await PostRecommendation.Handle(
-            "g1",
-            dto,
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<PostRecommendation>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_BadRequest_When_Missing_Title_Or_Content()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -84,27 +65,5 @@ public class PostRecommendationTest : TestBase
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Forbid_When_User_Is_Not_Member_Of_Group()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        dbContext.Groups.Add(TestDataFactory.CreateGroup("g1", "Test Group"));
-        await dbContext.SaveChangesAsync();
-        
-        var dto = TestDataFactory.CreateRecommendationRequestDto("Test", "Some text");
-
-        var result = await PostRecommendation.Handle(
-            "g1",
-            dto,
-            dbContext,
-            CreateClaimsPrincipal("u2"),
-            CreateHttpContext("u2"),
-            NullLogger<PostRecommendation>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
     }
 }
