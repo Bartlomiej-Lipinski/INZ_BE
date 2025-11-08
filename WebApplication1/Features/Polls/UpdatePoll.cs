@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Polls.Dtos;
 using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Polls;
 
@@ -21,7 +21,8 @@ public class UpdatePoll : IEndpoint
             .WithName("UpdatePoll")
             .WithDescription("Updates an existing poll in a group")
             .WithTags("Polls")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
 
     public static async Task<IResult> Handle(
@@ -36,26 +37,6 @@ public class UpdatePoll : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
-
-        var group = await dbContext.Groups
-            .AsNoTracking()
-            .Include(g => g.GroupUsers)
-            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
-
-        if (group == null)
-        {
-            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-        }
-
-        var groupUser = group.GroupUsers
-            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
-        if (groupUser == null)
-        {
-            logger.LogWarning("User {UserId} attempted to update poll in group {GroupId} but is not a member. " +
-                              "TraceId: {TraceId}", userId, groupId, traceId);
-            return Results.Forbid();
-        }
 
         var existingPoll = await dbContext.Polls
             .Include(p => p.Options).ThenInclude(pollOption => pollOption.VotedUsers)

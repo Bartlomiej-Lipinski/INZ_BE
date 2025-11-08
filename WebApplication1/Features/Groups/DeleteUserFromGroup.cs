@@ -7,6 +7,7 @@ using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Groups;
 
@@ -18,7 +19,8 @@ public class DeleteUserFromGroup : IEndpoint
             .WithName("DeleteUserFromGroup")
             .WithDescription("Deletes a user from a group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
@@ -35,9 +37,9 @@ public class DeleteUserFromGroup : IEndpoint
         logger.LogInformation("Deleting user {UserId} from group {GroupId}. TraceId: {TraceId}",
             userId, groupId, traceId);
         
-        var isCurrentUserAdmin = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId && gu.IsAdmin, cancellationToken);
-        if (!isCurrentUserAdmin)
+        var currentGroupUser = httpContext.Items["GroupUser"] as GroupUser;
+        var isAdmin = currentGroupUser?.IsAdmin ?? false;
+        if (!isAdmin)
         {
             logger.LogWarning("User {CurrentUserId} is not admin of group {GroupId}. TraceId: {TraceId}",
                 currentUserId, groupId, traceId);

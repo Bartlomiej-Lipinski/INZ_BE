@@ -8,6 +8,7 @@ using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Groups;
 
@@ -19,7 +20,8 @@ public class GrantAdminPrivileges : IEndpoint
             .WithName("GrantAdminPrivileges")
             .WithDescription("Grants admin Privileges to a user in a group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
     public static async Task<IResult> Handle(
         [FromBody] GrantAdminPrivilegesDto request,
@@ -36,11 +38,10 @@ public class GrantAdminPrivileges : IEndpoint
                               "GroupId: {GroupId}, UserId: {UserId}, AdminId: {AdminId}. TraceId: {TraceId}", 
             request.GroupId, request.UserId, currentUserId, traceId);
         
-        var isCurrentUserAdmin = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == request.GroupId  && gu.UserId == currentUserId && gu.IsAdmin,
-                cancellationToken);
+        var currentGroupUser = httpContext.Items["GroupUser"] as GroupUser;
+        var isAdmin = currentGroupUser?.IsAdmin ?? false;
         
-        if (!isCurrentUserAdmin)
+        if (!isAdmin)
         {
             logger.LogWarning("User {UserId} is not admin of group {GroupId}. TraceId: {TraceId}", 
                 currentUserId, request.GroupId, traceId);

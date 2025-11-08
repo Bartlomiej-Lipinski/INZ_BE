@@ -6,6 +6,7 @@ using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Groups;
 
@@ -17,7 +18,8 @@ public class GetAmountOfJoinRequests : IEndpoint
             .WithName("GetAmountOfJoinRequests")
             .WithDescription("Returns the amount of join requests for the current user")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
     
     public static async Task<IResult> Handle(

@@ -3,10 +3,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Comments;
 
@@ -19,7 +19,7 @@ public class DeleteComment : IEndpoint
             .WithDescription("Deletes a comment from a target. Allowed for comment author and target author.")
             .WithTags("Comments")
             .RequireAuthorization()
-            .AddEndpointFilter<ValidationFilter<DeleteComment>();
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
 
     public static async Task<IResult> Handle(
@@ -34,26 +34,6 @@ public class DeleteComment : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
-        
-        var group = await dbContext.Groups
-            .AsNoTracking()
-            .Include(g => g.GroupUsers)
-            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
-
-        if (group == null)
-        {
-            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-        }
-        
-        var groupUser = group.GroupUsers
-            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
-        if (groupUser == null)
-        {
-            logger.LogWarning("User {UserId} attempted to delete comment in group {GroupId} but is not a member. " +
-                              "TraceId: {TraceId}", userId, groupId, traceId);
-            return Results.Forbid();
-        }
 
         var comment = await dbContext.Comments
             .FirstOrDefaultAsync(c => c.Id == commentId && c.TargetId == targetId, cancellationToken);
