@@ -57,7 +57,7 @@ public class GetGroupById : IEndpoint
             .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
         if (groupUser == null)
         {
-            logger.LogWarning("User {UserId} attempted to delete event in group {GroupId} but is not a member. " +
+            logger.LogWarning("User {UserId} attempted to get group {GroupId} but is not a member. " +
                               "TraceId: {TraceId}", userId, id, traceId);
             return Results.Forbid();
         }
