@@ -55,6 +55,10 @@ public class GetGroupEvents : IEndpoint
                 }).ToList()
             })
             .ToListAsync(cancellationToken);
+        
+        if (events.Count == 0)
+            return Results.Ok(ApiResponse<List<EventResponseDto>>
+                .Ok(events, "No events found for this group.", traceId));
 
         return Results.Ok(ApiResponse<List<EventResponseDto>>.Ok(events, "Group events retrieved successfully.",
             traceId));

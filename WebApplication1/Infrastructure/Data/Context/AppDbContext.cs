@@ -456,7 +456,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         
         builder.Entity<ChallengeParticipant>(entity =>
         {
-            entity.HasKey(c => new { c.ChallengeId, c.UserId });
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.ChallengeId).IsRequired();
+            entity.Property(c => c.UserId).IsRequired();
 
             entity.HasOne(c => c.Challenge)
                 .WithMany(c => c.Participants)

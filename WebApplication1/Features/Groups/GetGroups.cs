@@ -29,6 +29,10 @@ public class GetGroups : IEndpoint
                 Color = g.Color
             }).ToListAsync(dbc);;
         
+        if (groups.Count == 0)
+            return Results.Ok(ApiResponse<List<GroupResponseDto>>
+                .Ok(groups, "No groups found."));
+        
         return Results.Ok(ApiResponse<List<GroupResponseDto>>.Ok(groups, "Groups retrieved successfully"));
     }
 }

@@ -49,6 +49,10 @@ public class GetGroupPolls : IEndpoint
             })
             .ToListAsync(cancellationToken);
         
+        if (polls.Count == 0)
+            return Results.Ok(ApiResponse<List<PollResponseDto>>
+                .Ok(polls, "No polls found for this group.", traceId));
+        
         return Results.Ok(ApiResponse<List<PollResponseDto>>.Ok(polls, "Group polls retrieved successfully.",
             traceId));
     }

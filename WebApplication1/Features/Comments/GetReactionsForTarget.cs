@@ -41,16 +41,13 @@ public class GetReactionsForTarget: IEndpoint
                 UserId = c.UserId,
             })
             .ToListAsync(cancellationToken);
-
-        if (reactions.Count == 0)
-        {
-            logger.LogInformation("No reactions found for {TargetId}. TraceId: {TraceId}", targetId, traceId);
-            return Results.Ok(ApiResponse<List<ReactionDto>>
-                .Ok([], "No reactions found.", traceId));
-        }
         
         logger.LogInformation("Fetched {Count} reactions for {TargetId}. TraceId: {TraceId}", 
             reactions.Count, targetId, traceId);
+        
+        if (reactions.Count == 0)
+            return Results.Ok(ApiResponse<List<ReactionDto>>
+                .Ok(reactions, "No reactions found for this target.", traceId));
 
         return Results.Ok(ApiResponse<List<ReactionDto>>
             .Ok(reactions, "Reactions retrieved successfully.", traceId));

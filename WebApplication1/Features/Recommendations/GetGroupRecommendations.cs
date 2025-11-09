@@ -113,6 +113,10 @@ public class GetGroupRecommendations: IEndpoint
                 }).ToList()
                 : []
         }).ToList();
+        
+        if (response.Count == 0)
+            return Results.Ok(ApiResponse<List<RecommendationResponseDto>>
+                .Ok(response, "No recommendations found for this group.", traceId));
 
         return Results.Ok(ApiResponse<List<RecommendationResponseDto>>
             .Ok(response, "Group recommendations retrieved successfully.", traceId));

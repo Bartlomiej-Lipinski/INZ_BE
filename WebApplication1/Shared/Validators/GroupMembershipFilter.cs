@@ -19,7 +19,7 @@ public class GroupMembershipFilter(AppDbContext dbContext, ILogger<GroupMembersh
         var group = await dbContext.Groups
             .AsNoTracking()
             .Include(g => g.GroupUsers)
-            .FirstOrDefaultAsync(g => g.Id == groupId);
+            .SingleOrDefaultAsync(g => g.Id == groupId);
 
         if (group == null)
         {
@@ -28,7 +28,7 @@ public class GroupMembershipFilter(AppDbContext dbContext, ILogger<GroupMembersh
         }
 
         var groupUser = group.GroupUsers
-            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
+            .SingleOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
 
         httpContext.Items["GroupUser"] = groupUser;
 

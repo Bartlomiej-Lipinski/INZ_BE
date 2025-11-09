@@ -76,6 +76,10 @@ public class GetTimeline : IEndpoint
             .OrderBy(e => e.Date)
             .ToList();
         
+        if (result.Count == 0)
+            return Results.Ok(ApiResponse<List<TimelineEventResponseDto>>
+                .Ok(result, "No timeline found for this group.", traceId));
+        
         return Results.Ok(ApiResponse<List<TimelineEventResponseDto>>
             .Ok(result, "Timeline retrieved successfully.", traceId));
     }

@@ -24,7 +24,7 @@ public class PostCommentTest : TestBase
         var result = await PostComment.Handle(
             group.Id,
             "nonexistent",
-            TestDataFactory.CreateCommentRequestDto("Recommendation", "Hello!"),
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),

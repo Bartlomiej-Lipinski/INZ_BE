@@ -50,6 +50,10 @@ public class GetUserSettlements :IEndpoint
             })
             .ToListAsync(cancellationToken);
         
+        if (settlements.Count == 0)
+            return Results.Ok(ApiResponse<List<SettlementResponseDto>>
+                .Ok(settlements, "No settlements found for this user.", traceId));
+        
         return Results.Ok(ApiResponse<List<SettlementResponseDto>>
             .Ok(settlements, "User settlements retrieved successfully.", traceId));
     }

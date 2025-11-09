@@ -22,7 +22,7 @@ public class GetUserGroups : IEndpoint
             .WithTags("Groups");
     }
 
-    public static async Task<ApiResponse<IEnumerable<GroupResponseDto>>> Handle(
+    public static async Task<IResult> Handle(
         ClaimsPrincipal currentUser,
         AppDbContext dbContext,
         HttpContext httpContext,
@@ -40,7 +40,12 @@ public class GetUserGroups : IEndpoint
                 Name = c.Group.Name
             })
             .ToListAsync(cancellationToken);
+        
+        if (groups.Count == 0)
+            return Results.Ok(ApiResponse<List<GroupResponseDto>>
+                .Ok(groups, "No groups found for this user.", traceId));
 
-        return ApiResponse<IEnumerable<GroupResponseDto>>.Ok(groups, null, traceId);
+        return Results.Ok(ApiResponse<List<GroupResponseDto>>
+            .Ok(groups, "Groups retrieved successfully.", traceId));
     }
 }

@@ -1,5 +1,7 @@
 ﻿using FluentAssertions;
 using WebApplication1.Features.Groups;
+using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Groups;
 
@@ -11,16 +13,18 @@ public class GetUserGroupsTest : TestBase
         var user = TestDataFactory.CreateUser("user1", "Test User");
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
-        var response = await GetUserGroups.Handle(
+        var result = await GetUserGroups.Handle(
             CreateClaimsPrincipal(user.Id),
             dbContext, 
             CreateHttpContext(user.Id), 
             CancellationToken.None
         );
         
-        response.Success.Should().BeTrue();
-        response.Data.Should().NotBeNull();
-        response.Data.Should().BeEmpty();
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GroupResponseDto>>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GroupResponseDto>>>;
+        okResult!.Value!.Success.Should().BeTrue();
+        okResult.Value.Data!.Should().NotBeNull();
+        okResult.Value.Data.Should().BeEmpty();
     }
     
     [Fact]
@@ -37,18 +41,20 @@ public class GetUserGroupsTest : TestBase
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user.Id, group2.Id));
         await dbContext.SaveChangesAsync();
         
-        var response = await GetUserGroups.Handle(
+        var result = await GetUserGroups.Handle(
             CreateClaimsPrincipal(user.Id), 
             dbContext,
             CreateHttpContext(user.Id), 
             CancellationToken.None
         );
-
-        response.Success.Should().BeTrue();
-        response.Data.Should().NotBeNull();
-        response.Data!.Count().Should().Be(2);
-        response.Data.Should().ContainEquivalentOf(TestDataFactory.CreateGroupResponseDto(group1.Id, group1.Name));
-        response.Data.Should().ContainEquivalentOf(TestDataFactory.CreateGroupResponseDto(group2.Id, group2.Name));
+        
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GroupResponseDto>>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GroupResponseDto>>>;
+        okResult!.Value!.Success.Should().BeTrue();
+        okResult.Value.Data!.Should().NotBeNull();
+        okResult.Value.Data!.Count.Should().Be(2);
+        okResult.Value.Data.Should().ContainEquivalentOf(TestDataFactory.CreateGroupResponseDto(group1.Id, group1.Name));
+        okResult.Value.Data.Should().ContainEquivalentOf(TestDataFactory.CreateGroupResponseDto(group2.Id, group2.Name));
     }
     
     [Fact]
@@ -66,17 +72,18 @@ public class GetUserGroupsTest : TestBase
         dbContext.GroupUsers.Add(TestDataFactory.CreateGroupUser(user2.Id, group2.Id));
         await dbContext.SaveChangesAsync();
         
-        var response = await GetUserGroups.Handle(
+        var result = await GetUserGroups.Handle(
             CreateClaimsPrincipal(user1.Id),
             dbContext,
             CreateHttpContext(user1.Id),
             CancellationToken.None
         );
         
-        response.Success.Should().BeTrue();
-        response.Data.Should().NotBeNull();
-        response.Data!.Count().Should().Be(1);
-        response.Data.First().Id.Should().Be(group1.Id);
-        response.Data.First().Name.Should().Be(group1.Name);
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GroupResponseDto>>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<GroupResponseDto>>>;
+        okResult!.Value!.Success.Should().BeTrue();
+        okResult.Value.Data!.Should().NotBeNull();
+        okResult.Value.Data!.Count.Should().Be(1);
+        okResult.Value.Data.First().Id.Should().Be(group1.Id);
     }
 }

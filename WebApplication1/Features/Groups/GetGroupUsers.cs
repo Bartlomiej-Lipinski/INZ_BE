@@ -66,6 +66,10 @@ public class GetGroupUsers : IEndpoint
                 Email = gu.User.Email
             })
             .ToList();
+        
+        if (users.Count == 0)
+            return Results.Ok(ApiResponse<List<UserResponseDto>>
+                .Ok(users, "No users found for this group.", traceId));
 
         return Results.Ok(ApiResponse<IEnumerable<UserResponseDto>>.Ok(users, null, traceId));
     }

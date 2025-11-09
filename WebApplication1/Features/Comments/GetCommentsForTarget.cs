@@ -50,6 +50,10 @@ public class GetCommentsForTarget : IEndpoint
 
         logger.LogInformation("Fetched {Count} comments for {TargetId}. TraceId: {TraceId}", 
             comments.Count, targetId, traceId);
+        
+        if (comments.Count == 0)
+            return Results.Ok(ApiResponse<List<CommentResponseDto>>
+                .Ok(comments, "No comments found for this target.", traceId));
 
         return Results.Ok(ApiResponse<List<CommentResponseDto>>
             .Ok(comments, "Comments retrieved successfully.", traceId));

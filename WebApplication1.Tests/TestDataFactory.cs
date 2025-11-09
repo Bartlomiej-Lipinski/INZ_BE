@@ -8,6 +8,7 @@ using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Features.Timeline.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Challenges;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
@@ -446,6 +447,22 @@ public static class TestDataFactory
             Title = title,
             Date = date,
             Description = description
+        };
+    }
+
+    public static Challenge CreateChallenge(
+        string id, string groupId, string userId, string name, string description, DateTime startDate, DateTime endDate)
+    {
+        return new Challenge
+        {
+            Id = id,
+            GroupId = groupId,
+            UserId = userId,
+            EntityType = EntityType.Challenge,
+            Name = name,
+            Description = description,
+            StartDate = startDate,
+            EndDate = endDate
         };
     }
     

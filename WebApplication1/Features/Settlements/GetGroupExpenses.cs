@@ -54,6 +54,10 @@ public class GetGroupExpenses : IEndpoint
                 }).ToList()
             })
             .ToListAsync(cancellationToken);
+        
+        if (expenses.Count == 0)
+            return Results.Ok(ApiResponse<List<ExpenseResponseDto>>
+                .Ok(expenses, "No expenses found for this group.", traceId));
 
         return Results.Ok(ApiResponse<List<ExpenseResponseDto>>
             .Ok(expenses, "Group expenses retrieved successfully.", traceId));
