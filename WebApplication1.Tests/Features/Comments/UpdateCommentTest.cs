@@ -8,26 +8,6 @@ namespace WebApplication1.Tests.Features.Comments;
 public class UpdateCommentTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Logged_In()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await UpdateComment.Handle(
-            "g1",
-            "r1",
-            "c1",
-            TestDataFactory.CreateCommentRequestDto("Updated"),
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<UpdateComment>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-    
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Comment_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

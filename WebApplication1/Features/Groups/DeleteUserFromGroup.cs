@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Groups;
 
@@ -17,7 +19,8 @@ public class DeleteUserFromGroup : IEndpoint
             .WithName("DeleteUserFromGroup")
             .WithDescription("Deletes a user from a group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
@@ -29,37 +32,33 @@ public class DeleteUserFromGroup : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var currentUserId = currentUser.GetUserId();
 
         logger.LogInformation("Deleting user {UserId} from group {GroupId}. TraceId: {TraceId}",
             userId, groupId, traceId);
         
-        var currentUserId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(currentUserId))
-        {
-            logger.LogWarning("Unauthorized attempt to delete user from group. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-        var isCurrentUserAdmin = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == currentUserId && gu.IsAdmin, cancellationToken);
-        if (!isCurrentUserAdmin)
+        var currentGroupUser = httpContext.Items["GroupUser"] as GroupUser;
+        var isAdmin = currentGroupUser?.IsAdmin ?? false;
+        if (!isAdmin)
         {
             logger.LogWarning("User {CurrentUserId} is not admin of group {GroupId}. TraceId: {TraceId}",
                 currentUserId, groupId, traceId);
             return Results.Forbid();
         }
+        
         var groupUser = await dbContext.GroupUsers
             .FirstOrDefaultAsync(
                 gu => gu.GroupId == groupId 
                       && gu.UserId == userId 
                       && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
+        
         if (groupUser == null)
         {
             logger.LogWarning("User {UserId} not found in group {GroupId}. TraceId: {TraceId}",
                 userId, groupId, traceId);
             return Results.NotFound();
         }
+        
         dbContext.GroupUsers.Remove(groupUser);
         await dbContext.SaveChangesAsync(cancellationToken);
         

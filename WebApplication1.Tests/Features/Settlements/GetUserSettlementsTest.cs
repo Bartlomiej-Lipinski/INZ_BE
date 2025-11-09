@@ -9,65 +9,6 @@ namespace WebApplication1.Tests.Features.Settlements;
 public class GetUserSettlementsTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await GetUserSettlements.Handle(
-            "g1",
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<GetUserSettlements>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-
-        var result = await GetUserSettlements.Handle(
-            "nonexistent-group",
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<GetUserSettlements>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Forbid_When_User_Not_Member_Of_Group()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
-        var group = TestDataFactory.CreateGroup("g1", "Group1");
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        await dbContext.SaveChangesAsync();
-
-        var result = await GetUserSettlements.Handle(
-            "g1",
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<GetUserSettlements>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_User_Settlements_When_They_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

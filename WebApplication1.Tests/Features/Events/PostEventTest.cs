@@ -52,31 +52,6 @@ public class PostEventTest : TestBase
     }
     
     [Fact]
-    public async Task Handle_Should_Return_Forbidden_When_User_Not_Member()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");  
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        await dbContext.SaveChangesAsync();
-
-        var request = TestDataFactory.CreateEventRequestDto("Event", DateTime.UtcNow.AddDays(1));
-
-        var result = await PostEvent.Handle(
-            group.Id,
-            request,
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(), 
-            NullLogger<PostEvent>.Instance, 
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();    
-    }
-    
-    [Fact]
     public async Task Handle_Should_Return_BadRequest_When_Title_Missing()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

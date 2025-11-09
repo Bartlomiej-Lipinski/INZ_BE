@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Events;
 
@@ -18,7 +18,8 @@ public class GetGroupEvents : IEndpoint
             .WithName("GetGroupEvents")
             .WithDescription("Retrieves all events for a specific group")
             .WithTags("Events")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
     
     public static async Task<IResult> Handle(
@@ -30,34 +31,6 @@ public class GetGroupEvents : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to get group events. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
-        var group = await dbContext.Groups
-            .AsNoTracking()
-            .Include(g => g.GroupUsers)
-            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
-
-        if (group == null)
-        {
-            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-        }
-
-        var groupUser = group.GroupUsers
-            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
-        if (groupUser == null)
-        {
-            logger.LogWarning("User {UserId} attempted to get group events, but is not a member. " +
-                              "TraceId: {TraceId}", userId, traceId);
-            return Results.Forbid();
-        }
 
         var events = await dbContext.Events
             .AsNoTracking()

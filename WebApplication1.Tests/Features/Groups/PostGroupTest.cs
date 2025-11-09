@@ -32,23 +32,6 @@ public class PostGroupTest : TestBase
     }
     
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_No_UserId()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        
-        var result = await PostGroup.Handle(
-            CreateHttpContext(), 
-            TestDataFactory.CreateGroupRequestDto("Test Group",  "#FFF"), 
-            dbContext,
-            CreateClaimsPrincipal(),
-            NullLogger<PostGroup>.Instance,
-            CancellationToken.None
-        );
-                    
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-    
-    [Fact]
     public async Task Handle_Should_Create_Group_And_Assign_User_As_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

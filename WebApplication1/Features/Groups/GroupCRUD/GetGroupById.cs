@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Groups.GroupCRUD;
@@ -30,14 +32,7 @@ public class GetGroupById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to get group. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
+        var userId = currentUser.GetUserId();
 
         if (string.IsNullOrWhiteSpace(id))
         {
@@ -56,6 +51,15 @@ public class GetGroupById : IEndpoint
         {
             logger.LogWarning("Group not found with ID: {GroupId}. TraceId: {TraceId}", id, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found", traceId));
+        }
+        
+        var groupUser = group.GroupUsers
+            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
+        if (groupUser == null)
+        {
+            logger.LogWarning("User {UserId} attempted to get group {GroupId} but is not a member. " +
+                              "TraceId: {TraceId}", userId, id, traceId);
+            return Results.Forbid();
         }
         
         var dto = new GroupResponseDto

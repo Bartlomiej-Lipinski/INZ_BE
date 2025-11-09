@@ -55,26 +55,6 @@ public class PostPollTest : TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Has_No_Claims()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        
-        var dto = TestDataFactory.CreatePollRequestDto(
-            "Test question", [new PollOptionDto { Text = "Option 1" }]);
-
-        var result = await PostPoll.Handle(
-            "g1",
-            dto,
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<PostPoll>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_BadRequest_When_Question_Is_Missing()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -98,46 +78,5 @@ public class PostPollTest : TestBase
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Forbid_When_User_Is_Not_Member_Of_Group()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        dbContext.Groups.Add(group);
-        await dbContext.SaveChangesAsync();
-
-        var dto = TestDataFactory.CreatePollRequestDto("Test question", [new PollOptionDto { Text = "Option 1" }]);
-
-        var result = await PostPoll.Handle(
-            "g1",
-            dto,
-            dbContext,
-            CreateClaimsPrincipal("u2"),
-            CreateHttpContext("u2"),
-            NullLogger<PostPoll>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var dto = TestDataFactory.CreatePollRequestDto("Test question", [new PollOptionDto { Text = "Option 1" }]);
-
-        var result = await PostPoll.Handle(
-            "nonexistent-group",
-            dto,
-            dbContext,
-            CreateClaimsPrincipal("u1"),
-            CreateHttpContext("u1"),
-            NullLogger<PostPoll>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
     }
 }

@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Users;
 
-[ApiExplorerSettings(GroupName = "Users")]
 public class DeleteUser : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
@@ -28,15 +28,7 @@ public class DeleteUser : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                     ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrEmpty(userId))
-        {
-            logger.LogWarning("Invalid user ID provided for deletion. TraceId: {TraceId}", traceId);
-            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
-        }
+        var userId = currentUser.GetUserId();
 
         logger.LogInformation("Attempting to delete user with ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 

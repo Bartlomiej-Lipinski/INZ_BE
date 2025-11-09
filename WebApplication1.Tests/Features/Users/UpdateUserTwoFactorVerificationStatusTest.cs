@@ -37,22 +37,6 @@ public class UpdateUserTwoFactorVerificationStatusTest : TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        
-        var result = await UpdateUserTwoFactorVerificationStatus.Handle(
-            true,
-            CreateClaimsPrincipal(""),
-            dbContext,
-            CreateHttpContext(),
-            NullLogger<UpdateUserTwoFactorVerificationStatus>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_User_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

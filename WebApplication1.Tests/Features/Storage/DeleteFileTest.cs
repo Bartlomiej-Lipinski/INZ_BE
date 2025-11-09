@@ -10,25 +10,6 @@ namespace WebApplication1.Tests.Features.Storage;
 public class DeleteFileTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Is_Null()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var mockStorageService = new Mock<IStorageService>();
-
-        var result = await DeleteFile.Handle(
-            "test-id",
-            dbContext,
-            mockStorageService.Object,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<DeleteFile>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_File_Does_Not_Exist_In_Database()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

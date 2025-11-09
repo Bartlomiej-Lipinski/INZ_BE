@@ -40,23 +40,6 @@ public class DeletePollTest : TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_No_User_Id()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        
-        var result = await DeletePoll.Handle(
-            "g1",
-            "p1",
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<DeletePoll>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Poll_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

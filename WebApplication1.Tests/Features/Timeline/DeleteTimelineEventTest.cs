@@ -38,24 +38,6 @@ public class DeleteTimelineEventTest : TestBase
     }
 
     [Fact]
-    public async Task DeleteTimelineEvent_Should_Return_Unauthorized_When_No_User()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await DeleteTimelineEvent.Handle(
-            "g1",
-            "e1",
-            dbContext,
-            CreateClaimsPrincipal(null),
-            CreateHttpContext(null),
-            NullLogger<DeleteTimelineEvent>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task DeleteTimelineEvent_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -74,29 +56,6 @@ public class DeleteTimelineEventTest : TestBase
         );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task DeleteTimelineEvent_Should_Return_Forbidden_When_User_Not_In_Group()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User 1");
-        var group = TestDataFactory.CreateGroup("g1", "Group 1");
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        await dbContext.SaveChangesAsync();
-
-        var result = await DeleteTimelineEvent.Handle(
-            group.Id,
-            "e1",
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<DeleteTimelineEvent>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
     }
 
     [Fact]
