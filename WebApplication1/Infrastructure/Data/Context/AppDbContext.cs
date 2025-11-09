@@ -36,6 +36,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<TimelineEvent> TimelineEvents { get; set; } = null!;
     public DbSet<Challenge> Challenges { get; set; } = null!;
     public DbSet<ChallengeParticipant> ChallengeParticipants { get; set; } = null!;
+    public DbSet<ChallengeProgress> ChallengeProgresses { get; set; } = null!;
+    public DbSet<ChallengeStage> ChallengeStages { get; set; } = null!;
+
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -449,11 +452,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithOne(s => s.Challenge)
                 .HasForeignKey(s => s.ChallengeId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
-            entity.HasMany(c => c.Posts)
-                .WithOne(p => p.Challenge)
-                .HasForeignKey(p => p.ChallengeId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
         
         builder.Entity<ChallengeParticipant>(entity =>
@@ -473,6 +471,31 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasMany(c => c.ProgressEntries)
                 .WithOne(p => p.Participant)
                 .HasForeignKey(p => p.ParticipantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<ChallengeProgress>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.ParticipantId).IsRequired();
+            entity.Property(c => c.Description).IsRequired().HasMaxLength(255);
+
+            entity.HasOne(c => c.Participant)
+                .WithMany(p => p.ProgressEntries)
+                .HasForeignKey(c => c.ParticipantId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<ChallengeStage>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.ChallengeId).IsRequired();
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(255);
+            entity.Property(c => c.Description).IsRequired().HasMaxLength(255);
+
+            entity.HasOne(c => c.Challenge)
+                .WithMany(c => c.Stages)
+                .HasForeignKey(c => c.ChallengeId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

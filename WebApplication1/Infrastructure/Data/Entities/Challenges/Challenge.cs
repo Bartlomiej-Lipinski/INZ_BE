@@ -24,5 +24,4 @@ public class Challenge
     public User User { get; set; } = null!;
     public ICollection<ChallengeParticipant> Participants { get; set; } = new List<ChallengeParticipant>();
     public ICollection<ChallengeStage> Stages { get; set; } = new List<ChallengeStage>();
-    public ICollection<ChallengePost> Posts { get; set; } = new List<ChallengePost>();
 }
