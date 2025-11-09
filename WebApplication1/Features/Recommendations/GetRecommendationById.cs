@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
@@ -54,12 +55,12 @@ public class GetRecommendationById : IEndpoint
         var comments = await dbContext.Comments
             .AsNoTracking()
             .Include(c => c.User)
-            .Where(c => c.TargetId == recommendationId && c.TargetType == "Recommendation")
+            .Where(c => c.TargetId == recommendationId && c.EntityType == EntityType.Recommendation)
             .ToListAsync(cancellationToken);
 
         var reactions = await dbContext.Reactions
             .AsNoTracking()
-            .Where(r => r.TargetId == recommendationId && r.TargetType == "Recommendation")
+            .Where(r => r.TargetId == recommendationId && r.EntityType == EntityType.Recommendation)
             .ToListAsync(cancellationToken);
 
         var response = new RecommendationResponseDto

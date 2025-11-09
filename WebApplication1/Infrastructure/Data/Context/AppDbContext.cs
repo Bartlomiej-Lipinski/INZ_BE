@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Challenges;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
@@ -33,7 +34,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Poll> Polls { get; set; } = null!;
     public DbSet<PollOption> PollOptions { get; set; } = null!;
     public DbSet<TimelineEvent> TimelineEvents { get; set; } = null!;
-     
+    public DbSet<Challenge> Challenges { get; set; } = null!;
+    public DbSet<ChallengeParticipant> ChallengeParticipants { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -160,6 +163,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasKey(r => r.Id);
             entity.Property(r => r.GroupId).IsRequired();
             entity.Property(r => r.UserId).IsRequired();
+            entity.Property(r => r.EntityType).IsRequired();
             entity.Property(r => r.Title).IsRequired().HasMaxLength(200);
             entity.Property(r => r.Content).IsRequired().HasMaxLength(2000);
             entity.Property(r => r.Category).HasMaxLength(100);
@@ -179,7 +183,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.TargetId).IsRequired();
-            entity.Property(c => c.TargetType).IsRequired();
+            entity.Property(c => c.EntityType).IsRequired();
             entity.Property(c => c.UserId).IsRequired();
             entity.Property(c => c.Content).IsRequired().HasMaxLength(1000);
             
@@ -188,14 +192,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             
-            entity.HasIndex(c => new { c.TargetType, c.TargetId });
+            entity.HasIndex(c => new { TargetType = c.EntityType, c.TargetId });
         });
         
         builder.Entity<Reaction>(entity =>
         {
             entity.HasKey(r => new { r.TargetId, r.UserId });
             entity.Property(r => r.TargetId).IsRequired();
-            entity.Property(r => r.TargetType).IsRequired();
+            entity.Property(r => r.EntityType).IsRequired();
             entity.Property(r => r.UserId).IsRequired();
             
             entity.HasOne(r => r.User)
@@ -203,7 +207,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
             
-            entity.HasIndex(r => new { r.TargetType, r.TargetId });
+            entity.HasIndex(r => new { TargetType = r.EntityType, r.TargetId });
         });
         
         builder.Entity<Event>(entity =>
@@ -211,12 +215,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasKey(e => e.Id);
             entity.Property(e => e.GroupId).IsRequired();
             entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.EntityType).IsRequired();
             entity.Property(e => e.Title).IsRequired().HasMaxLength(150);
             entity.Property(e => e.Description).HasMaxLength(2000);
             entity.Property(e => e.Location).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.IsAutoScheduled).IsRequired();
-            entity.Property(e => e.Status).IsRequired();
 
             entity.HasOne(e => e.Group)
                 .WithMany(g => g.Events)
@@ -350,6 +354,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasKey(p => p.Id);
             entity.Property(p => p.GroupId).IsRequired();
             entity.Property(p => p.CreatedByUserId).IsRequired();
+            entity.Property(p => p.EntityType).IsRequired();
             entity.Property(p => p.Question).IsRequired().HasMaxLength(500);
             entity.Property(p => p.CreatedAt).IsRequired();
 
@@ -413,6 +418,61 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasOne(te => te.Group)
                 .WithMany(g => g.TimelineEvents)
                 .HasForeignKey(te => te.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<Challenge>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.GroupId).IsRequired();
+            entity.Property(c => c.UserId).IsRequired();
+            entity.Property(c => c.EntityType).IsRequired();
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+            entity.Property(c => c.Description).IsRequired().HasMaxLength(255);
+
+            entity.HasOne(c => c.Group)
+                .WithMany(g => g.Challenges)
+                .HasForeignKey(c => c.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(c => c.User)
+                .WithMany(u => u.Challenges)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(c => c.Participants)
+                .WithOne(p => p.Challenge)
+                .HasForeignKey(p => p.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(c => c.Stages)
+                .WithOne(s => s.Challenge)
+                .HasForeignKey(s => s.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(c => c.Posts)
+                .WithOne(p => p.Challenge)
+                .HasForeignKey(p => p.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<ChallengeParticipant>(entity =>
+        {
+            entity.HasKey(c => new { c.ChallengeId, c.UserId });
+
+            entity.HasOne(c => c.Challenge)
+                .WithMany(c => c.Participants)
+                .HasForeignKey(c => c.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(c => c.User)
+                .WithMany(u => u.ChallengeParticipants)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(c => c.ProgressEntries)
+                .WithOne(p => p.Participant)
+                .HasForeignKey(p => p.ParticipantId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Comments;
 using WebApplication1.Features.Comments.Dtos;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Comments;
@@ -25,9 +26,9 @@ public class GetCommentsForTargetTest : TestBase
         dbContext.Recommendations.Add(target);
 
         var comment1 = TestDataFactory.CreateComment(
-            "c1", target.Id, "Recommendation", user.Id, "First comment", DateTime.UtcNow);
+            "c1", target.Id, EntityType.Recommendation, user.Id, "First comment", DateTime.UtcNow);
         var comment2 = TestDataFactory.CreateComment(
-            "c2", target.Id, "Recommendation", user.Id, "Second comment", DateTime.UtcNow);
+            "c2", target.Id, EntityType.Recommendation, user.Id, "Second comment", DateTime.UtcNow);
         dbContext.Comments.AddRange(comment1, comment2);
 
         await dbContext.SaveChangesAsync();

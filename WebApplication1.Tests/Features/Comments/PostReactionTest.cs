@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Comments;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Comments;
@@ -51,7 +52,7 @@ public class PostReactionTest : TestBase
         var target = TestDataFactory.CreateRecommendation(
             "r1", group.Id, user.Id, "Title", "Content", DateTime.UtcNow);
 
-        var existingReaction = TestDataFactory.CreateReaction(target.Id, "Recommendation", user.Id);
+        var existingReaction = TestDataFactory.CreateReaction(target.Id, EntityType.Recommendation, user.Id);
 
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);

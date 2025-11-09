@@ -14,6 +14,7 @@ using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
+using WebApplication1.Infrastructure.Data.Enums;
 
 namespace WebApplication1.Tests;
 
@@ -157,25 +158,25 @@ public static class TestDataFactory
     }
 
     public static Comment CreateComment(
-        string id, string targetId, string targetType, string userId, string content, DateTime createdAt)
+        string id, string targetId, EntityType entityType, string userId, string content, DateTime createdAt)
     {
         return new Comment
         {
             Id = id,
             TargetId = targetId,
-            TargetType = targetType,
+            EntityType = entityType,
             UserId = userId,
             Content = content,
             CreatedAt = createdAt
         };
     }
 
-    public static Reaction CreateReaction(string targetId, string targetType, string userId)
+    public static Reaction CreateReaction(string targetId, EntityType entityType, string userId)
     {
         return new Reaction
         {
             TargetId = targetId,
-            TargetType = targetType,
+            EntityType = entityType,
             UserId = userId,
         };
     }
@@ -193,11 +194,11 @@ public static class TestDataFactory
         };
     }
 
-    public static CommentRequestDto CreateCommentRequestDto(string content, string? targetType = "Recommendation")
+    public static CommentRequestDto CreateCommentRequestDto(string content, string targetType = "Recommendation")
     {
         return new CommentRequestDto
         {
-            TargetType = targetType,
+            EntityType = targetType,
             Content = content
         };
     }

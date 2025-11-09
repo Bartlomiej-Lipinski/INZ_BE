@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -47,9 +48,10 @@ public class PostRecommendation : IEndpoint
             Id = Guid.NewGuid().ToString(),
             GroupId = groupId,
             UserId = userId!,
-            Title = request.Title.Trim(),
-            Content = request.Content.Trim(),
-            Category = request.Category?.Trim(),
+            EntityType = EntityType.Recommendation,
+            Title = request.Title,
+            Content = request.Content,
+            Category = request.Category,
             ImageUrl = request.ImageUrl,
             LinkUrl = request.LinkUrl,
             CreatedAt = DateTime.UtcNow

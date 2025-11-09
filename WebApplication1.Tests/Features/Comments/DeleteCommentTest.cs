@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Comments;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Comments;
@@ -48,7 +49,7 @@ public class DeleteCommentTest : TestBase
         dbContext.Recommendations.Add(target);
         
         var comment = TestDataFactory.CreateComment(
-            "c1", target.Id, "Recommendation", user.Id, "Text", DateTime.UtcNow);
+            "c1", target.Id, EntityType.Recommendation, user.Id, "Text", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
 
@@ -84,7 +85,7 @@ public class DeleteCommentTest : TestBase
         dbContext.Recommendations.Add(target);
 
         var comment = TestDataFactory.CreateComment(
-            "c1", target.Id, "Recommendation", commenter.Id, "Text", DateTime.UtcNow);
+            "c1", target.Id, EntityType.Recommendation, commenter.Id, "Text", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
 
@@ -122,7 +123,7 @@ public class DeleteCommentTest : TestBase
         dbContext.Recommendations.Add(target);
 
         var comment = TestDataFactory.CreateComment(
-            "c1", target.Id, "Recommendation", commenter.Id, "Text", DateTime.UtcNow);
+            "c1", target.Id, EntityType.Recommendation, commenter.Id, "Text", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
         

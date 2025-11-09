@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Events;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -63,6 +64,7 @@ public class PostEvent : IEndpoint
             Id = Guid.NewGuid().ToString(),
             GroupId = groupId,
             UserId = userId!,
+            EntityType = EntityType.Event,
             Title = request.Title,
             Description = request.Description,
             Location = request.Location,
@@ -72,7 +74,6 @@ public class PostEvent : IEndpoint
             DurationMinutes = request.DurationMinutes,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            Status = request.Status,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -96,7 +97,6 @@ public class PostEvent : IEndpoint
             DurationMinutes = newEvent.DurationMinutes,
             StartDate = newEvent.StartDate?.ToLocalTime(),
             EndDate = newEvent.EndDate?.ToLocalTime(),
-            Status = newEvent.Status,
             CreatedAt = newEvent.CreatedAt.ToLocalTime()
         };
 

@@ -1,10 +1,12 @@
-﻿namespace WebApplication1.Infrastructure.Data.Entities.Comments;
+﻿using WebApplication1.Infrastructure.Data.Enums;
+
+namespace WebApplication1.Infrastructure.Data.Entities.Comments;
 
 public class Reaction
 {
     public string TargetId { get; set; } = null!;
     
-    public string TargetType { get; set; } = null!;
+    public EntityType EntityType { get; set; }
     
     public string UserId { get; set; } = null!;
     

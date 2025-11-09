@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Recommendations;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
@@ -49,10 +50,10 @@ public class GetRecommendationByIdTest : TestBase
         dbContext.Recommendations.Add(recommendation);
         
         var comment = TestDataFactory
-            .CreateComment("c1", recommendation.Id, "Recommendation", user.Id, "Nice!", DateTime.UtcNow);
+            .CreateComment("c1", recommendation.Id, EntityType.Recommendation, user.Id, "Nice!", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
 
-        var reaction = TestDataFactory.CreateReaction(recommendation.Id, "Recommendation", user.Id);
+        var reaction = TestDataFactory.CreateReaction(recommendation.Id, EntityType.Recommendation, user.Id);
         dbContext.Reactions.Add(reaction);
         await dbContext.SaveChangesAsync();
         

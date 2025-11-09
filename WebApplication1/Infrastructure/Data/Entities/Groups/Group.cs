@@ -1,4 +1,5 @@
-﻿using WebApplication1.Infrastructure.Data.Entities.Events;
+﻿using WebApplication1.Infrastructure.Data.Entities.Challenges;
+using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
 
@@ -20,4 +21,5 @@ public class Group
     public ICollection<Settlement> Settlements { get; set; } = new List<Settlement>();
     public ICollection<Poll> Polls { get; set; } = new List<Poll>();
     public ICollection<TimelineEvent> TimelineEvents { get; set; } = new List<TimelineEvent>();
+    public ICollection<Challenge> Challenges { get; set; } = new List<Challenge>();
 }

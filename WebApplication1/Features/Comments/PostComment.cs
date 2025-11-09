@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -42,9 +43,18 @@ public class PostComment : IEndpoint
             return Results.BadRequest(ApiResponse<string>.Fail("Comment content cannot be empty.", traceId));
         }
 
-        var target = request.TargetType switch
+        if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
         {
-            "Recommendation" => await dbContext.Recommendations
+            return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type."));
+        }
+
+        object? target = entityType switch
+        {
+            EntityType.Recommendation => await dbContext.Recommendations
+                .Include(r => r.Group)
+                .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
+            
+            EntityType.Challenge => await dbContext.Challenges
                 .Include(r => r.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
             
@@ -61,7 +71,7 @@ public class PostComment : IEndpoint
         {
             Id = Guid.NewGuid().ToString(),
             TargetId = targetId,
-            TargetType = request.TargetType,
+            EntityType = entityType,
             UserId = userId!,
             Content = request.Content.Trim(),
             CreatedAt = DateTime.UtcNow

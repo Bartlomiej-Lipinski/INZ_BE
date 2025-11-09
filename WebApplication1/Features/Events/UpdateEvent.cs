@@ -89,7 +89,6 @@ public class UpdateEvent : IEndpoint
         existingEvent.DurationMinutes = request.DurationMinutes;
         existingEvent.StartDate = request.StartDate;
         existingEvent.EndDate = request.EndDate;
-        existingEvent.Status = request.Status;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} updated event {EventId} in group {GroupId}. TraceId: {TraceId}",
@@ -109,7 +108,6 @@ public class UpdateEvent : IEndpoint
             DurationMinutes = existingEvent.DurationMinutes,
             StartDate = existingEvent.StartDate?.ToLocalTime(),
             EndDate = existingEvent.EndDate?.ToLocalTime(),
-            Status = existingEvent.Status,
             CreatedAt = existingEvent.CreatedAt.ToLocalTime()
         };
 

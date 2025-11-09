@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Recommendations;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
@@ -80,8 +81,8 @@ public class DeleteRecommendationTest : TestBase
         dbContext.Recommendations.Add(recommendation);
 
         var comment = TestDataFactory.CreateComment(
-            "c1", "rec1", "Recommendation", user.Id, "Comment", DateTime.UtcNow);
-        var reaction = TestDataFactory.CreateReaction("rec1", "Recommendation", user.Id);
+            "c1", "rec1", EntityType.Recommendation, user.Id, "Comment", DateTime.UtcNow);
+        var reaction = TestDataFactory.CreateReaction("rec1", EntityType.Recommendation, user.Id);
         dbContext.Comments.Add(comment);
         dbContext.Reactions.Add(reaction);
 
