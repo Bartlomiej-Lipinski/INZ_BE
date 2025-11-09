@@ -1,12 +1,15 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Storage;
 
@@ -14,16 +17,18 @@ public class PostFile : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/entities/{entityType}/{entityId}/files", Handle)
+        app.MapPost("/groups/{groupId}/entities/{entityType}/{entityId}/files", Handle)
             .WithName("PostFile")
             .WithDescription("Upload file and link it to an entity")
             .WithTags("Storage")
             .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>()
             .DisableAntiforgery()
             .Accepts<IFormFile>("multipart/form-data");
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string entityType,
         [FromRoute] string entityId,
         IFormFile file,
@@ -35,27 +40,35 @@ public class PostFile : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.GetUserId();
+        var userId = currentUser.GetUserId();
+        
+        if (!Enum.TryParse<EntityType>(entityType, true, out var parsedEntityType))
+        {
+            logger.LogWarning("Invalid entity type '{EntityType}' for user {UserId}. TraceId: {TraceId}",
+                entityType, userId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type.", traceId));
+        }
 
-        if (file == null || file.Length == 0)
+        if (file.Length == 0)
             return Results.BadRequest(ApiResponse<string>.Fail("No file uploaded.", traceId));
 
         string url;
         await using (var stream = file.OpenReadStream())
         {
-            url = await storage.SaveFileAsync(stream, file.FileName, file.ContentType ?? "application/octet-stream", cancellationToken);
+            url = await storage.SaveFileAsync(stream, file.FileName, file.ContentType, cancellationToken);
         }
 
         var record = new StoredFile
         {
             Id = Guid.NewGuid().ToString(),
+            GroupId = groupId,
+            UploadedById = userId!,
+            EntityType = parsedEntityType,
+            EntityId = entityId,
             FileName = file.FileName,
-            ContentType = file.ContentType ?? "application/octet-stream",
+            ContentType = file.ContentType,
             Size = file.Length,
             Url = url,
-            EntityType = entityType,
-            EntityId = entityId,
-            UploadedById = currentUserId,
             UploadedAt = DateTime.UtcNow
         };
 
@@ -63,7 +76,7 @@ public class PostFile : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} uploaded file {FileId} for {EntityType}/{EntityId}. TraceId: {TraceId}",
-            currentUserId, record.Id, entityType, entityId, traceId);
+            userId, record.Id, entityType, entityId, traceId);
 
         var dto = new StoredFileResponseDto
         {
@@ -72,23 +85,11 @@ public class PostFile : IEndpoint
             ContentType = record.ContentType,
             Size = record.Size,
             Url = record.Url,
-            EntityType = record.EntityType,
+            EntityType = record.EntityType.ToString(),
             EntityId = record.EntityId,
             UploadedAt = record.UploadedAt
         };
 
         return Results.Ok(ApiResponse<StoredFileResponseDto>.Ok(dto, "File uploaded.", traceId));
-    }
-
-    public record StoredFileResponseDto
-    {
-        public string Id { get; init; } = null!;
-        public string FileName { get; init; } = null!;
-        public string ContentType { get; init; } = null!;
-        public long Size { get; init; }
-        public string Url { get; init; } = null!;
-        public string EntityType { get; init; } = null!;
-        public string EntityId { get; init; } = null!;
-        public DateTime UploadedAt { get; init; }
     }
 }

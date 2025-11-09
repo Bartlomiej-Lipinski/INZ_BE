@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Storage;
 
@@ -10,14 +11,16 @@ public class GetFile : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/files/{id}", Handle)
+        app.MapGet("/groups/{groupId}/files/{id}", Handle)
             .WithName("GetFile")
             .WithDescription("Download file by id")
             .WithTags("Storage")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string id,
         AppDbContext dbContext,
         IStorageService storage,

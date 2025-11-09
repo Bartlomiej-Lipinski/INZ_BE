@@ -97,6 +97,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(tce => tce.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             
+            entity.HasMany(g => g.Challenges)
+                .WithOne(c => c.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.StoredFiles)
+                .WithOne(sf => sf.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
             entity.HasIndex(g => g.Code).IsUnique();
         });
         
@@ -284,6 +294,32 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithMany(e => e.Suggestions)
                 .HasForeignKey(es => es.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<StoredFile>(entity =>
+        {
+            entity.HasKey(sf => sf.Id);
+            entity.Property(sf => sf.UploadedById).IsRequired();
+            entity.Property(sf => sf.EntityType).IsRequired();
+            entity.Property(sf => sf.FileName).IsRequired();
+            entity.Property(sf => sf.ContentType).IsRequired();
+            entity.Property(sf => sf.Size).IsRequired();
+            entity.Property(sf => sf.Url).IsRequired();
+            entity.Property(sf => sf.UploadedAt).IsRequired();
+            
+            entity.HasOne(sf => sf.Group)
+                .WithMany(u => u.StoredFiles)
+                .HasForeignKey(sf => sf.GroupId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(sf => sf.UploadedBy)
+                .WithMany(u => u.StoredFiles)
+                .HasForeignKey(sf => sf.UploadedById)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(sf => new { sf.UploadedById, sf.EntityType });
+            entity.HasIndex(sf => new { sf.EntityId, sf.EntityType });
         });
         
         builder.Entity<Expense>(entity =>

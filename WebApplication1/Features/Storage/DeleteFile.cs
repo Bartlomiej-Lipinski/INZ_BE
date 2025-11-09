@@ -6,6 +6,7 @@ using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Storage;
 
@@ -13,14 +14,16 @@ public class DeleteFile : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/files/{id}", Handle)
+        app.MapDelete("/groups/{groupId}/files/{id}", Handle)
             .WithName("DeleteFile")
             .WithDescription("Delete file by id")
             .WithTags("Storage")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string id,
         AppDbContext dbContext,
         IStorageService storage,
@@ -30,7 +33,7 @@ public class DeleteFile : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.GetUserId();
+        var userId = currentUser.GetUserId();
 
         var record = await dbContext.StoredFiles.FindAsync([id], cancellationToken);
         if (record == null)
@@ -44,7 +47,7 @@ public class DeleteFile : IEndpoint
         dbContext.StoredFiles.Remove(record);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("User {UserId} deleted file {FileId}. TraceId: {TraceId}", currentUserId, id, traceId);
+        logger.LogInformation("User {UserId} deleted file {FileId}. TraceId: {TraceId}", userId, id, traceId);
 
         return Results.Ok(ApiResponse<string>.Ok(null!, "File deleted.", traceId));
     }

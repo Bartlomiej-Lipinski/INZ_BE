@@ -45,7 +45,6 @@ public class UpdateUserProfile : IEndpoint
         user.BirthDate = request.BirthDate;
         user.Status = request.Status;
         user.Description = request.Description;
-        user.Photo = request.Photo;
 
         dbContext.Users.Update(user);
         var updated = await dbContext.SaveChangesAsync(cancellationToken);

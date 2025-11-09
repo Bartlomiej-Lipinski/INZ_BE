@@ -5,5 +5,6 @@ public enum EntityType
     Challenge,
     Event,
     Poll,
-    Recommendation
+    Recommendation,
+    User
 }

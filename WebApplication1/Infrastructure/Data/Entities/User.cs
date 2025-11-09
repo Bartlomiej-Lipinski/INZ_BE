@@ -20,17 +20,15 @@ public class User : IdentityUser
      * paswordSalt provided by IdentityUser as SecurityStamp
      *
      */
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Surname { get; set; }
+    public string Surname { get; set; }
 
     public DateOnly? BirthDate { get; set; }
 
     public string? Status { get; set; }
 
     public string? Description { get; set; }
-
-    public string? Photo { get; set; }
     
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
@@ -51,4 +49,5 @@ public class User : IdentityUser
     public ICollection<TwoFactorCode> TwoFactorCodes { get; set; } = new List<TwoFactorCode>();
     public ICollection<Challenge> Challenges { get; set; } = new List<Challenge>();
     public ICollection<ChallengeParticipant> ChallengeParticipants { get; set; } = new List<ChallengeParticipant>();
+    public ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
 }

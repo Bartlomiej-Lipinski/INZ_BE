@@ -14,6 +14,4 @@ public record UserProfileRequestDto
     public string? Status { get; init; }
     [MaxLength(300)]
     public string? Description { get; init; }
-    [MaxLength(500)]
-    public string? Photo { get; init; }
 }
