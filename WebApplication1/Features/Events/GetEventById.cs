@@ -38,16 +38,12 @@ public class GetEventById : IEndpoint
             .Include(e => e.User)
             .Include(e => e.Group)
             .Include(e => e.Suggestions)
+            .Include(e => e.Availabilities)
+            .ThenInclude(a => a.User)
             .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
         if (evt == null)
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
-        
-        var availabilities = await dbContext.EventAvailabilities
-            .AsNoTracking()
-            .Include(c => c.User)
-            .Where(ea => ea.EventId == eventId)
-            .ToListAsync(cancellationToken);
 
         var response = new EventResponseDto
         {
@@ -60,7 +56,7 @@ public class GetEventById : IEndpoint
             StartDate = evt.StartDate?.ToLocalTime(),
             EndDate = evt.EndDate?.ToLocalTime(),
             CreatedAt = evt.CreatedAt.ToLocalTime(),
-            Availabilities = availabilities.Select(ea => new EventAvailabilityResponseDto
+            Availabilities = evt.Availabilities.Select(ea => new EventAvailabilityResponseDto
             {
                 UserId = ea.UserId,
                 Status = ea.Status,

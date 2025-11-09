@@ -451,7 +451,18 @@ public static class TestDataFactory
     }
 
     public static Challenge CreateChallenge(
-        string id, string groupId, string userId, string name, string description, DateTime startDate, DateTime endDate)
+        string id,
+        string groupId,
+        string userId,
+        string name,
+        string description,
+        DateTime startDate,
+        DateTime endDate,
+        List<ChallengeParticipant> participants,
+        List<ChallengeStage> stages,
+        double? pointsPerUnit = null,
+        string? unit = null,
+        bool isCompleted = false)
     {
         return new Challenge
         {
@@ -462,7 +473,12 @@ public static class TestDataFactory
             Name = name,
             Description = description,
             StartDate = startDate,
-            EndDate = endDate
+            EndDate = endDate,
+            PointsPerUnit = pointsPerUnit,
+            Unit = unit,
+            IsCompleted = isCompleted,
+            Participants = participants,
+            Stages = stages
         };
     }
     

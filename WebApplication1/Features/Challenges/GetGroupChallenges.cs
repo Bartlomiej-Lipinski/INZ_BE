@@ -41,6 +41,7 @@ public class GetGroupChallenges : IEndpoint
             .Select(c => new ChallengeResponseDto
             {
                 Id = c.Id,
+                UserId = c.UserId,
                 Name = c.Name,
                 Description = c.Description,
                 StartDate = c.StartDate.ToLocalTime(),
