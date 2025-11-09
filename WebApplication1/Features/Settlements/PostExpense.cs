@@ -36,11 +36,17 @@ public class PostExpense : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("Creating expense in group {GroupId} by user {UserId}. TraceId: {TraceId}", 
+            groupId, userId, traceId);
 
         if (string.IsNullOrWhiteSpace(request.PaidByUserId) || string.IsNullOrWhiteSpace(request.Title)
                                                             || request.Beneficiaries.Count == 0)
+        {
+            logger.LogWarning("Invalid expense request. TraceId: {TraceId}", traceId);
             return Results.BadRequest(ApiResponse<string>
                 .Fail("PaidByUserId, expense title and beneficiaries are required.", traceId));
+        }
 
         var expense = new Expense
         {
@@ -72,14 +78,16 @@ public class PostExpense : IEndpoint
         {
             if (request.Beneficiaries.Any(expenseBeneficiary => expenseBeneficiary.Share == null))
             {
+                logger.LogWarning("Missing share for some beneficiaries. TraceId: {TraceId}", traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("User's shares should be included since the expense is not evenly split.", traceId));
             }
 
             var totalShares = request.Beneficiaries.Sum(b => b.Share);
-
             if (totalShares != request.Amount)
             {
+                logger.LogWarning("Sum of shares {TotalShares} does not equal expense amount {Amount}. TraceId: {TraceId}", 
+                    totalShares, request.Amount, traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("Sum of beneficiaries shares does not equal the expense amount.", traceId));
             }
@@ -101,7 +109,6 @@ public class PostExpense : IEndpoint
         logger.LogInformation(
             "User {UserId} added new expense {ExpenseId} in group {GroupId}. TraceId: {TraceId}",
             userId, expense.Id, groupId, traceId);
-
         return Results.Ok(ApiResponse<string>.Ok("Expense created successfully.", expense.Id, traceId));
     }
 }

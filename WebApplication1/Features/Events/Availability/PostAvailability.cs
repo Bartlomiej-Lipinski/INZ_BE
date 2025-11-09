@@ -37,6 +37,9 @@ public class PostAvailability : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} attempts to set availability for event {EventId} in group {GroupId} with status {Status}. TraceId: {TraceId}",
+            userId, eventId, groupId, request.Status, traceId);
+        
         var evt = await dbContext.Events
             .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 

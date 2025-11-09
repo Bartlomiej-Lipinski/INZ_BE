@@ -36,9 +36,14 @@ public class UpdateComment : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} attempts to update comment {CommentId} for target {TargetId}. TraceId: {TraceId}",
+            userId, commentId, targetId, traceId);
 
         if (string.IsNullOrWhiteSpace(request.Content))
         {
+            logger.LogWarning("Empty content submitted for comment update by user {UserId}. TraceId: {TraceId}",
+                userId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Content is required.", traceId));
         }
 

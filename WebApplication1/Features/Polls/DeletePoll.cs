@@ -34,6 +34,9 @@ public class DeletePoll : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("Attempting to delete poll {PollId} in group {GroupId} by user {UserId}. TraceId: {TraceId}",
+            pollId, groupId, userId, traceId);
 
         var poll = await dbContext.Polls
             .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == groupId, cancellationToken);

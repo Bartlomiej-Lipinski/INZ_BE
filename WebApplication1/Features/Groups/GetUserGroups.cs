@@ -26,10 +26,14 @@ public class GetUserGroups : IEndpoint
         ClaimsPrincipal currentUser,
         AppDbContext dbContext,
         HttpContext httpContext,
+        ILogger<GetUserGroups> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("Fetching groups for user {UserId}. TraceId: {TraceId}", 
+            userId, traceId);
 
         var groups = await dbContext.GroupUsers.AsNoTracking()
             .AsQueryable()
@@ -42,9 +46,14 @@ public class GetUserGroups : IEndpoint
             .ToListAsync(cancellationToken);
         
         if (groups.Count == 0)
-            return Results.Ok(ApiResponse<List<GroupResponseDto>>
-                .Ok(groups, "No groups found for this user.", traceId));
+        {
+            logger.LogInformation("No groups found for user {UserId}. TraceId: {TraceId}", 
+                userId, traceId);
+            return Results.Ok(ApiResponse<List<GroupResponseDto>>.Ok(groups, "No groups found for this user.", traceId));
+        }
 
+        logger.LogInformation("Retrieved {Count} groups for user {UserId}. TraceId: {TraceId}", 
+            groups.Count, userId, traceId);
         return Results.Ok(ApiResponse<List<GroupResponseDto>>
             .Ok(groups, "Groups retrieved successfully.", traceId));
     }

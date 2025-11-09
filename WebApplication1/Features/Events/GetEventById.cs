@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -32,6 +33,11 @@ public class GetEventById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+
+        logger.LogInformation("User {UserId} started fetching event {EventId} in group {GroupId}. TraceId: {TraceId}",
+            userId, eventId, groupId, traceId);
+
 
         var evt = await dbContext.Events
             .AsNoTracking()
@@ -43,8 +49,11 @@ public class GetEventById : IEndpoint
             .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
         if (evt == null)
+        {
+            logger.LogWarning("Event {EventId} not found in group {GroupId}. TraceId: {TraceId}", eventId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
-
+        }
+        
         var response = new EventResponseDto
         {
             Id = evt.Id,
@@ -69,6 +78,8 @@ public class GetEventById : IEndpoint
             }).ToList()
         };
 
+        logger.LogInformation("User {UserId} successfully fetched event {EventId} from group {GroupId}. TraceId: {TraceId}",
+            userId, eventId, groupId, traceId);
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(response, null, traceId));
     }
 }

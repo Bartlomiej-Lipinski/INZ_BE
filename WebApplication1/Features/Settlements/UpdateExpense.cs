@@ -36,11 +36,14 @@ public class UpdateExpense : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        logger.LogInformation("Updating expense {ExpenseId} in group {GroupId}. TraceId: {TraceId}", 
+            expenseId, groupId, traceId);
         
         if (string.IsNullOrWhiteSpace(request.PaidByUserId) ||
             string.IsNullOrWhiteSpace(request.Title) ||
             request.Beneficiaries.Count == 0)
         {
+            logger.LogWarning("Invalid request data. TraceId: {TraceId}", traceId);
             return Results.BadRequest(ApiResponse<string>.Fail(
                 "PaidByUserId, expense title, and beneficiaries are required.", traceId));
         }
@@ -50,7 +53,10 @@ public class UpdateExpense : IEndpoint
             .FirstOrDefaultAsync(e => e.Id == expenseId && e.GroupId == groupId, cancellationToken);
 
         if (expense == null)
+        {
+            logger.LogWarning("Expense not found: {ExpenseId}. TraceId: {TraceId}", expenseId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Expense not found.", traceId));
+        }
         
         var oldExpenseSnapshot = new Expense
         {
@@ -96,13 +102,20 @@ public class UpdateExpense : IEndpoint
         else
         {
             if (request.Beneficiaries.Any(b => b.Share == null))
+            {
+                logger.LogWarning("Missing share for beneficiaries. TraceId: {TraceId}", traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("User's shares should be included since the expense is not evenly split.", traceId));
+            }
 
             var totalShares = request.Beneficiaries.Sum(b => b.Share);
             if (totalShares != request.Amount)
+            {
+                logger.LogWarning("Sum of shares {TotalShares} != expense amount {Amount}. TraceId: {TraceId}",
+                    totalShares, request.Amount, traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("Sum of beneficiaries shares does not equal the expense amount.", traceId));
+            }
 
             newBeneficiaries = request.Beneficiaries.Select(b => new ExpenseBeneficiary
             {
@@ -126,7 +139,6 @@ public class UpdateExpense : IEndpoint
 
         logger.LogInformation("Expense {ExpenseId} updated successfully in group {GroupId}. TraceId: {TraceId}",
             expenseId, groupId, traceId);
-
         return Results.Ok(ApiResponse<string>.Ok("Expense updated successfully.", expenseId, traceId));
     }
 }

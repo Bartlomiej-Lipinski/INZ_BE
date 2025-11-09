@@ -31,6 +31,7 @@ public class GetGroupPolls : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        logger.LogInformation("Fetching polls for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
         
         var polls = await dbContext.Polls
             .AsNoTracking()
@@ -50,9 +51,13 @@ public class GetGroupPolls : IEndpoint
             .ToListAsync(cancellationToken);
         
         if (polls.Count == 0)
-            return Results.Ok(ApiResponse<List<PollResponseDto>>
-                .Ok(polls, "No polls found for this group.", traceId));
+        {
+            logger.LogInformation("No polls found for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
+            return Results.Ok(ApiResponse<List<PollResponseDto>>.Ok(polls, "No polls found for this group.",
+                traceId));
+        }
         
+        logger.LogInformation("Retrieved {Count} polls for group {GroupId}. TraceId: {TraceId}", polls.Count, groupId, traceId);
         return Results.Ok(ApiResponse<List<PollResponseDto>>.Ok(polls, "Group polls retrieved successfully.",
             traceId));
     }

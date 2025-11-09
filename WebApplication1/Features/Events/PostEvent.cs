@@ -35,29 +35,49 @@ public class PostEvent : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} started creating an event in group {GroupId}. TraceId: {TraceId}",
+            userId, groupId, traceId);
 
         if (string.IsNullOrWhiteSpace(request.Title))
+        {
+            logger.LogWarning("Event creation failed: title is required. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+                userId, groupId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Event title is required.", traceId));
-
+        }
+        
         if (request.StartDate == null && !request.IsAutoScheduled)
-            return Results.BadRequest(ApiResponse<string>.Fail("Start date is required for manual events.",
-                traceId));
+        {
+            logger.LogWarning("Event creation failed: start date is required for manual events. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+                userId, groupId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Start date is required for manual events.", traceId));
+        }
         
         if (request.IsAutoScheduled)
         {
             if (!request.RangeStart.HasValue || !request.RangeEnd.HasValue || !request.DurationMinutes.HasValue)
+            {
+                logger.LogWarning("Event creation failed: missing scheduling parameters. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+                    userId, groupId, traceId);
                 return Results.BadRequest(ApiResponse<string>.Fail(
                     "For automatic scheduling, range start, range end, and duration are required.", traceId));
+            }
 
             if (request.RangeEnd < request.RangeStart)
-                return Results.BadRequest(ApiResponse<string>.Fail("Range end cannot be earlier" +
-                                                                   " than range start.", traceId));
+            {
+                logger.LogWarning("Event creation failed: range end before start. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+                    userId, groupId, traceId);
+                return Results.BadRequest(ApiResponse<string>.Fail("Range end cannot be earlier than range start.", traceId));
+            }
         }
 
         if (request is { IsAutoScheduled: false, EndDate: not null, StartDate: not null } 
             && request.EndDate < request.StartDate)
-            return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.",
-                traceId));
+        {
+            logger.LogWarning("Event creation failed: end date before start date. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+                userId, groupId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.", traceId));
+        }
 
         var newEvent = new Event
         {
@@ -100,6 +120,8 @@ public class PostEvent : IEndpoint
             CreatedAt = newEvent.CreatedAt.ToLocalTime()
         };
 
+        logger.LogInformation("User {UserId} successfully created event {EventId} in group {GroupId}. TraceId: {TraceId}",
+            userId, newEvent.Id, groupId, traceId);
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(responseDto, "Event created successfully.", traceId));
     }
 }

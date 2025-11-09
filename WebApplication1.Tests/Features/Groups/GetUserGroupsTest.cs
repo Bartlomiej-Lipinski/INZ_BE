@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Groups;
 using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Shared.Responses;
@@ -16,7 +17,8 @@ public class GetUserGroupsTest : TestBase
         var result = await GetUserGroups.Handle(
             CreateClaimsPrincipal(user.Id),
             dbContext, 
-            CreateHttpContext(user.Id), 
+            CreateHttpContext(user.Id),
+            NullLogger<GetUserGroups>.Instance,
             CancellationToken.None
         );
         
@@ -45,6 +47,7 @@ public class GetUserGroupsTest : TestBase
             CreateClaimsPrincipal(user.Id), 
             dbContext,
             CreateHttpContext(user.Id), 
+            NullLogger<GetUserGroups>.Instance,
             CancellationToken.None
         );
         
@@ -76,6 +79,7 @@ public class GetUserGroupsTest : TestBase
             CreateClaimsPrincipal(user1.Id),
             dbContext,
             CreateHttpContext(user1.Id),
+            NullLogger<GetUserGroups>.Instance,
             CancellationToken.None
         );
         

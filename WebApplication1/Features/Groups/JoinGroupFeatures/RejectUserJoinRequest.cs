@@ -34,6 +34,9 @@ public class RejectUserJoinRequest : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("Admin {AdminId} attempting to reject join request. GroupId: {GroupId}, UserId: {TargetUserId}, TraceId: {TraceId}",
+            userId, groupId, request.UserId, traceId);
+        
         var group = await dbContext.Groups
             .AsNoTracking()
             .Include(g => g.GroupUsers)

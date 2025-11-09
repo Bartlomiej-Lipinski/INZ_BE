@@ -33,9 +33,9 @@ public class DeleteUserFromGroup : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var currentUserId = currentUser.GetUserId();
-
-        logger.LogInformation("Deleting user {UserId} from group {GroupId}. TraceId: {TraceId}",
-            userId, groupId, traceId);
+        
+        logger.LogInformation("Attempt to remove user {TargetUserId} from group {GroupId} by admin {AdminId}. TraceId: {TraceId}",
+            userId, groupId, currentUserId, traceId);
         
         var currentGroupUser = httpContext.Items["GroupUser"] as GroupUser;
         var isAdmin = currentGroupUser?.IsAdmin ?? false;
@@ -62,6 +62,8 @@ public class DeleteUserFromGroup : IEndpoint
         dbContext.GroupUsers.Remove(groupUser);
         await dbContext.SaveChangesAsync(cancellationToken);
         
+        logger.LogInformation("User {UserId} removed from group {GroupId} successfully. TraceId: {TraceId}", 
+            userId, groupId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("User removed from group successfully.", traceId));
     }
 }

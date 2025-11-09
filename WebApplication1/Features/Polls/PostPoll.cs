@@ -36,6 +36,9 @@ public class PostPoll : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} creating poll in group {GroupId}. TraceId: {TraceId}",
+            userId, groupId, traceId);
+        
         if (string.IsNullOrWhiteSpace(request.Question))
             return Results.BadRequest(ApiResponse<string>.Fail("Question is required.", traceId));
 

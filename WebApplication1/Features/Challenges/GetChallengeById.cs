@@ -32,6 +32,8 @@ public class GetChallengeById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        logger.LogInformation("Fetching challenge {ChallengeId} for group {GroupId}, traceId: {TraceId}",
+            challengeId, groupId, traceId);
 
         var challenge = await dbContext.Challenges
             .AsNoTracking()
@@ -42,8 +44,12 @@ public class GetChallengeById : IEndpoint
             .FirstOrDefaultAsync(e => e.Id == challengeId && e.GroupId == groupId, cancellationToken);
         
         if (challenge == null)
+        {
+            logger.LogWarning("Challenge {ChallengeId} not found in group {GroupId}, traceId: {TraceId}",
+                challengeId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Challenge not found.", traceId));
-
+        }
+        
         var response = new ChallengeResponseDto
         {
             Id = challengeId,
@@ -76,6 +82,7 @@ public class GetChallengeById : IEndpoint
                 }).ToList()
         };
         
+        logger.LogInformation("Returning challenge {ChallengeId} response, traceId: {TraceId}", challengeId, traceId);
         return Results.Ok(ApiResponse<ChallengeResponseDto>.Ok(response, null, traceId));
     }
 }

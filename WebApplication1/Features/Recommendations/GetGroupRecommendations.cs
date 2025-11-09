@@ -32,6 +32,7 @@ public class GetGroupRecommendations: IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        logger.LogInformation("Fetching recommendations for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
         
         var recommendations = await dbContext.Recommendations
             .AsNoTracking()
@@ -51,8 +52,13 @@ public class GetGroupRecommendations: IEndpoint
             .ToListAsync(cancellationToken);
 
         if (recommendations.Count == 0)
+        {
+            logger.LogInformation(
+                "[GetGroupRecommendations] No recommendations found for group {GroupId}. TraceId: {TraceId}", groupId,
+                traceId);
             return Results.Ok(ApiResponse<List<RecommendationResponseDto>>
                 .Ok([], "No recommendations found.", traceId));
+        }
 
         var recommendationIds = recommendations.Select(r => r.Id).ToList();
         
@@ -118,6 +124,8 @@ public class GetGroupRecommendations: IEndpoint
             return Results.Ok(ApiResponse<List<RecommendationResponseDto>>
                 .Ok(response, "No recommendations found for this group.", traceId));
 
+        logger.LogInformation("Retrieved {Count} recommendations for group {GroupId}. TraceId: {TraceId}",
+            response.Count, groupId, traceId);
         return Results.Ok(ApiResponse<List<RecommendationResponseDto>>
             .Ok(response, "Group recommendations retrieved successfully.", traceId));
     }

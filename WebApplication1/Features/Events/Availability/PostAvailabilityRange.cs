@@ -37,6 +37,9 @@ public class PostAvailabilityRange : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} attempts to post {Count} availability ranges for event {EventId} in group {GroupId}. TraceId: {TraceId}",
+            userId, request.Count, eventId, groupId, traceId);
+        
         var evt = await dbContext.Events
             .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
@@ -63,18 +66,22 @@ public class PostAvailabilityRange : IEndpoint
         foreach (var r in request)
         {
             if (r.AvailableFrom >= r.AvailableTo)
+            {
+                logger.LogWarning("Invalid range for user {UserId}: AvailableFrom {From} >= AvailableTo {To}. TraceId: {TraceId}",
+                    userId, r.AvailableFrom, r.AvailableTo, traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("AvailableTo must be later than AvailableFrom.", traceId));
+            }
 
             if (evt.IsAutoScheduled)
             {
-                if (evt.RangeStart.HasValue && r.AvailableFrom < evt.RangeStart.Value)
-                    return Results.BadRequest(ApiResponse<string>
-                        .Fail("Availability starts before event range.", traceId));
-
-                if (evt.RangeEnd.HasValue && r.AvailableTo > evt.RangeEnd.Value)
-                    return Results.BadRequest(ApiResponse<string>
-                        .Fail("Availability ends after event range.", traceId));
+                if (evt.RangeStart.HasValue && r.AvailableFrom < evt.RangeStart.Value ||
+                    evt.RangeEnd.HasValue && r.AvailableTo > evt.RangeEnd.Value)
+                {
+                    logger.LogWarning("Range {From}-{To} for user {UserId} is outside event range. TraceId: {TraceId}",
+                        r.AvailableFrom, r.AvailableTo, userId, traceId);
+                    return Results.BadRequest(ApiResponse<string>.Fail("Availability range outside event range.", traceId));
+                }
             }
 
             var hasOverlap = addedRanges.Any(ar =>
@@ -82,8 +89,10 @@ public class PostAvailabilityRange : IEndpoint
                 ar.AvailableTo > r.AvailableFrom);
             
             if (hasOverlap)
-                return Results.BadRequest(ApiResponse<string>
-                    .Fail("One or more ranges in the request overlap with each other.", traceId));
+            {
+                logger.LogWarning("User {UserId} submitted overlapping ranges. TraceId: {TraceId}", userId, traceId);
+                return Results.BadRequest(ApiResponse<string>.Fail("One or more ranges in the request overlap with each other.", traceId));
+            }
             
             addedRanges.Add(new EventAvailabilityRange
             {

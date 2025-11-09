@@ -37,6 +37,9 @@ public class DeleteExpense : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} attempting to delete expense {ExpenseId} in group {GroupId}. TraceId: {TraceId}",
+            userId, expenseId, groupId, traceId);
+        
         var expense = await dbContext.Expenses
             .FirstOrDefaultAsync(e => e.Id == expenseId, cancellationToken);
         
@@ -63,7 +66,6 @@ public class DeleteExpense : IEndpoint
         
         logger.LogInformation("User {UserId} deleted expense {ExpenseId} from group {GroupId}. TraceId: {TraceId}",
             userId, expenseId, groupId, traceId);
-
         return Results.Ok(ApiResponse<string>.Ok("Expense deleted successfully.", expenseId, traceId));
     }
 }

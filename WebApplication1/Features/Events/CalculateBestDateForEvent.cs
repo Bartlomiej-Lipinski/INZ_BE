@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -32,6 +33,10 @@ public class CalculateBestDateForEvent : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} starts calculating best dates for event {EventId} in group {GroupId}. TraceId: {TraceId}",
+            userId, eventId, groupId, traceId);
 
         var evt = await dbContext.Events
             .Include(e => e.Suggestions)
@@ -46,6 +51,8 @@ public class CalculateBestDateForEvent : IEndpoint
 
         if (evt.Suggestions.Count != 0)
         {
+            logger.LogInformation("Clearing {Count} previous suggestions for event {EventId}. TraceId: {TraceId}",
+                evt.Suggestions.Count, eventId, traceId);
             evt.Suggestions.Clear();
         }
 
@@ -60,10 +67,15 @@ public class CalculateBestDateForEvent : IEndpoint
                 AvailableUserCount = availablePeople
             };
             evt.Suggestions.Add(evtSuggestion);
+            
+            logger.LogInformation("Suggested date {Date} for event {EventId} with {Count} available users. TraceId: {TraceId}",
+                date, eventId, availablePeople, traceId);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        logger.LogInformation("Finished calculating best dates for event {EventId}. Total suggestions: {Count}. TraceId: {TraceId}",
+            eventId, evt.Suggestions.Count, traceId);
         return Results.Ok(ApiResponse<List<EventSuggestion>>.Ok(evt.Suggestions.ToList()));
     }
 

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -32,6 +33,9 @@ public class GetCommentsForTarget : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+        logger.LogInformation("User {UserId} fetching comments for target {TargetId} in group {GroupId}. TraceId: {TraceId}",
+            userId, targetId, groupId, traceId);
         
         var comments = await dbContext.Comments
             .AsNoTracking()
@@ -47,14 +51,16 @@ public class GetCommentsForTarget : IEndpoint
                 CreatedAt = c.CreatedAt.ToLocalTime()
             })
             .ToListAsync(cancellationToken);
-
-        logger.LogInformation("Fetched {Count} comments for {TargetId}. TraceId: {TraceId}", 
-            comments.Count, targetId, traceId);
         
         if (comments.Count == 0)
+        {
+            logger.LogInformation("No comments found for target {TargetId}. TraceId: {TraceId}", targetId, traceId);
             return Results.Ok(ApiResponse<List<CommentResponseDto>>
                 .Ok(comments, "No comments found for this target.", traceId));
+        }
 
+        logger.LogInformation("Retrieved {Count} comments for target {TargetId}. TraceId: {TraceId}", 
+            comments.Count, targetId, traceId);
         return Results.Ok(ApiResponse<List<CommentResponseDto>>
             .Ok(comments, "Comments retrieved successfully.", traceId));
     }

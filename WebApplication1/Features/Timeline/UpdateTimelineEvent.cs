@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Timeline.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -33,6 +34,10 @@ public class UpdateTimelineEvent : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+
+        logger.LogInformation("User {UserId} updating event {EventId} in group {GroupId}. TraceId: {TraceId}", 
+            userId, eventId, groupId, traceId);
 
         var timelineEvent =
             await dbContext.TimelineEvents.FirstOrDefaultAsync(te => te.Id == eventId, cancellationToken);
@@ -44,14 +49,20 @@ public class UpdateTimelineEvent : IEndpoint
         }
         
         if (string.IsNullOrWhiteSpace(request.Title) || request.Date == default)
+        {
+            logger.LogWarning("Invalid update request by user {UserId} for event {EventId}. TraceId: {TraceId}", 
+                userId, eventId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Title and date are required.", traceId));
-
+        }
+        
         timelineEvent.Title = request.Title;
         timelineEvent.Date = request.Date;
         timelineEvent.Description = request.Description;
         
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        logger.LogInformation("Timeline event {EventId} updated successfully by user {UserId} in group {GroupId}. TraceId: {TraceId}", 
+            eventId, userId, groupId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Timeline event updated successfully.", eventId, traceId));
     }
 }

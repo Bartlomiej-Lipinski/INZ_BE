@@ -37,9 +37,14 @@ public class PostReaction : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} attempts to toggle reaction on target {TargetId} in group {GroupId}. TraceId: {TraceId}",
+            userId, targetId, groupId, traceId);
+        
         if (!Enum.TryParse<EntityType>(entityType, true, out var parsedEntityType))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type."));
+            logger.LogWarning("User {UserId} provided invalid entity type '{EntityType}' for target {TargetId}. TraceId: {TraceId}",
+                userId, entityType, targetId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type.", traceId));
         }
 
         object? target = parsedEntityType switch
@@ -57,7 +62,8 @@ public class PostReaction : IEndpoint
 
         if (target == null)
         {
-            logger.LogWarning("Target {TargetId} not found. TraceId: {TraceId}", targetId, traceId);
+            logger.LogWarning("Target {TargetId} not found for entity type {EntityType}. TraceId: {TraceId}",
+                targetId, parsedEntityType, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Target not found.", traceId));
         }
 

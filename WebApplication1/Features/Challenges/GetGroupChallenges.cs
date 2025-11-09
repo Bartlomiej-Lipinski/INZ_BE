@@ -31,6 +31,7 @@ public class GetGroupChallenges : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        logger.LogInformation("Fetching all challenges for group {GroupId}, traceId: {TraceId}", groupId, traceId);
         
         var challenges = await dbContext.Challenges
             .AsNoTracking()
@@ -55,9 +56,14 @@ public class GetGroupChallenges : IEndpoint
             }).ToListAsync(cancellationToken);
         
         if (challenges.Count == 0)
+        {
+            logger.LogInformation("No challenges found for group {GroupId}, traceId: {TraceId}", groupId, traceId);
             return Results.Ok(ApiResponse<List<ChallengeResponseDto>>
                 .Ok(challenges, "No challenges found for this group.", traceId));
-            
+        }
+        
+        logger.LogInformation("Retrieved {Count} challenges for group {GroupId}, traceId: {TraceId}",
+            challenges.Count, groupId, traceId);
         return Results.Ok(ApiResponse<List<ChallengeResponseDto>>
             .Ok(challenges, "Group challenges retrieved successfully.", traceId));
     }

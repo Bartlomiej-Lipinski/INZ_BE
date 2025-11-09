@@ -34,9 +34,12 @@ public class GetRecommendationById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        logger.LogInformation("Fetching recommendation {RecommendationId} in group {GroupId}. TraceId: {TraceId}",
+            recommendationId, groupId, traceId);
         
         if (string.IsNullOrWhiteSpace(recommendationId))
         {
+            logger.LogWarning("Recommendation ID is missing. TraceId: {TraceId}", traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Recommendation ID is required.", traceId));
         }
         
@@ -86,6 +89,8 @@ public class GetRecommendationById : IEndpoint
             }).ToList()
         };
 
+        logger.LogInformation("Recommendation retrieved successfully: {RecommendationId}. TraceId: {TraceId}",
+            recommendationId, traceId);
         return Results.Ok(ApiResponse<RecommendationResponseDto>.Ok(response, null, traceId));
     }
 }

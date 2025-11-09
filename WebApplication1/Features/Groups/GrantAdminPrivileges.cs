@@ -63,6 +63,8 @@ public class GrantAdminPrivileges : IEndpoint
 
         if (groupUser.IsAdmin)
         {
+            logger.LogInformation("User {TargetUserId} already has admin privileges in group {GroupId}. TraceId: {TraceId}",
+                request.UserId, request.GroupId, traceId);
             return Results.Ok(ApiResponse<string>.Fail("User already has admin privileges.", traceId));
         }
 
@@ -70,6 +72,8 @@ public class GrantAdminPrivileges : IEndpoint
         dbContext.GroupUsers.Update(groupUser);
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        logger.LogInformation("Admin privileges granted to user {TargetUserId} in group {GroupId}. TraceId: {TraceId}",
+            request.UserId, request.GroupId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Admin privileges granted successfully.", traceId));
     }
 }

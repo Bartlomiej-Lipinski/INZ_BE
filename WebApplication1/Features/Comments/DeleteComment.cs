@@ -64,9 +64,8 @@ public class DeleteComment : IEndpoint
         dbContext.Comments.Remove(comment);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("User {UserId} deleted comment {CommentId} from target {TargetId}." +
-                              " TraceId: {TraceId}", userId, commentId, targetId, traceId);
-
+        logger.LogInformation("User {UserId} deleted comment {CommentId} from target {TargetId}. TraceId: {TraceId}",
+            userId, commentId, targetId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Comment deleted successfully.", comment.Id, traceId));
     }
 }

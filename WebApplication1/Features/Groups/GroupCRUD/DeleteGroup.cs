@@ -31,6 +31,9 @@ public class DeleteGroup : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} started deleting group {GroupId}. TraceId: {TraceId}",
+            userId, groupId, traceId);
 
         var group = await dbContext.Groups
             .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);

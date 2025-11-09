@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -32,6 +33,10 @@ public class GetExpenseById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("[GetExpenseById] User {UserId} fetching expense {ExpenseId} in group {GroupId}. TraceId: {TraceId}",
+            userId, expenseId, groupId, traceId);
         
         var expense = await dbContext.Expenses
             .Include(e => e.Group)
@@ -68,6 +73,8 @@ public class GetExpenseById : IEndpoint
             }).ToList()
         };
         
+        logger.LogInformation("Expense {ExpenseId} retrieved successfully for group {GroupId}. TraceId: {TraceId}", 
+            expenseId, groupId, traceId);
         return Results.Ok(ApiResponse<ExpenseResponseDto>.Ok(response, null, traceId));
     }
 }

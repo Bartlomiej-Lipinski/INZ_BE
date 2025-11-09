@@ -37,15 +37,22 @@ public class PostComment : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} attempts to post a comment on target {TargetId} in group {GroupId}. TraceId: {TraceId}",
+            userId, targetId, groupId, traceId);
 
         if (string.IsNullOrWhiteSpace(request.Content))
         {
+            logger.LogWarning("User {UserId} attempted to post empty comment on target {TargetId}. TraceId: {TraceId}",
+                userId, targetId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Comment content cannot be empty.", traceId));
         }
 
         if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type."));
+            logger.LogWarning("User {UserId} provided invalid entity type '{EntityType}' for target {TargetId}. TraceId: {TraceId}",
+                userId, request.EntityType, targetId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type.", traceId));
         }
 
         object? target = entityType switch
@@ -63,7 +70,8 @@ public class PostComment : IEndpoint
         
         if (target == null)
         {
-            logger.LogWarning("Target {TargetId} not found. TraceId: {TraceId}", targetId, traceId);
+            logger.LogWarning("Target {TargetId} not found for entity type {EntityType}. TraceId: {TraceId}",
+                targetId, entityType, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Target not found.", traceId));
         }
 

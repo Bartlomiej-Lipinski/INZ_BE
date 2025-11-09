@@ -34,6 +34,9 @@ public class DeleteSettlement : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} attempting to delete settlement {SettlementId} in group {GroupId}. TraceId: {TraceId}",
+            userId, settlementId, groupId, traceId);
+        
         var settlement = await dbContext.Settlements
             .FirstOrDefaultAsync(s => s.Id == settlementId && s.FromUserId == userId, cancellationToken);
         
@@ -48,7 +51,6 @@ public class DeleteSettlement : IEndpoint
 
         logger.LogInformation("User {UserId} deleted settlement {Id} from group {GroupId}. TraceId: {TraceId}",
             userId, settlementId, groupId, traceId);
-
         return Results.Ok(ApiResponse<string>.Ok("Settlement deleted successfully.", settlementId, traceId));
     }
 }

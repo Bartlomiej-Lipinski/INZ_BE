@@ -37,6 +37,9 @@ public class UpdatePoll : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} attempting to update poll {PollId} in group {GroupId}. TraceId: {TraceId}",
+            userId, pollId, groupId, traceId);
 
         var existingPoll = await dbContext.Polls
             .Include(p => p.Options).ThenInclude(pollOption => pollOption.VotedUsers)
@@ -44,6 +47,7 @@ public class UpdatePoll : IEndpoint
         
         if (existingPoll == null)
         {
+            logger.LogWarning("Poll {PollId} not found in group {GroupId}. TraceId: {TraceId}", pollId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Poll not found.", traceId));
         }
 
@@ -108,6 +112,8 @@ public class UpdatePoll : IEndpoint
             }).ToList()
         };
         
+        logger.LogInformation("Poll {PollId} updated successfully by user {UserId}. TraceId: {TraceId}", 
+            pollId, userId, traceId);
         return Results.Ok(ApiResponse<PollResponseDto>.Ok(response, "Poll updated successfully.", traceId));
     }
 }
