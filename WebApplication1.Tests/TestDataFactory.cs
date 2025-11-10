@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using WebApplication1.Features.Auth;
+using WebApplication1.Features.Challenges.Dtos;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Features.Groups.Dtos;
@@ -479,6 +480,20 @@ public static class TestDataFactory
             IsCompleted = isCompleted,
             Participants = participants,
             Stages = stages
+        };
+    }
+
+    public static ChallengeRequestDto CreateChallengeRequestDto(
+        string name, string description, DateTime startDate, DateTime endDate, double pointsPerUnit, string unit)
+    {
+        return new ChallengeRequestDto
+        {
+            Name = name,
+            Description = description,
+            StartDate = startDate,
+            EndDate = endDate,
+            PointsPerUnit = pointsPerUnit,
+            Unit = unit
         };
     }
     

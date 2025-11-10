@@ -100,7 +100,7 @@ public class PostEvent : IEndpoint
         dbContext.Events.Add(newEvent);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("[PostEvent] User {UserId} created event {EventId} in group {GroupId}. TraceId: {TraceId}",
+        logger.LogInformation("User {UserId} created event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, newEvent.Id, groupId, traceId);
 
         var responseDto = new EventResponseDto
