@@ -12,7 +12,7 @@ public class UpdateRecommendationTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Recommendation_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -38,8 +38,8 @@ public class UpdateRecommendationTest : TestBase
     public async Task Handle_Should_Return_Forbid_When_User_Is_Not_Author()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var author = TestDataFactory.CreateUser("author", "AuthorUser");
-        var otherUser = TestDataFactory.CreateUser("other", "OtherUser");
+        var author = TestDataFactory.CreateUser("author", "Test","User");
+        var otherUser = TestDataFactory.CreateUser("other", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUserAuthor = TestDataFactory.CreateGroupUser(author.Id, group.Id);
         var groupUser = TestDataFactory.CreateGroupUser(otherUser.Id, group.Id);
@@ -72,7 +72,7 @@ public class UpdateRecommendationTest : TestBase
     public async Task Handle_Should_Update_Recommendation_Successfully()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);

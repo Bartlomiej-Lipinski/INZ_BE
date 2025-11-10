@@ -14,8 +14,8 @@ public class GetJoinRequestsForAdminsTest : TestBase
     public async Task Test_JoinRequest_For_Admins()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user1 = TestDataFactory.CreateUser("user1", "bogdan");
-        var user2 = TestDataFactory.CreateUser("user2", "zoia");
+        var user1 = TestDataFactory.CreateUser("user1", "Test","User");
+        var user2 = TestDataFactory.CreateUser("user2", "Test","User");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#FFFFFF", "CODE1");
         var group2 = TestDataFactory.CreateGroup("group2", "Group 2", "#000000", "CODE2");
 

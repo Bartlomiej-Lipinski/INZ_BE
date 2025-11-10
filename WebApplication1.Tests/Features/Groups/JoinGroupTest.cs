@@ -13,8 +13,8 @@ public class JoinGroupTest : TestBase
     public async Task Handle_ShouldAddUserToGroup_WhenCodeIsValid()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
-        var user = TestDataFactory.CreateUser(id: "user1");
+        var group = TestDataFactory.CreateGroup("g1","Test Group", "#FFFFFF");
+        var user = TestDataFactory.CreateUser("user1", "Test","User");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
         
@@ -46,7 +46,7 @@ public class JoinGroupTest : TestBase
     public async Task Handle_ShouldReturnNotFound_WhenGroupDoesNotExist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser(id: "user1");
+        var user = TestDataFactory.CreateUser("user1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
@@ -72,7 +72,7 @@ public class JoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenCodeIsExpired()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString()); 
-        var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group", "#FFFFFF");
         dbContext.Groups.Add(group);
         await dbContext.SaveChangesAsync();
 
@@ -89,7 +89,7 @@ public class JoinGroupTest : TestBase
         existingGroup!.CodeExpirationTime = DateTime.UtcNow.AddMinutes(-1);
         dbContext.Groups.Update(existingGroup);
         await dbContext.SaveChangesAsync();
-        var user1 = TestDataFactory.CreateUser(id: "user1");
+        var user1 = TestDataFactory.CreateUser("user1", "Test","User");
         dbContext.Users.Add(user1);
         await dbContext.SaveChangesAsync();
         
@@ -115,8 +115,8 @@ public class JoinGroupTest : TestBase
     public async Task Handle_ShouldReturnBadRequest_WhenUserAlreadyInGroup()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
-        var user = TestDataFactory.CreateUser(id: "user1");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group", "#FFFFFF");
+        var user = TestDataFactory.CreateUser("user1", "Test","User");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
         dbContext.Users.Add(user);

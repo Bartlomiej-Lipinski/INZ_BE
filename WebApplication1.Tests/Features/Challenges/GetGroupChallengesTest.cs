@@ -12,7 +12,7 @@ public class GetGroupChallengesTest : TestBase
     public async Task Handle_Should_Return_Challenges_For_Member()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -67,7 +67,7 @@ public class GetGroupChallengesTest : TestBase
     public async Task Handle_Should_Return_Empty_List_When_No_Challenges()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u2", "emptyUser");
+        var user = TestDataFactory.CreateUser("u2", "Test","User");
         var group = TestDataFactory.CreateGroup("g2", "Empty Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);

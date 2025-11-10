@@ -15,7 +15,7 @@ public class GetUserByIdTest: TestBase
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
         dbContext.Users.Add(TestDataFactory.CreateUser(
-            "user1", "Test", "test@test.com", "testUser", "User"));
+            "user1", "Test","User", "test@test.com", "testUser"));
         await dbContext.SaveChangesAsync();
         
         var result = await GetUserById.Handle(
@@ -41,7 +41,7 @@ public class GetUserByIdTest: TestBase
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
-        var user = TestDataFactory.CreateUser("user1", "Test", "test@test.com", "testUser", "User");
+        var user = TestDataFactory.CreateUser("user1", "Test","User", "test@test.com", "testUser");
         
         var result = await GetUserById.Handle(
             "nonexistent",

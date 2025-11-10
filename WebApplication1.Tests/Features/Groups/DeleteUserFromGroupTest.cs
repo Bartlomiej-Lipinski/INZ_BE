@@ -13,8 +13,8 @@ public class DeleteUserFromGroupTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
 
-        var userId = TestDataFactory.CreateUser("u1");
-        var userTwoId = TestDataFactory.CreateUser("u2");
+        var userId = TestDataFactory.CreateUser("u1", "Test","User");
+        var userTwoId = TestDataFactory.CreateUser("u2", "Test","User");
         var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         var groupUser = TestDataFactory.CreateGroupUser(userId: userId.Id, groupId: group.Id, isAdmin: true);
         var groupUserTwo = TestDataFactory.CreateGroupUser(userId: userTwoId.Id, groupId: group.Id, isAdmin: false);

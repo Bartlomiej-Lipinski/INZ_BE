@@ -16,7 +16,7 @@ public class DeleteExpenseTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
@@ -45,7 +45,7 @@ public class DeleteExpenseTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Expense_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -78,7 +78,7 @@ public class DeleteExpenseTest : TestBase
     public async Task Handle_Should_Delete_Expense_And_Recalculate_Settlements()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var expense = TestDataFactory.CreateExpense("e1", group.Id, user.Id, "title", 100m, true);

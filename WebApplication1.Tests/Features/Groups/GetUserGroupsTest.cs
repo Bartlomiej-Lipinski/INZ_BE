@@ -11,7 +11,7 @@ public class GetUserGroupsTest : TestBase
     [Fact]
     public async Task Handle_Should_Return_EmptyList_When_User_Has_No_Groups()
     {
-        var user = TestDataFactory.CreateUser("user1", "Test User");
+        var user = TestDataFactory.CreateUser("user1", "Test","User");
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
         var result = await GetUserGroups.Handle(
@@ -33,7 +33,7 @@ public class GetUserGroupsTest : TestBase
     public async Task Handle_Should_Return_Groups_For_User_When_They_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("user1", "Test User");
+        var user = TestDataFactory.CreateUser("user1", "Test","User");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#fff", "C1");
         var group2 = TestDataFactory.CreateGroup("group2", "Group 2", "#000", "C2");
         
@@ -64,8 +64,8 @@ public class GetUserGroupsTest : TestBase
     public async Task Handle_Should_Return_Only_Groups_For_Specified_User()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user1 = TestDataFactory.CreateUser("user1", "User One");
-        var user2 = TestDataFactory.CreateUser("user2", "User Two");
+        var user1 = TestDataFactory.CreateUser("user1", "Test","User");
+        var user2 = TestDataFactory.CreateUser("user2", "Test","User");
         var group1 = TestDataFactory.CreateGroup("group1", "Group 1", "#fff", "C1");
         var group2 = TestDataFactory.CreateGroup("group2", "Group 2", "#000", "C2");
         

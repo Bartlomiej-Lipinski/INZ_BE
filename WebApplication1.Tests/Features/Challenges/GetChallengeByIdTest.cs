@@ -13,7 +13,7 @@ public class GetChallengeByIdTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Challenge_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "Test User");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
@@ -37,7 +37,7 @@ public class GetChallengeByIdTest : TestBase
     public async Task Handle_Should_Return_Challenge_With_Participants_And_Stages()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "Test User");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         dbContext.Users.Add(user);
         dbContext.Groups.Add(group);

@@ -12,7 +12,7 @@ public class GetTimelineTest : TestBase
     public async Task GetTimeline_Should_Return_Timeline_For_Valid_User_In_Group()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser", birthDate: new DateOnly(1990, 1, 1));
+        var user = TestDataFactory.CreateUser("u1", "Test","User", birthDate: new DateOnly(1990, 1, 1));
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
 

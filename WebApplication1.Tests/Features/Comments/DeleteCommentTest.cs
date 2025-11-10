@@ -13,7 +13,7 @@ public class DeleteCommentTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Comment_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -38,7 +38,7 @@ public class DeleteCommentTest : TestBase
     public async Task Handle_Should_Allow_Author_To_Delete_Their_Comment()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "commentAuthor");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var target = TestDataFactory.CreateRecommendation(
@@ -71,8 +71,8 @@ public class DeleteCommentTest : TestBase
     public async Task Handle_Should_Allow_Target_Author_To_Delete_Comment()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var owner = TestDataFactory.CreateUser("owner", "ownerUser");
-        var commenter = TestDataFactory.CreateUser("commenter", "commentUser");
+        var owner = TestDataFactory.CreateUser("owner", "Test","User");
+        var commenter = TestDataFactory.CreateUser("commenter", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUserOwner = TestDataFactory.CreateGroupUser(owner.Id, group.Id);
         var groupUserCommenter = TestDataFactory.CreateGroupUser(commenter.Id, group.Id);
@@ -107,9 +107,9 @@ public class DeleteCommentTest : TestBase
     public async Task Handle_Should_Return_Forbid_When_User_Is_Not_Allowed()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var owner = TestDataFactory.CreateUser("owner", "ownerUser");
-        var commenter = TestDataFactory.CreateUser("commenter", "commentUser");
-        var other = TestDataFactory.CreateUser("other", "otherUser");
+        var owner = TestDataFactory.CreateUser("owner", "Test","User");
+        var commenter = TestDataFactory.CreateUser("commenter", "Test","User");
+        var other = TestDataFactory.CreateUser("other", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUserOwner = TestDataFactory.CreateGroupUser(owner.Id, group.Id);
         var groupUserCommenter = TestDataFactory.CreateGroupUser(commenter.Id, group.Id);

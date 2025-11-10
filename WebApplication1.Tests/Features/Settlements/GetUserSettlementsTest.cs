@@ -12,8 +12,8 @@ public class GetUserSettlementsTest : TestBase
     public async Task Handle_Should_Return_User_Settlements_When_They_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
-        var otherUser = TestDataFactory.CreateUser("u2", "User2");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
+        var otherUser = TestDataFactory.CreateUser("u2", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser1 = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var groupUser2 = TestDataFactory.CreateGroupUser(otherUser.Id, group.Id);

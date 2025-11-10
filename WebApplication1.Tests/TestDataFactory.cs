@@ -87,11 +87,11 @@ public static class TestDataFactory
     }
 
     public static User CreateUser(
-        string? id = null,
-        string? name = null,
+        string id,
+        string name,
+        string surname,
         string? email = null,
         string? userName = null,
-        string? surname = null, 
         DateOnly? birthDate = null)
     {
         ArgumentNullException.ThrowIfNull(id, nameof(id));
@@ -321,7 +321,7 @@ public static class TestDataFactory
         string url,
         DateTime uploadedAt,
         string entityId,
-        string entityType,
+        EntityType entityType,
         string uploadedBy)
     {
         return new StoredFile
@@ -338,13 +338,13 @@ public static class TestDataFactory
         };
     }
 
-    public static IFormFile CreateFormFile(string fileName, byte[] content)
+    public static IFormFile CreateFormFile(string fileName, byte[] content, string contentType = "image/jpeg")
     {
         var stream = new MemoryStream(content);
         return new FormFile(stream, 0, content.Length, "file", fileName)
         {
             Headers = new HeaderDictionary(),
-            ContentType = "application/octet-stream"
+            ContentType = contentType
         };
     }
 

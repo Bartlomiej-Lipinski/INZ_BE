@@ -45,7 +45,7 @@ public class UpdateFile : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("File not found.", traceId));
         }
 
-        if (file.Length == 0)
+        if (file == null || file.Length == 0)
             return Results.BadRequest(ApiResponse<string>.Fail("No file uploaded.", traceId));
 
         await storage.DeleteFileAsync(record.Url, cancellationToken);

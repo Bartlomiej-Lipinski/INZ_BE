@@ -11,7 +11,7 @@ public class DeleteTimelineEventTest : TestBase
     public async Task DeleteTimelineEvent_Should_Delete_Event_For_Valid_User_In_Group()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User 1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var timelineEvent = TestDataFactory.CreateTimelineEvent("e1", group.Id, "Event title", DateTime.UtcNow);
@@ -41,7 +41,7 @@ public class DeleteTimelineEventTest : TestBase
     public async Task DeleteTimelineEvent_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User 1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
@@ -62,7 +62,7 @@ public class DeleteTimelineEventTest : TestBase
     public async Task DeleteTimelineEvent_Should_Return_NotFound_When_Event_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User 1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
 

@@ -37,7 +37,7 @@ public class UploadUserProfilePhoto : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
 
-        if (file.Length == 0)
+        if (file == null || file.Length == 0)
         {
             logger.LogWarning("User {UserId} attempted to upload an empty file. TraceId: {TraceId}", userId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("No file uploaded.", traceId));

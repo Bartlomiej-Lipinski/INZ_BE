@@ -11,7 +11,7 @@ public class DeleteSettlementTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
@@ -32,7 +32,7 @@ public class DeleteSettlementTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Settlement_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
 
@@ -58,8 +58,8 @@ public class DeleteSettlementTest : TestBase
     public async Task Handle_Should_Delete_Settlement_When_Exists_And_User_Is_Owner()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
-        var otherUser = TestDataFactory.CreateUser("u2", "User2");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
+        var otherUser = TestDataFactory.CreateUser("u2", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser1 = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var groupUser2 = TestDataFactory.CreateGroupUser(otherUser.Id, group.Id);

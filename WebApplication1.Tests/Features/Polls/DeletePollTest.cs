@@ -13,7 +13,7 @@ public class DeletePollTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var user = TestDataFactory.CreateUser("u1", "User One");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var poll = TestDataFactory.CreatePoll("p1", group.Id, user.Id, question: "Test poll");
         dbContext.Groups.Add(group);
@@ -44,7 +44,7 @@ public class DeletePollTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var user = TestDataFactory.CreateUser("u1", "User One");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
         dbContext.Users.Add(user);

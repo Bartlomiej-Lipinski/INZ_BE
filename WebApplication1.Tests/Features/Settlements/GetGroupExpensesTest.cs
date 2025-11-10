@@ -12,7 +12,7 @@ public class GetGroupExpensesTest : TestBase
     public async Task Handle_Should_Return_Empty_List_When_No_Expenses()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -38,7 +38,7 @@ public class GetGroupExpensesTest : TestBase
     public async Task Handle_Should_Return_Expenses_When_They_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var expense = TestDataFactory.CreateExpense("e1", group.Id, user.Id,  "Lunch", 200m, true);
