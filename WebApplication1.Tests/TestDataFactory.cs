@@ -484,7 +484,12 @@ public static class TestDataFactory
     }
 
     public static ChallengeRequestDto CreateChallengeRequestDto(
-        string name, string description, DateTime startDate, DateTime endDate, double pointsPerUnit, string unit)
+        string name, 
+        string description,
+        DateTime startDate,
+        DateTime? endDate = null,
+        double? pointsPerUnit = null,
+        string? unit = null)
     {
         return new ChallengeRequestDto
         {

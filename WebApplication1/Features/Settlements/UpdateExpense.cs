@@ -50,7 +50,7 @@ public class UpdateExpense : IEndpoint
 
         var expense = await dbContext.Expenses
             .Include(e => e.Beneficiaries)
-            .FirstOrDefaultAsync(e => e.Id == expenseId && e.GroupId == groupId, cancellationToken);
+            .SingleOrDefaultAsync(e => e.Id == expenseId && e.GroupId == groupId, cancellationToken);
 
         if (expense == null)
         {

@@ -43,7 +43,7 @@ public class UpdatePoll : IEndpoint
 
         var existingPoll = await dbContext.Polls
             .Include(p => p.Options).ThenInclude(pollOption => pollOption.VotedUsers)
-            .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == groupId, cancellationToken);
+            .SingleOrDefaultAsync(p => p.Id == pollId && p.GroupId == groupId, cancellationToken);
         
         if (existingPoll == null)
         {

@@ -39,8 +39,8 @@ public class UpdateTimelineEvent : IEndpoint
         logger.LogInformation("User {UserId} updating event {EventId} in group {GroupId}. TraceId: {TraceId}", 
             userId, eventId, groupId, traceId);
 
-        var timelineEvent =
-            await dbContext.TimelineEvents.FirstOrDefaultAsync(te => te.Id == eventId, cancellationToken);
+        var timelineEvent = await dbContext.TimelineEvents
+            .SingleOrDefaultAsync(te => te.Id == eventId, cancellationToken);
         
         if (timelineEvent == null)
         {

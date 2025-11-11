@@ -40,7 +40,7 @@ public class UpdateEvent : IEndpoint
             userId, eventId, groupId, traceId);
 
         var existingEvent = await dbContext.Events
-            .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
+            .SingleOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
         if (existingEvent == null)
         {

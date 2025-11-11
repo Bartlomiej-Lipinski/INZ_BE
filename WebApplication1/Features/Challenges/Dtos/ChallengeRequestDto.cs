@@ -8,4 +8,5 @@ public record ChallengeRequestDto
     public DateTime? EndDate { get; set; }
     public double? PointsPerUnit { get; set; } = 1;
     public string? Unit { get; set; }
+    public bool? IsCompleted { get; set; }
 }
