@@ -60,7 +60,18 @@ public class DeleteComment : IEndpoint
                 userId, commentId, traceId);
             return Results.Forbid();
         }
+        
+        var relatedReactions = await dbContext.Reactions
+            .Where(r => r.TargetId == commentId)
+            .ToListAsync(cancellationToken);
 
+        if (relatedReactions.Count > 0)
+        {
+            dbContext.Reactions.RemoveRange(relatedReactions);
+            logger.LogInformation("Deleted {Count} reactions linked to comment {CommentId}. TraceId: {TraceId}",
+                relatedReactions.Count, commentId, traceId);
+        }
+        
         dbContext.Comments.Remove(comment);
         await dbContext.SaveChangesAsync(cancellationToken);
 

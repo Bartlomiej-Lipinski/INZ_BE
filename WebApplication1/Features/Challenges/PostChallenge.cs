@@ -65,7 +65,6 @@ public class PostChallenge : IEndpoint
             Description = request.Description,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            PointsPerUnit = 1,
             GoalUnit = request.GoalUnit,
             GoalValue = request.GoalValue,
             IsCompleted = false,

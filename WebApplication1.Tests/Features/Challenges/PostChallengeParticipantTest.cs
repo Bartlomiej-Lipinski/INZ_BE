@@ -50,10 +50,10 @@ public class PostChallengeParticipantTest : TestBase
         dbContext.Challenges.Add(challenge);
 
         var participant = TestDataFactory.CreateChallengeParticipant(
-            Guid.NewGuid().ToString(),
             "challenge1",
             "user1",
-            DateTime.UtcNow
+            DateTime.UtcNow,
+            0
         );
         dbContext.ChallengeParticipants.Add(participant);
 
@@ -114,9 +114,8 @@ public class PostChallengeParticipantTest : TestBase
 
         var participant = await dbContext.ChallengeParticipants.FirstOrDefaultAsync(p => p.UserId == "user1");
         participant.Should().NotBeNull();
-        participant!.ChallengeId.Should().Be("challenge1");
+        participant.ChallengeId.Should().Be("challenge1");
         participant.TotalProgress.Should().Be(0);
-        participant.Points.Should().Be(0);
         participant.Completed.Should().BeFalse();
     }
 }

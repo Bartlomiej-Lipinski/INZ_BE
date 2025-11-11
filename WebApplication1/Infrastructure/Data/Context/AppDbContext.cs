@@ -105,6 +105,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(sf => sf.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             
+            entity.HasMany(g => g.Reactions)
+                .WithOne(sf => sf.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
             entity.HasIndex(g => g.Code).IsUnique();
         });
         
@@ -211,8 +216,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         {
             entity.HasKey(r => new { r.TargetId, r.UserId });
             entity.Property(r => r.TargetId).IsRequired();
+            entity.Property(r => r.GroupId).IsRequired();
             entity.Property(r => r.EntityType).IsRequired();
             entity.Property(r => r.UserId).IsRequired();
+            
+            entity.HasOne(r => r.Group)
+                .WithMany(u => u.Reactions)
+                .HasForeignKey(r => r.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
             
             entity.HasOne(r => r.User)
                 .WithMany(u => u.Reactions)
@@ -490,9 +501,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
         
         builder.Entity<ChallengeParticipant>(entity =>
         {
-            entity.HasKey(c => c.Id);
-            entity.Property(c => c.ChallengeId).IsRequired();
-            entity.Property(c => c.UserId).IsRequired();
+            entity.HasKey(c => new { c.ChallengeId, c.UserId });
             entity.Property(c => c.Completed).IsRequired();
             entity.Property(c => c.TotalProgress).IsRequired();
             
@@ -508,20 +517,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             
             entity.HasMany(c => c.ProgressEntries)
                 .WithOne(p => p.Participant)
-                .HasForeignKey(p => p.ParticipantId)
+                .HasForeignKey(p => new { p.ChallengeId, p.UserId })
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
         builder.Entity<ChallengeProgress>(entity =>
         {
             entity.HasKey(c => c.Id);
-            entity.Property(c => c.ParticipantId).IsRequired();
+            entity.Property(c => c.ChallengeId).IsRequired();
+            entity.Property(c => c.UserId).IsRequired();
             entity.Property(c => c.Description).IsRequired().HasMaxLength(255);
             entity.Property(c => c.Value).IsRequired();
 
             entity.HasOne(c => c.Participant)
                 .WithMany(p => p.ProgressEntries)
-                .HasForeignKey(c => c.ParticipantId)
+                .HasForeignKey(c => new { c.ChallengeId, c.UserId })
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

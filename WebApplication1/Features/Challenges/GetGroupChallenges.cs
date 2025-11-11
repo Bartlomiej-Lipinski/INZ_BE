@@ -52,7 +52,6 @@ public class GetGroupChallenges : IEndpoint
                 Participants = c.Participants.Select(p => new ChallengeParticipantResponseDto
                 {
                     UserId = p.UserId,
-                    Points = p.Points
                 }).ToList()
             }).ToListAsync(cancellationToken);
         

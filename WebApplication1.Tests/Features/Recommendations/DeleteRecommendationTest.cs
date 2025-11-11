@@ -81,8 +81,8 @@ public class DeleteRecommendationTest : TestBase
         dbContext.Recommendations.Add(recommendation);
 
         var comment = TestDataFactory.CreateComment(
-            "c1", "rec1", EntityType.Recommendation, user.Id, "Comment", DateTime.UtcNow);
-        var reaction = TestDataFactory.CreateReaction("rec1", EntityType.Recommendation, user.Id);
+            "c1", group.Id, "rec1", EntityType.Recommendation, user.Id, "Comment", DateTime.UtcNow);
+        var reaction = TestDataFactory.CreateReaction(group.Id, "rec1", EntityType.Recommendation, user.Id);
         dbContext.Comments.Add(comment);
         dbContext.Reactions.Add(reaction);
 

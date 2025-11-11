@@ -50,10 +50,10 @@ public class GetRecommendationByIdTest : TestBase
         dbContext.Recommendations.Add(recommendation);
         
         var comment = TestDataFactory
-            .CreateComment("c1", recommendation.Id, EntityType.Recommendation, user.Id, "Nice!", DateTime.UtcNow);
+            .CreateComment("c1", group.Id, recommendation.Id, EntityType.Recommendation, user.Id, "Nice!", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
 
-        var reaction = TestDataFactory.CreateReaction(recommendation.Id, EntityType.Recommendation, user.Id);
+        var reaction = TestDataFactory.CreateReaction(group.Id, recommendation.Id, EntityType.Recommendation, user.Id);
         dbContext.Reactions.Add(reaction);
         await dbContext.SaveChangesAsync();
         

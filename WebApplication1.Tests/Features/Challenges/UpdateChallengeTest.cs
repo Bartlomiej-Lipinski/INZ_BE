@@ -59,7 +59,6 @@ public class UpdateChallengeTest : TestBase
         var updated = await dbContext.Challenges.FindAsync("ch1");
         updated!.Name.Should().Be("New Name");
         updated.Description.Should().Be("New Description");
-        updated.PointsPerUnit.Should().Be(20);
         updated.GoalUnit.Should().Be("steps");
     }
 

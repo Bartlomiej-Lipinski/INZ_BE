@@ -160,11 +160,12 @@ public static class TestDataFactory
     }
 
     public static Comment CreateComment(
-        string id, string targetId, EntityType entityType, string userId, string content, DateTime createdAt)
+        string id, string groupId, string targetId, EntityType entityType, string userId, string content, DateTime createdAt)
     {
         return new Comment
         {
             Id = id,
+            GroupId = groupId,
             TargetId = targetId,
             EntityType = entityType,
             UserId = userId,
@@ -173,10 +174,11 @@ public static class TestDataFactory
         };
     }
 
-    public static Reaction CreateReaction(string targetId, EntityType entityType, string userId)
+    public static Reaction CreateReaction(string groupId, string targetId, EntityType entityType, string userId)
     {
         return new Reaction
         {
+            GroupId = groupId,
             TargetId = targetId,
             EntityType = entityType,
             UserId = userId,
@@ -501,14 +503,23 @@ public static class TestDataFactory
     }
 
     public static ChallengeParticipant CreateChallengeParticipant(
-        string id, string challengeId, string userId, DateTime joinedAt)
+        string challengeId, string userId, DateTime joinedAt, double totalProgress)
     {
         return new ChallengeParticipant
         {
-            Id = id,
             ChallengeId = challengeId,
             UserId = userId,
-            JoinedAt = joinedAt
+            JoinedAt = joinedAt,
+            TotalProgress = totalProgress,
+        };
+    }
+
+    public static ChallengeProgressRequestDto CreateChallengeProgressRequestDto(string description, double value)
+    {
+        return new ChallengeProgressRequestDto
+        {
+            Description = description,
+            Value = value
         };
     }
     

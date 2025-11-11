@@ -63,7 +63,6 @@ public class GetChallengeById : IEndpoint
             Participants = challenge.Participants.Select(p => new ChallengeParticipantResponseDto
             {
                 UserId = p.UserId,
-                Points = p.Points,
                 JoinedAt = p.JoinedAt,
                 CompletedAt = p.CompletedAt,
                 ProgressEntries = p.ProgressEntries.Select(p => new ChallengeProgressResponseDto

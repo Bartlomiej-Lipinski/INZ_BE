@@ -26,9 +26,9 @@ public class GetCommentsForTargetTest : TestBase
         dbContext.Recommendations.Add(target);
 
         var comment1 = TestDataFactory.CreateComment(
-            "c1", target.Id, EntityType.Recommendation, user.Id, "First comment", DateTime.UtcNow);
+            "c1", group.Id, target.Id, EntityType.Recommendation, user.Id, "First comment", DateTime.UtcNow);
         var comment2 = TestDataFactory.CreateComment(
-            "c2", target.Id, EntityType.Recommendation, user.Id, "Second comment", DateTime.UtcNow);
+            "c2", group.Id, target.Id, EntityType.Recommendation, user.Id, "Second comment", DateTime.UtcNow);
         dbContext.Comments.AddRange(comment1, comment2);
 
         await dbContext.SaveChangesAsync();

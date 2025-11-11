@@ -56,6 +56,17 @@ public class DeleteChallenge : IEndpoint
             return Results.Forbid();
         }
         
+        var relatedComments = await dbContext.Comments
+            .Where(c => c.TargetId == challengeId)
+            .ToListAsync(cancellationToken);
+        
+        if (relatedComments.Count > 0)
+        {
+            dbContext.Comments.RemoveRange(relatedComments);
+            logger.LogInformation("Deleted {Count} comments linked to challenge {ChallengeId}. TraceId: {TraceId}",
+                relatedComments.Count, challenge, traceId);
+        }
+        
         dbContext.Challenges.Remove(challenge);
         await dbContext.SaveChangesAsync(cancellationToken);
 

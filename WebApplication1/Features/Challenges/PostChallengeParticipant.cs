@@ -38,10 +38,10 @@ public class PostChallengeParticipant : IEndpoint
         logger.LogInformation("Attempting to join a challenge {ChallengeId} by user {UserId}. TraceId: {TraceId}",
             challengeId, userId, traceId);
         
-        var challengeExists = await dbContext.Challenges
+        var challenge = await dbContext.Challenges
             .SingleOrDefaultAsync(c => c.Id == challengeId && c.GroupId == groupId, cancellationToken);
 
-        if (challengeExists == null)
+        if (challenge == null)
         {
             logger.LogWarning("Challenge {ChallengeId} not found in group {GroupId}. TraceId: {TraceId}", challengeId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Challenge not found.", traceId));
@@ -59,12 +59,10 @@ public class PostChallengeParticipant : IEndpoint
 
         var participant = new ChallengeParticipant
         {
-            Id = Guid.NewGuid().ToString(),
             ChallengeId = challengeId,
             UserId = userId!,
             Completed = false,
             TotalProgress = 0,
-            Points = 0,
             JoinedAt = DateTime.UtcNow
         };
         
@@ -74,6 +72,6 @@ public class PostChallengeParticipant : IEndpoint
         logger.LogInformation("User {UserId} joined challenge {ChallengeId} in group {GroupId}. TraceId: {TraceId}",
             userId, challengeId, groupId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok("Challenge joined successfully.", participant.Id, traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Challenge joined successfully.", participant.UserId, traceId));
     }
 }

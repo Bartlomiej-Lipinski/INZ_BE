@@ -51,7 +51,7 @@ public class UpdateCommentTest : TestBase
         dbContext.Recommendations.Add(target);
 
         var comment = TestDataFactory.CreateComment(
-            "c1", target.Id, EntityType.Recommendation, user.Id, "Old content", DateTime.UtcNow);
+            "c1", group.Id, target.Id, EntityType.Recommendation, user.Id, "Old content", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
         

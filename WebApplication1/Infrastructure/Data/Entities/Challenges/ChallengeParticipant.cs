@@ -2,13 +2,11 @@
 
 public class ChallengeParticipant
 {
-    public string Id { get; set; } = null!;
     public string ChallengeId { get; set; } = null!;
     public string UserId { get; set; } = null!;
 
     public bool Completed { get; set; }
     public double TotalProgress { get; set; }
-    public int Points { get; set; }
     public DateTime JoinedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
     

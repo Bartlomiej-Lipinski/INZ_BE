@@ -49,10 +49,6 @@ public class PostReaction : IEndpoint
 
         object? target = parsedEntityType switch
         {
-            EntityType.Challenge => await dbContext.Challenges
-                .Include(r => r.Group)
-                .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
-            
             EntityType.Comment => await dbContext.Comments
                 .Include(c => c.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
@@ -88,6 +84,7 @@ public class PostReaction : IEndpoint
 
         var reaction = new Reaction
         {
+            GroupId = groupId,
             TargetId = targetId,
             EntityType = parsedEntityType,
             UserId = userId!

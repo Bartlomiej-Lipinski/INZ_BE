@@ -53,9 +53,8 @@ public class GetChallengeByIdTest : TestBase
             [
                 new ChallengeParticipant
                 {
-                    Id = "p1",
+                    ChallengeId = "c1",
                     UserId = user.Id,
-                    Points = 5,
                     ProgressEntries = new List<ChallengeProgress>
                     {
                         new()

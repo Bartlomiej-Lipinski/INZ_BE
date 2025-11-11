@@ -1,4 +1,5 @@
 ﻿using WebApplication1.Infrastructure.Data.Entities.Challenges;
+using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
@@ -24,4 +25,5 @@ public class Group
     public ICollection<TimelineEvent> TimelineEvents { get; set; } = new List<TimelineEvent>();
     public ICollection<Challenge> Challenges { get; set; } = new List<Challenge>();
     public ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
+    public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
 }
