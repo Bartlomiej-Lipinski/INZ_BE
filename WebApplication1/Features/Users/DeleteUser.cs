@@ -32,7 +32,7 @@ public class DeleteUser : IEndpoint
 
         logger.LogInformation("Attempting to delete user with ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
         
         if (user == null)
         {

@@ -39,7 +39,7 @@ public class DeletePoll : IEndpoint
             pollId, groupId, userId, traceId);
 
         var poll = await dbContext.Polls
-            .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == groupId, cancellationToken);
+            .SingleOrDefaultAsync(p => p.Id == pollId && p.GroupId == groupId, cancellationToken);
 
         if (poll == null)
         {

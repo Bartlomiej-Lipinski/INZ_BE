@@ -36,7 +36,7 @@ public class DeleteGroup : IEndpoint
             userId, groupId, traceId);
 
         var group = await dbContext.Groups
-            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+            .SingleOrDefaultAsync(g => g.Id == groupId, cancellationToken);
 
         if (group == null)
         {

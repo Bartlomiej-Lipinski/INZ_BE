@@ -38,7 +38,7 @@ public class DeleteTimelineEvent : IEndpoint
             userId, eventId, groupId, traceId);
 
         var timelineEvent = await dbContext.TimelineEvents
-            .FirstOrDefaultAsync(te => te.Id == eventId, cancellationToken);
+            .SingleOrDefaultAsync(te => te.Id == eventId, cancellationToken);
         
         if (timelineEvent == null)
         {

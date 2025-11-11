@@ -47,7 +47,7 @@ public class DeleteUserFromGroup : IEndpoint
         }
         
         var groupUser = await dbContext.GroupUsers
-            .FirstOrDefaultAsync(
+            .SingleOrDefaultAsync(
                 gu => gu.GroupId == groupId 
                       && gu.UserId == userId 
                       && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);

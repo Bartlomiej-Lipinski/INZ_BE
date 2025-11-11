@@ -39,7 +39,7 @@ public class DeleteRecommendation : IEndpoint
             userId, recommendationId, groupId, traceId);
         
         var recommendation = await dbContext.Recommendations
-            .FirstOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
+            .SingleOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
 
         if (recommendation == null)
         {

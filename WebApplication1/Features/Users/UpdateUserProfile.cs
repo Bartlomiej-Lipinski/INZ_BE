@@ -4,6 +4,7 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Shared.Extensions;
 
@@ -33,7 +34,7 @@ public class UpdateUserProfile : IEndpoint
 
         logger.LogInformation("Attempting to update profile for user ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 
-        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user == null)
         {
             logger.LogWarning("User not found for profile update with ID: {UserId}. TraceId: {TraceId}", userId, traceId);

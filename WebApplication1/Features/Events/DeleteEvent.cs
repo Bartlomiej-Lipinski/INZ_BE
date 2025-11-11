@@ -39,7 +39,7 @@ public class DeleteEvent : IEndpoint
             userId, eventId, groupId, traceId);
 
         var evt = await dbContext.Events
-            .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
+            .SingleOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
         if (evt == null)
         {

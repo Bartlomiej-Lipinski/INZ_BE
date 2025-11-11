@@ -41,7 +41,7 @@ public class DeleteExpense : IEndpoint
             userId, expenseId, groupId, traceId);
         
         var expense = await dbContext.Expenses
-            .FirstOrDefaultAsync(e => e.Id == expenseId, cancellationToken);
+            .SingleOrDefaultAsync(e => e.Id == expenseId, cancellationToken);
         
         if (expense == null)
         {

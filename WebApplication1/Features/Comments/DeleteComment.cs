@@ -37,7 +37,7 @@ public class DeleteComment : IEndpoint
         var userId = currentUser.GetUserId();
 
         var comment = await dbContext.Comments
-            .FirstOrDefaultAsync(c => c.Id == commentId && c.TargetId == targetId, cancellationToken);
+            .SingleOrDefaultAsync(c => c.Id == commentId && c.TargetId == targetId, cancellationToken);
 
         if (comment == null)
         {

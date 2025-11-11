@@ -38,7 +38,7 @@ public class DeleteSettlement : IEndpoint
             userId, settlementId, groupId, traceId);
         
         var settlement = await dbContext.Settlements
-            .FirstOrDefaultAsync(s => s.Id == settlementId && s.FromUserId == userId, cancellationToken);
+            .SingleOrDefaultAsync(s => s.Id == settlementId && s.FromUserId == userId, cancellationToken);
         
         if (settlement == null)
         {
