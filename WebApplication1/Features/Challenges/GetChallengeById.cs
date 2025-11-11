@@ -40,7 +40,6 @@ public class GetChallengeById : IEndpoint
             .Include(c => c.User)
             .Include(c => c.Participants)
             .ThenInclude(p => p.ProgressEntries)
-            .Include(c => c.Stages)
             .FirstOrDefaultAsync(e => e.Id == challengeId && e.GroupId == groupId, cancellationToken);
         
         if (challenge == null)
@@ -57,29 +56,23 @@ public class GetChallengeById : IEndpoint
             Name = challenge.Name,
             Description = challenge.Description,
             StartDate = challenge.StartDate.ToLocalTime(),
-            EndDate = challenge.EndDate?.ToLocalTime(),
-            PointsPerUnit = challenge.PointsPerUnit,
-            Unit = challenge.Unit,
+            EndDate = challenge.EndDate.ToLocalTime(),
+            GoalUnit = challenge.GoalUnit,
+            GoalValue = challenge.GoalValue,
             IsCompleted = challenge.IsCompleted,
             Participants = challenge.Participants.Select(p => new ChallengeParticipantResponseDto
             {
                 UserId = p.UserId,
                 Points = p.Points,
                 JoinedAt = p.JoinedAt,
+                CompletedAt = p.CompletedAt,
                 ProgressEntries = p.ProgressEntries.Select(p => new ChallengeProgressResponseDto
                 {
                     Date = p.Date,
                     Description = p.Description,
                     Value = p.Value
                 }).ToList()
-            }).ToList(),
-            Stages = challenge.Stages.OrderBy(s => s.Order)
-                .Select(s => new ChallengeStageResponseDto 
-                {
-                    Name = s.Name,
-                    Description = s.Description,
-                    Order = s.Order 
-                }).ToList()
+            }).ToList()
         };
         
         logger.LogInformation("Returning challenge {ChallengeId} response, traceId: {TraceId}", challengeId, traceId);

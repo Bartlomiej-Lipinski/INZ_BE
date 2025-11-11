@@ -36,7 +36,6 @@ public class GetGroupChallenges : IEndpoint
         var challenges = await dbContext.Challenges
             .AsNoTracking()
             .Include(c => c.Participants)
-            .Include(c => c.Stages)
             .Where(c => c.GroupId == groupId)
             .OrderBy(c => c.StartDate)
             .Select(c => new ChallengeResponseDto
@@ -46,7 +45,9 @@ public class GetGroupChallenges : IEndpoint
                 Name = c.Name,
                 Description = c.Description,
                 StartDate = c.StartDate.ToLocalTime(),
-                EndDate = c.EndDate.HasValue ? c.EndDate.Value.ToLocalTime() : null,
+                EndDate = c.EndDate.ToLocalTime(),
+                GoalUnit = c.GoalUnit,
+                GoalValue = c.GoalValue,
                 IsCompleted = c.IsCompleted,
                 Participants = c.Participants.Select(p => new ChallengeParticipantResponseDto
                 {

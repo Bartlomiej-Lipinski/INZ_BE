@@ -64,23 +64,20 @@ public class UpdateChallenge : IEndpoint
                 traceId));
         }
         
-        if (request.EndDate != null)
+        if (request.EndDate < request.StartDate)
         {
-            if (request.EndDate < request.StartDate)
-            {
-                logger.LogWarning("Challenge creation failed: end date before start date. User {UserId}, Group {GroupId}," +
-                                  " TraceId: {TraceId}", userId, groupId, traceId);
-                return Results.BadRequest(ApiResponse<string>
-                    .Fail("Range end cannot be earlier than range start.", traceId));
-            }
+            logger.LogWarning("Challenge creation failed: end date before start date. User {UserId}, Group {GroupId}," +
+                              " TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.BadRequest(ApiResponse<string>
+                .Fail("Range end cannot be earlier than range start.", traceId));
         }
-
+            
         existingChallenge.Name = request.Name;
         existingChallenge.Description = request.Description;
         existingChallenge.StartDate = request.StartDate;
         existingChallenge.EndDate = request.EndDate;
-        existingChallenge.PointsPerUnit = request.PointsPerUnit;
-        existingChallenge.Unit = request.Unit;
+        existingChallenge.GoalUnit = request.GoalUnit;
+        existingChallenge.GoalValue = request.GoalValue;
         existingChallenge.IsCompleted = request.IsCompleted ?? false;
         await dbContext.SaveChangesAsync(cancellationToken);
 

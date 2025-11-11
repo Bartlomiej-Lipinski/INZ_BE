@@ -23,9 +23,8 @@ public class UpdateChallengeTest : TestBase
             DateTime.UtcNow, 
             DateTime.UtcNow.AddDays(1), 
             [], 
-            [],
-            10, 
-            "km"
+            "km",
+            10
         );
 
         dbContext.Challenges.Add(challenge);
@@ -36,8 +35,8 @@ public class UpdateChallengeTest : TestBase
             "New Description",
             DateTime.UtcNow.AddDays(1),
             DateTime.UtcNow.AddDays(2),
-            20,
-            "steps"
+            "steps",
+            4000
         );
 
         var result = await UpdateChallenge.Handle(
@@ -61,7 +60,7 @@ public class UpdateChallengeTest : TestBase
         updated!.Name.Should().Be("New Name");
         updated.Description.Should().Be("New Description");
         updated.PointsPerUnit.Should().Be(20);
-        updated.Unit.Should().Be("steps");
+        updated.GoalUnit.Should().Be("steps");
     }
 
     [Fact]
@@ -71,7 +70,10 @@ public class UpdateChallengeTest : TestBase
         var request = TestDataFactory.CreateChallengeRequestDto(
             "Test",
             "Desc",
-            DateTime.UtcNow
+            DateTime.UtcNow,
+            DateTime.UtcNow.AddDays(2),
+            "steps",
+            4000
         );
 
         var result = await UpdateChallenge.Handle(
@@ -105,7 +107,8 @@ public class UpdateChallengeTest : TestBase
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(1), 
             [], 
-            []
+            "steps",
+            4000
         );
         dbContext.Challenges.Add(challenge);
         await dbContext.SaveChangesAsync();
@@ -113,7 +116,10 @@ public class UpdateChallengeTest : TestBase
         var request = TestDataFactory.CreateChallengeRequestDto(
             "New",
             "New Desc",
-            DateTime.UtcNow
+            DateTime.UtcNow,
+            DateTime.UtcNow.AddDays(2),
+            "steps",
+            4000
         );
 
         var result = await UpdateChallenge.Handle(
@@ -143,12 +149,19 @@ public class UpdateChallengeTest : TestBase
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(1), 
             [], 
-            []
+            "steps",
+            4000
         );
         dbContext.Challenges.Add(challenge);
         await dbContext.SaveChangesAsync();
 
-        var request = TestDataFactory.CreateChallengeRequestDto("", "", DateTime.UtcNow);
+        var request = TestDataFactory.CreateChallengeRequestDto(
+            "", 
+            "",
+            DateTime.UtcNow, 
+            DateTime.UtcNow.AddDays(2),
+            "steps",
+            4000);
 
         var result = await UpdateChallenge.Handle(
             "group1",
@@ -181,7 +194,8 @@ public class UpdateChallengeTest : TestBase
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(1), 
             [], 
-            []
+            "steps",
+            4000
         );
         dbContext.Challenges.Add(challenge);
         await dbContext.SaveChangesAsync();
@@ -190,7 +204,9 @@ public class UpdateChallengeTest : TestBase
             "New",
             "New",
             DateTime.UtcNow,
-            DateTime.UtcNow.AddDays(-1)
+            DateTime.UtcNow.AddDays(-1),
+            "steps",
+            4000
         );
 
         var result = await UpdateChallenge.Handle(

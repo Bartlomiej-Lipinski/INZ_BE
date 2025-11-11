@@ -24,7 +24,8 @@ public class DeleteChallengeTest : TestBase
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(1), 
             [], 
-            []
+            "km",
+            10
         );
         dbContext.Challenges.Add(challenge);
         await dbContext.SaveChangesAsync();
@@ -83,7 +84,8 @@ public class DeleteChallengeTest : TestBase
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(1), 
             [], 
-            []
+            "unit",
+            10
         );
         dbContext.Challenges.Add(challenge);
         await dbContext.SaveChangesAsync();

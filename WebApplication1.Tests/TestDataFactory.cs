@@ -460,9 +460,8 @@ public static class TestDataFactory
         DateTime startDate,
         DateTime endDate,
         List<ChallengeParticipant> participants,
-        List<ChallengeStage> stages,
-        double? pointsPerUnit = null,
-        string? unit = null,
+        string goalUnit,
+        double goalValue,
         bool isCompleted = false)
     {
         return new Challenge
@@ -475,11 +474,10 @@ public static class TestDataFactory
             Description = description,
             StartDate = startDate,
             EndDate = endDate,
-            PointsPerUnit = pointsPerUnit,
-            Unit = unit,
+            GoalUnit = goalUnit,
+            GoalValue = goalValue,
             IsCompleted = isCompleted,
             Participants = participants,
-            Stages = stages
         };
     }
 
@@ -487,9 +485,9 @@ public static class TestDataFactory
         string name, 
         string description,
         DateTime startDate,
-        DateTime? endDate = null,
-        double? pointsPerUnit = null,
-        string? unit = null)
+        DateTime endDate,
+        string goalUnit,
+        double goalValue)
     {
         return new ChallengeRequestDto
         {
@@ -497,8 +495,20 @@ public static class TestDataFactory
             Description = description,
             StartDate = startDate,
             EndDate = endDate,
-            PointsPerUnit = pointsPerUnit,
-            Unit = unit
+            GoalUnit = goalUnit,
+            GoalValue = goalValue
+        };
+    }
+
+    public static ChallengeParticipant CreateChallengeParticipant(
+        string id, string challengeId, string userId, DateTime joinedAt)
+    {
+        return new ChallengeParticipant
+        {
+            Id = id,
+            ChallengeId = challengeId,
+            UserId = userId,
+            JoinedAt = joinedAt
         };
     }
     

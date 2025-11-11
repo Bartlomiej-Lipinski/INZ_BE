@@ -14,9 +14,10 @@ public class Challenge
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
     public DateTime StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
-    public double? PointsPerUnit { get; set; } = 1;
-    public string? Unit { get; set; }
+    public DateTime EndDate { get; set; }
+    public double PointsPerUnit { get; set; }
+    public string GoalUnit { get; set; } = null!;
+    public double GoalValue { get; set; }
     
     public bool IsCompleted { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -24,5 +25,4 @@ public class Challenge
     public Group Group { get; set; } = null!;
     public User User { get; set; } = null!;
     public ICollection<ChallengeParticipant> Participants { get; set; } = new List<ChallengeParticipant>();
-    public ICollection<ChallengeStage> Stages { get; set; } = new List<ChallengeStage>();
 }

@@ -78,6 +78,7 @@ public class PostComment : IEndpoint
         var comment = new Comment
         {
             Id = Guid.NewGuid().ToString(),
+            GroupId = groupId,
             TargetId = targetId,
             EntityType = entityType,
             UserId = userId!,

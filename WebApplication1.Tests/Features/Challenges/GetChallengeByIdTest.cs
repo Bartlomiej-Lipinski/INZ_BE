@@ -68,12 +68,8 @@ public class GetChallengeByIdTest : TestBase
                     }
                 }
             ],
-            [
-                new ChallengeStage { Id = "s1", Name = "Stage 1", Description = "First stage", Order = 1 },
-                new ChallengeStage { Id = "s2", Name = "Stage 2", Description = "Second stage", Order = 2 }
-            ],
-            10,
-            "km"
+            "km",
+            10
         );
 
         dbContext.Challenges.Add(challenge);
@@ -99,8 +95,5 @@ public class GetChallengeByIdTest : TestBase
         data.Participants.Should().HaveCount(1);
         data.Participants.First().UserId.Should().Be(user.Id);
         data.Participants.First().ProgressEntries.Should().HaveCount(1);
-        data.Stages.Should().HaveCount(2);
-        data.Stages.First().Order.Should().Be(1);
-        data.Stages.Last().Order.Should().Be(2);
     }
 }

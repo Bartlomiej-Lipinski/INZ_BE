@@ -49,11 +49,15 @@ public class PostReaction : IEndpoint
 
         object? target = parsedEntityType switch
         {
-            EntityType.Recommendation => await dbContext.Recommendations
+            EntityType.Challenge => await dbContext.Challenges
                 .Include(r => r.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
             
-            EntityType.Challenge => await dbContext.Challenges
+            EntityType.Comment => await dbContext.Comments
+                .Include(c => c.Group)
+                .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
+            
+            EntityType.Recommendation => await dbContext.Recommendations
                 .Include(r => r.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
             

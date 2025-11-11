@@ -21,8 +21,8 @@ public class PostChallengeTest : TestBase
             "Do something",
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(7),
-            10,
-            "steps"
+            "km",
+             10
         );
 
         var result = await PostChallenge.Handle(
@@ -30,7 +30,7 @@ public class PostChallengeTest : TestBase
             request,
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(),
+            CreateHttpContext(user.Id),
             NullLogger<PostChallenge>.Instance,
             CancellationToken.None
         );
@@ -44,7 +44,7 @@ public class PostChallengeTest : TestBase
 
         var challengeInDb = await dbContext.Challenges.FirstOrDefaultAsync();
         challengeInDb.Should().NotBeNull();
-        challengeInDb!.Name.Should().Be(request.Name);
+        challengeInDb.Name.Should().Be(request.Name);
         challengeInDb.Description.Should().Be(request.Description);
     }
 
@@ -61,8 +61,8 @@ public class PostChallengeTest : TestBase
             "",
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(7),
-            10,
-            "steps"
+            "steps",
+            10000
         );
 
         var result = await PostChallenge.Handle(
@@ -91,8 +91,8 @@ public class PostChallengeTest : TestBase
             "Description",
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(-1),
-            10,
-            "steps"
+            "steps",
+            5000
         );
 
         var result = await PostChallenge.Handle(

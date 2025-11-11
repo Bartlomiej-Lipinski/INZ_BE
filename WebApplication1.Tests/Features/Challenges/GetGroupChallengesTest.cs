@@ -28,7 +28,8 @@ public class GetGroupChallengesTest : TestBase
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(7),
             [],
-            []
+            "km",
+            10
         );
 
         var challenge2 = TestDataFactory.CreateChallenge(
@@ -40,7 +41,8 @@ public class GetGroupChallengesTest : TestBase
             DateTime.UtcNow,
             DateTime.UtcNow.AddDays(14),
             [],
-            []
+            "km",
+            20
         );
 
         dbContext.Challenges.AddRange(challenge1, challenge2);

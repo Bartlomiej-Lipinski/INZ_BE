@@ -47,17 +47,14 @@ public class PostChallenge : IEndpoint
                 traceId));
         }
 
-        if (request.EndDate != null)
+        if (request.EndDate < request.StartDate)
         {
-            if (request.EndDate < request.StartDate)
-            {
-                logger.LogWarning("Challenge creation failed: end date before start date. User {UserId}, Group {GroupId}," +
-                                  " TraceId: {TraceId}", userId, groupId, traceId);
-                return Results.BadRequest(ApiResponse<string>
-                    .Fail("Range end cannot be earlier than range start.", traceId));
-            }
+            logger.LogWarning("Challenge creation failed: end date before start date. User {UserId}, Group {GroupId}," +
+                              " TraceId: {TraceId}", userId, groupId, traceId);
+            return Results.BadRequest(ApiResponse<string>
+                .Fail("Range end cannot be earlier than range start.", traceId));
         }
-
+            
         var challenge = new Challenge
         {
             Id = Guid.NewGuid().ToString(),
@@ -68,8 +65,9 @@ public class PostChallenge : IEndpoint
             Description = request.Description,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            PointsPerUnit = request.PointsPerUnit,
-            Unit = request.Unit,
+            PointsPerUnit = 1,
+            GoalUnit = request.GoalUnit,
+            GoalValue = request.GoalValue,
             IsCompleted = false,
             CreatedAt = DateTime.UtcNow
         };
