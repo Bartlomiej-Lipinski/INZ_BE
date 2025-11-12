@@ -46,14 +46,15 @@ public class CalculateBestDateForEventTests : TestBase
         var evt = TestDataFactory.CreateEvent(
             "e1",
             group.Id,
-            user.Id, 
-            "Test Event", 
+            user.Id,
+            "Test Event",
             "Description",
-            startDate, 
-            "Location", 
+            startDate,
+            "Location",
             DateTime.UtcNow
         );
-        evt.EndDate = endDate;
+        evt.RangeStart = startDate;
+        evt.RangeEnd = endDate;
         evt.Availabilities = new List<EventAvailability>
         {
             TestDataFactory.CreateEventAvailability(evt.Id, user.Id, EventAvailabilityStatus.Going, DateTime.Now),
@@ -69,7 +70,7 @@ public class CalculateBestDateForEventTests : TestBase
         dbContext.GroupUsers.Add(groupUser);
         dbContext.Events.Add(evt);
         await dbContext.SaveChangesAsync();
-        
+
         var result = await CalculateBestDateForEvent.Handle(
             group.Id,
             evt.Id,
@@ -96,15 +97,16 @@ public class CalculateBestDateForEventTests : TestBase
 
         var evt = TestDataFactory.CreateEvent(
             "e1",
-            group.Id, 
+            group.Id,
             user1.Id,
-            "Test Event", 
-            "Description", 
-            startDate, 
+            "Test Event",
+            "Description",
+            startDate,
             "Location",
             DateTime.UtcNow
         );
-        evt.EndDate = startDate.AddDays(7);
+        evt.RangeStart = startDate;
+        evt.RangeEnd = startDate.AddDays(7);
         evt.Availabilities = new List<EventAvailability>
         {
             TestDataFactory.CreateEventAvailability(evt.Id, user1.Id, EventAvailabilityStatus.Going, DateTime.Now),
@@ -137,7 +139,7 @@ public class CalculateBestDateForEventTests : TestBase
             "e1",
             group.Id,
             user.Id,
-            "Test Event", 
+            "Test Event",
             "Description",
             DateTime.UtcNow,
             "Location",
@@ -157,7 +159,6 @@ public class CalculateBestDateForEventTests : TestBase
         bestResult.date.Hour.Should().Be(9);
     }
 
-
     [Fact]
     public void GetBestDateAndTime_Should_Handle_Overlapping_Availabilities()
     {
@@ -169,15 +170,16 @@ public class CalculateBestDateForEventTests : TestBase
 
         var evt = TestDataFactory.CreateEvent(
             "e1",
-            group.Id, 
-            user1.Id, 
-            "Test Event", 
+            group.Id,
+            user1.Id,
+            "Test Event",
             "Description",
             startDate,
             "Location",
             DateTime.UtcNow
         );
-        evt.EndDate = startDate.AddDays(2);
+        evt.RangeStart = startDate;
+        evt.RangeEnd = startDate.AddDays(2);
         evt.Availabilities = new List<EventAvailability>
         {
             TestDataFactory.CreateEventAvailability(evt.Id, user1.Id, EventAvailabilityStatus.Going, DateTime.Now),
@@ -214,14 +216,15 @@ public class CalculateBestDateForEventTests : TestBase
         var evt = TestDataFactory.CreateEvent(
             "e1",
             group.Id,
-            user1.Id, 
+            user1.Id,
             "Test Event",
             "Description",
             startDate,
             "Location",
             DateTime.UtcNow
         );
-        evt.EndDate = startDate.AddDays(5);
+        evt.RangeStart = startDate;
+        evt.RangeEnd = startDate.AddDays(5);
         evt.Availabilities = new List<EventAvailability>
         {
             TestDataFactory.CreateEventAvailability(evt.Id, user1.Id, EventAvailabilityStatus.Going, DateTime.Now),
@@ -254,12 +257,10 @@ public class CalculateBestDateForEventTests : TestBase
 
         var results = CalculateBestDateForEvent.GetBestDateAndTime(evt);
 
-        results.Should().HaveCount(3, "metoda zwraca maksymalnie 3 najlepsze daty");
+        results.Should().HaveCount(3);
 
         var bestResult = results.First();
-        bestResult.date.Date.Should().Be(new DateTime(2024, 1, 3),
-            "dzień 3 stycznia ma największe nakładanie się dostępności wszystkich trzech użytkowników");
-        bestResult.date.Hour.Should()
-            .Be(13, "godzina 13 to początek przedziału gdzie wszyscy trzej użytkownicy są dostępni");
+        bestResult.date.Date.Should().Be(new DateTime(2024, 1, 3));
+        bestResult.date.Hour.Should().Be(13);
     }
 }

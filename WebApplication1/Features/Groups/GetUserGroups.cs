@@ -16,10 +16,11 @@ public class GetUserGroups : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("/users/groups",Handle)
+        app.MapGet("/users/groups", Handle)
             .WithName("GetUserGroups")
             .WithDescription("Returns groups for the currently logged-in user")
-            .WithTags("Groups");
+            .WithTags("Groups")
+            .RequireAuthorization();
     }
 
     public static async Task<ApiResponse<IEnumerable<GroupResponseDto>>> Handle(
@@ -33,11 +34,12 @@ public class GetUserGroups : IEndpoint
 
         var groups = await dbContext.GroupUsers.AsNoTracking()
             .AsQueryable()
-            .Where(c => c.UserId == userId && c.AcceptanceStatus == AcceptanceStatus.Accepted)
+            .Where(c => c.UserId == currentUserId && c.AcceptanceStatus == AcceptanceStatus.Accepted)
             .Select(c => new GroupResponseDto
             {
                 Id = c.GroupId,
-                Name = c.Group.Name
+                Name = c.Group.Name,
+                Color = c.Group.Color
             })
             .ToListAsync(cancellationToken);
 
