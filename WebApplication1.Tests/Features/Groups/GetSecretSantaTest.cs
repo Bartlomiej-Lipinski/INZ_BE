@@ -24,7 +24,7 @@ public class GetSecretSantaTest : TestBase
 
         var result = await GetSecretSanta.Handle(
             group.Id,
-            CreateClaimsPrincipal(),
+            CreateClaimsPrincipal(user.Id),
             dbContext,
             CreateHttpContext(user.Id),
             NullLogger<GetSecretSanta>.Instance,
@@ -49,7 +49,7 @@ public class GetSecretSantaTest : TestBase
 
         var result = await GetSecretSanta.Handle(
             "g-no-group",
-            CreateClaimsPrincipal(),
+            CreateClaimsPrincipal(user1.Id),
             dbContext,
             CreateHttpContext(user1.Id),
             NullLogger<GetSecretSanta>.Instance,
@@ -76,7 +76,7 @@ public class GetSecretSantaTest : TestBase
 
         var result = await GetSecretSanta.Handle(
             group.Id,
-            CreateClaimsPrincipal(),
+            CreateClaimsPrincipal(user1.Id),
             dbContext,
             CreateHttpContext(user1.Id),
             NullLogger<GetSecretSanta>.Instance,
