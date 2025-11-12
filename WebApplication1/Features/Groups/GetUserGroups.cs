@@ -30,7 +30,7 @@ public class GetUserGroups : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.GetUserId();
+        var currentUserId = currentUser.GetUserId();
 
         var groups = await dbContext.GroupUsers.AsNoTracking()
             .AsQueryable()
