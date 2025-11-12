@@ -43,21 +43,6 @@ public class GetPollByIdTest : TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Logged_In()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await GetPollById.Handle(
-            "g1", "p1", dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<GetPollById>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Poll_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -79,26 +64,5 @@ public class GetPollByIdTest : TestBase
             CancellationToken.None);
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Forbid_When_User_Is_Not_In_Group()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-
-        dbContext.Groups.Add(group);
-        await dbContext.SaveChangesAsync();
-
-        var result = await GetPollById.Handle(
-            "g1",
-            "p1",
-            dbContext,
-            CreateClaimsPrincipal("u2"),
-            CreateHttpContext("u2"),
-            NullLogger<GetPollById>.Instance,
-            CancellationToken.None);
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
     }
 }

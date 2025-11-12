@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Groups;
 
@@ -16,7 +18,8 @@ public class GetAmountOfJoinRequests : IEndpoint
             .WithName("GetAmountOfJoinRequests")
             .WithDescription("Returns the amount of join requests for the current user")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
     
     public static async Task<IResult> Handle(
@@ -27,15 +30,7 @@ public class GetAmountOfJoinRequests : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-        
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("User ID not found in claims. TraceId: {TraceId}", traceId);
-            return Results.BadRequest(ApiResponse<string>.Fail("User ID cannot be null or empty.", traceId));
-        }
+        var userId = currentUser.GetUserId();
 
         var adminGroupIds = await dbContext.GroupUsers
             .Where(gu => gu.UserId == userId && gu.IsAdmin)

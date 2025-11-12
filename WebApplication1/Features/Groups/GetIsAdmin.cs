@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Groups;
@@ -28,14 +29,7 @@ public class GetIsAdmin : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to check admin status. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
+        var userId = currentUser.GetUserId();
 
         logger.LogInformation("Checking admin status for user ID: {UserId}. TraceId: {TraceId}", userId, traceId);
 

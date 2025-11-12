@@ -4,9 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Comments;
 
@@ -18,7 +19,8 @@ public class UpdateComment : IEndpoint
             .WithName("UpdateComment")
             .WithDescription("Updates an existing comment for a target")
             .WithTags("Comments")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
 
     public static async Task<IResult> Handle(
@@ -33,35 +35,7 @@ public class UpdateComment : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                            ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to update comment {CommentId}. TraceId: {TraceId}", 
-                commentId, traceId);
-            return Results.Unauthorized();
-        }
-        
-        var group = await dbContext.Groups
-            .AsNoTracking()
-            .Include(g => g.GroupUsers)
-            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
-
-        if (group == null)
-        {
-            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-        }
-
-        var groupUser = group.GroupUsers
-            .FirstOrDefault(gu => gu.UserId == userId && gu.AcceptanceStatus == AcceptanceStatus.Accepted);
-        if (groupUser == null)
-        {
-            logger.LogWarning("User {UserId} attempted to update comment in group {GroupId} but is not a member. " +
-                              "TraceId: {TraceId}", userId, groupId, traceId);
-            return Results.Forbid();
-        }
+        var userId = currentUser.GetUserId();
 
         if (string.IsNullOrWhiteSpace(request.Content))
         {

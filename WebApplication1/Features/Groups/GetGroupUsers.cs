@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Groups;
@@ -29,17 +30,11 @@ public class GetGroupUsers : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to get group users. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
+        var userId = currentUser.GetUserId();
         
         var isCurrentUserMemberOfGroup = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == groupId && gu.UserId == userId, cancellationToken);
+        
         if (!isCurrentUserMemberOfGroup)
         {
             logger.LogWarning("User {UserId} tried to get users for group {GroupId} without membership. TraceId: {TraceId}", 

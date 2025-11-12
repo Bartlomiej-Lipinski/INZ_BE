@@ -35,31 +35,6 @@ public class GetSecretSantaTest : TestBase
     }
 
     [Fact]
-    public async Task Handle_Should_Return_NotFound_When_Group_Record_Does_Not_Exist_But_GroupUsers_Exist()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user1 = TestDataFactory.CreateUser("u1", "User1");
-        var user2 = TestDataFactory.CreateUser("u2", "User2");
-        var groupUser1 = TestDataFactory.CreateGroupUser(user1.Id, "g-no-group");
-        var groupUser2 = TestDataFactory.CreateGroupUser(user2.Id, "g-no-group");
-
-        dbContext.Users.AddRange(user1, user2);
-        dbContext.GroupUsers.AddRange(groupUser1, groupUser2);
-        await dbContext.SaveChangesAsync();
-
-        var result = await GetSecretSanta.Handle(
-            "g-no-group",
-            CreateClaimsPrincipal(user1.Id),
-            dbContext,
-            CreateHttpContext(user1.Id),
-            NullLogger<GetSecretSanta>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<NotFound<ApiResponse<string>>>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_Ok_With_Pairs_When_Succeeds()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

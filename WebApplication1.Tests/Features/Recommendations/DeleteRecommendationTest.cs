@@ -9,24 +9,6 @@ namespace WebApplication1.Tests.Features.Recommendations;
 public class DeleteRecommendationTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await DeleteRecommendation.Handle(
-            "g1",
-            "rec1",
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<DeleteRecommendation>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-    
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Recommendation_Not_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

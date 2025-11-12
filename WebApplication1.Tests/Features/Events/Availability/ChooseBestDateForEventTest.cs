@@ -10,41 +10,6 @@ namespace WebApplication1.Tests.Features.Events.Availability;
 public class ChooseBestDateForEventTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        TestDataFactory.CreateUser("owner-id", "Owner");
-        var evt = TestDataFactory.CreateEvent(
-            "e1",
-            group.Id,
-            "owner-id",
-            "Test Event",
-            "Details",
-            DateTime.UtcNow,
-            "Online",
-            DateTime.UtcNow
-        );
-
-        dbContext.Groups.Add(group);
-        dbContext.Events.Add(evt);
-        await dbContext.SaveChangesAsync();
-            
-        var result = await ChooseBestDateForEvent.Handle(
-            group.Id,
-            "e1",
-            "s1",
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<ChooseBestDateForEvent>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Found()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -68,42 +33,6 @@ public class ChooseBestDateForEventTest : TestBase
         );
 
         result.Should().BeOfType<NotFound<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Forbid_When_User_Not_Member_Of_Group()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
-        var group = TestDataFactory.CreateGroup("g1", "Group1");
-        var evt = TestDataFactory.CreateEvent(
-            "e1",
-            group.Id,
-            user.Id,
-            "Test Event",
-            "Details",
-            DateTime.UtcNow,
-            "Online",
-            DateTime.UtcNow
-        );
-
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        dbContext.Events.Add(evt);
-        await dbContext.SaveChangesAsync();
-
-        var result = await ChooseBestDateForEvent.Handle(
-            group.Id,
-            evt.Id,
-            "s1",
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<ChooseBestDateForEvent>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<ForbidHttpResult>();
     }
 
     [Fact]

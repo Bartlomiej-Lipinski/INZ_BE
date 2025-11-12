@@ -6,7 +6,9 @@ using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Groups;
 
@@ -18,42 +20,28 @@ public class GrantAdminPrivileges : IEndpoint
             .WithName("GrantAdminPrivileges")
             .WithDescription("Grants admin Privileges to a user in a group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
     public static async Task<IResult> Handle(
         [FromBody] GrantAdminPrivilegesDto request,
         AppDbContext dbContext,
-        ClaimsPrincipal? user,
+        ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<GrantAdminPrivileges> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        
-        if (user == null)
-        {
-            logger.LogWarning("Null user principal in GrantAdminPrivileges. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-        
-        var currentUserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                            ?? user.FindFirst("sub")?.Value;
-        
-        if (string.IsNullOrEmpty(currentUserId))
-        {
-            logger.LogWarning("No user ID found in claims for GrantAdminPrivlages. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
+        var currentUserId = currentUser.GetUserId();
         
         logger.LogInformation("Processing admin privilege grant. " +
                               "GroupId: {GroupId}, UserId: {UserId}, AdminId: {AdminId}. TraceId: {TraceId}", 
             request.GroupId, request.UserId, currentUserId, traceId);
         
-        var isCurrentUserAdmin = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == request.GroupId  && gu.UserId == currentUserId && gu.IsAdmin,
-                cancellationToken);
+        var currentGroupUser = httpContext.Items["GroupUser"] as GroupUser;
+        var isAdmin = currentGroupUser?.IsAdmin ?? false;
         
-        if (!isCurrentUserAdmin)
+        if (!isAdmin)
         {
             logger.LogWarning("User {UserId} is not admin of group {GroupId}. TraceId: {TraceId}", 
                 currentUserId, request.GroupId, traceId);

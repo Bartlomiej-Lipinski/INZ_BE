@@ -7,6 +7,7 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Groups;
 
@@ -18,7 +19,8 @@ public class GetSecretSanta : IEndpoint
             .WithName("GetSecretSanta")
             .WithDescription("Assigns Secret Santa pairs within a group")
             .WithTags("Groups")
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
     }
 
     public static async Task<IResult> Handle(
@@ -30,33 +32,6 @@ public class GetSecretSanta : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
-
-        var group = await dbContext.Groups
-            .AsNoTracking()
-            .Include(g => g.GroupUsers)
-            .FirstOrDefaultAsync(g => g.Id == groupId, cancellationToken);
-
-        if (group == null)
-        {
-            logger.LogWarning("Group {GroupId} not found. TraceId: {TraceId}", groupId, traceId);
-            return Results.NotFound(ApiResponse<string>.Fail("Group not found.", traceId));
-        }
-
-        var groupUser = group.GroupUsers.FirstOrDefault(gu => gu.UserId == userId);
-        if (groupUser == null)
-        {
-            logger.LogWarning("User {UserId} attempted to retrieve event in group {GroupId} but is not a member. " +
-                              "TraceId: {TraceId}", userId, groupId, traceId);
-            return Results.Forbid();
-        }
 
         var groupUsers = await dbContext.GroupUsers
             .Include(gu => gu.User)

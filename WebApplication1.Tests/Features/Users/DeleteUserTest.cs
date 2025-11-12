@@ -10,25 +10,6 @@ namespace WebApplication1.Tests.Features.Users;
 public class DeleteUserTest: TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_BadRequest_When_UserId_Is_Empty()
-    {
-        var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await DeleteUser.Handle(
-            CreateClaimsPrincipal(),
-            dbContext,
-            CreateHttpContext(), 
-            NullLogger<DeleteUser>.Instance, 
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
-        var badRequest = result as BadRequest<ApiResponse<string>>;
-        badRequest!.Value!.TraceId.Should().Be("test-trace-id");
-        badRequest.Value.Message.Should().Be("User ID cannot be null or empty.");
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_User_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());

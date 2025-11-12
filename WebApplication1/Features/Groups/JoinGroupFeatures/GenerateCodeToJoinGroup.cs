@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Features.Groups.JoinGroupFeatures;
@@ -29,14 +30,7 @@ public class GenerateCodeToJoinGroup : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var userId = currentUser.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                     ?? currentUser.FindFirst("sub")?.Value;
-
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            logger.LogWarning("Unauthorized attempt to generate code. TraceId: {TraceId}", traceId);
-            return Results.Unauthorized();
-        }
+        var userId = currentUser.GetUserId();
 
         if (string.IsNullOrWhiteSpace(groupId))
         {

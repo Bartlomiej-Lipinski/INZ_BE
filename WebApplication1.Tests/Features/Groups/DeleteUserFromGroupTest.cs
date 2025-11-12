@@ -22,13 +22,15 @@ public class DeleteUserFromGroupTest : TestBase
         await dbContext.SaveChangesAsync();
         dbContext.GroupUsers.AddRange(groupUser, groupUserTwo);
         await dbContext.SaveChangesAsync();
+        var httpContext = CreateHttpContext(userId.Id);
+        httpContext.Items["GroupUser"] = groupUser;
         var result = await DeleteUserFromGroup.Handle(
             group.Id,
             userTwoId.Id,
             dbContext,
             CreateClaimsPrincipal(userId.Id),
             NullLogger<DeleteUserFromGroup>.Instance,
-            CreateHttpContext(),
+            httpContext,
             CancellationToken.None
         );
         

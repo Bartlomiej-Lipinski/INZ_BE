@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-using FluentAssertions;
-using Microsoft.AspNetCore.Http;
+﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Events;
 using WebApplication1.Features.Events.Dtos;
@@ -24,7 +22,7 @@ public class GetGroupEventsTest : TestBase
         var evt1 = TestDataFactory.CreateEvent(
             "e1", group.Id, user.Id, "Event 1", null, DateTime.UtcNow, null, DateTime.UtcNow);
         var evt2 = TestDataFactory.CreateEvent(
-            "e2", group.Id, user.Id, "Event 2", null, DateTime.UtcNow, null,  DateTime.UtcNow.AddHours(1));
+            "e2", group.Id, user.Id, "Event 2", null, DateTime.UtcNow, null, DateTime.UtcNow.AddHours(1));
         dbContext.Events.AddRange(evt1, evt2);
         await dbContext.SaveChangesAsync();
 
@@ -41,64 +39,5 @@ public class GetGroupEventsTest : TestBase
         var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<EventResponseDto>>>;
         ok!.Value!.Data.Should().HaveCount(2);
         ok.Value.Data.Select(e => e.Id).Should().Contain(["e1", "e2"]);
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Forbidden_If_Not_Member()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
-        var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        await dbContext.SaveChangesAsync();
-
-        var result = await GetGroupEvents.Handle(
-            group.Id,
-            dbContext,
-            CreateClaimsPrincipal(user.Id), 
-            CreateHttpContext(user.Id),
-            NullLogger<GetGroupEvents>.Instance, 
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();    
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_NotFound_If_Group_Does_Not_Exist()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync();
-
-        var result = await GetGroupEvents.Handle(
-            "nonexistent-group",
-            dbContext, 
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<GetGroupEvents>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Unauthorized_If_User_Not_LoggedIn()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await GetGroupEvents.Handle(
-            "any-group", 
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<GetGroupEvents>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
     }
 }

@@ -10,25 +10,6 @@ namespace WebApplication1.Tests.Features.Events.Availability;
 public class PostAvailabilityRangeTest :TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await PostAvailabilityRange.Handle(
-            "g1",
-            "e1",
-            [],
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<PostAvailabilityRange>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-    
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Group_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -54,36 +35,6 @@ public class PostAvailabilityRangeTest :TestBase
         );
 
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Forbidden_When_User_Not_Member_Of_Group()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "TestUser");
-        var group = TestDataFactory.CreateGroup("g1", "TestGroup");
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        await dbContext.SaveChangesAsync();
-
-        var request = TestDataFactory.CreateAvailabilityRangeRequestDto(
-            DateTime.UtcNow.Date.AddHours(10),
-            numberOfRanges: 1,
-            rangeLengthHours: 2,
-            gapBetweenRangesHours: 1);
-
-        var result = await PostAvailabilityRange.Handle(
-            group.Id,
-            "e1",
-            request,
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
-            NullLogger<PostAvailabilityRange>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
     }
 
     [Fact]

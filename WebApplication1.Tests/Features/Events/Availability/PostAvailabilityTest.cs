@@ -10,25 +10,6 @@ namespace WebApplication1.Tests.Features.Events.Availability;
 public class PostAvailabilityTest : TestBase
 {
     [Fact]
-    public async Task Handle_Should_Return_Unauthorized_When_User_Not_Authenticated()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-
-        var result = await PostAvailability.Handle(
-            "g1",
-            "e1",
-            TestDataFactory.CreateEventAvailabilityRequestDto(EventAvailabilityStatus.Going),
-            dbContext,
-            CreateClaimsPrincipal(),
-            CreateHttpContext(),
-            NullLogger<PostAvailability>.Instance,
-            CancellationToken.None
-        );
-
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.UnauthorizedHttpResult>();
-    }
-
-    [Fact]
     public async Task Handle_Should_Return_NotFound_When_Group_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
@@ -48,30 +29,6 @@ public class PostAvailabilityTest : TestBase
         );
         
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.NotFound<ApiResponse<string>>>();
-    }
-
-    [Fact]
-    public async Task Handle_Should_Return_Forbidden_When_User_Not_Member()
-    {
-        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "test");
-        var group = TestDataFactory.CreateGroup("g1", "test");
-        dbContext.Users.Add(user);
-        dbContext.Groups.Add(group);
-        await dbContext.SaveChangesAsync();
-        
-        var result = await PostAvailability.Handle(
-            group.Id,
-            "e1",
-            TestDataFactory.CreateEventAvailabilityRequestDto(EventAvailabilityStatus.Going),
-            dbContext,
-            CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(),
-            NullLogger<PostAvailability>.Instance,
-            CancellationToken.None
-        );
-        
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.ForbidHttpResult>();
     }
 
     [Fact]
