@@ -526,7 +526,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasKey(c => c.Id);
             entity.Property(c => c.ChallengeId).IsRequired();
             entity.Property(c => c.UserId).IsRequired();
-            entity.Property(c => c.Description).IsRequired().HasMaxLength(255);
+            entity.Property(c => c.Description).HasMaxLength(255);
             entity.Property(c => c.Value).IsRequired();
 
             entity.HasOne(c => c.Participant)

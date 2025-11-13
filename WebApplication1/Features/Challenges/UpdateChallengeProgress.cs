@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Challenges.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
-using WebApplication1.Infrastructure.Data.Entities.Challenges;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -12,13 +11,13 @@ using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Challenges;
 
-public class PostChallengeProgress : IEndpoint
+public class UpdateChallengeProgress : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/groups/{groupId}/challenges/{challengeId}/progress", Handle)
-            .WithName("PostChallengeProgress")
-            .WithDescription("Creates a new progress for a participant")
+        app.MapPut("/groups/{groupId}/challenges/{challengeId}/progress/{progressId}", Handle)
+            .WithName("UpdateChallengeProgress")
+            .WithDescription("Updates a specific progress in a challenge")
             .WithTags("Challenges")
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
@@ -27,17 +26,18 @@ public class PostChallengeProgress : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string challengeId,
+        [FromRoute] string progressId,
         [FromBody] ChallengeProgressRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
-        ILogger<PostChallengeProgress> logger,
+        ILogger<UpdateChallengeProgress> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
-        logger.LogInformation("Attempting to add a progress in a challenge {ChallengeId} by user {UserId}. TraceId: {TraceId}",
+        logger.LogInformation("Attempting to update progress in challenge {ChallengeId} by user {UserId}. TraceId: {TraceId}",
             challengeId, userId, traceId);
         
         var challenge = await dbContext.Challenges
@@ -60,6 +60,16 @@ public class PostChallengeProgress : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Challenge participant not found.", traceId));
         }
         
+        var progress = await dbContext.ChallengeProgresses
+            .SingleOrDefaultAsync(c => c.Id == progressId && c.ChallengeId == challengeId, cancellationToken);
+        
+        if (progress == null)
+        {
+            logger.LogWarning("Progress not found. User {UserId}, ProgressId {ProgressId}, Group {GroupId}, TraceId: {TraceId}",
+                userId, progressId, groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Progress not found.", traceId));
+        }
+        
         if (request.Value <= 0)
         {
             logger.LogWarning("Progress creation failed: value is required. User {UserId}, " +
@@ -68,19 +78,10 @@ public class PostChallengeProgress : IEndpoint
                 traceId));
         }
 
-        var progress = new ChallengeProgress
-        {
-            Id = Guid.NewGuid().ToString(),
-            ChallengeId = challengeId,
-            UserId = userId!,
-            Date = DateTime.UtcNow,
-            Description = request.Description,
-            Value = request.Value
-        };
-        
-        dbContext.ChallengeProgresses.Add(progress);
-        
-        participant.TotalProgress += request.Value;
+        var previousValue = progress.Value;
+        progress.Description = request.Description;
+        progress.Value = request.Value;
+        participant.TotalProgress += request.Value - previousValue;
         
         if (participant.TotalProgress >= challenge.GoalValue && !participant.Completed)
         {
@@ -104,9 +105,9 @@ public class PostChallengeProgress : IEndpoint
         
         await dbContext.SaveChangesAsync(cancellationToken);
         
-        logger.LogInformation("User {UserId} added progress in a challenge {ChallengeId} in group {GroupId}. TraceId: {TraceId}",
-            userId, challengeId, groupId, traceId);
-
-        return Results.Ok(ApiResponse<string>.Ok("Challenge joined successfully.", progress.Id, traceId));
+        logger.LogInformation("User {UserId} updated progress {ProgressId} in group {GroupId}. TraceId: {TraceId}",
+            userId, progressId, groupId, traceId);
+        
+        return Results.Ok(ApiResponse<string>.Ok("Progress updated successfully.", progressId, traceId));
     }
 }

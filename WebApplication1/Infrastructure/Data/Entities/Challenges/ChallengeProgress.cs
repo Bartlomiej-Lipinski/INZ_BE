@@ -7,7 +7,7 @@ public class ChallengeProgress
     public string UserId { get; set; } = null!;
     
     public DateTime Date { get; set; }
-    public string Description { get; set; } = null!;
+    public string? Description { get; set; }
     public double Value { get; set; }
     
     public ChallengeParticipant Participant { get; set; } = null!;

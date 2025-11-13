@@ -514,6 +514,19 @@ public static class TestDataFactory
         };
     }
 
+    public static ChallengeProgress CreateChallengeProgress(
+        string id, string challengeId, string userId, string description, double value)
+    {
+        return new ChallengeProgress
+        {
+            Id = id,
+            ChallengeId = challengeId,
+            UserId = userId,
+            Description = description,
+            Value = value
+        };
+    }
+
     public static ChallengeProgressRequestDto CreateChallengeProgressRequestDto(string description, double value)
     {
         return new ChallengeProgressRequestDto

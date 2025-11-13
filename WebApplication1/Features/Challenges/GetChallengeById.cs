@@ -65,12 +65,13 @@ public class GetChallengeById : IEndpoint
                 UserId = p.UserId,
                 JoinedAt = p.JoinedAt,
                 CompletedAt = p.CompletedAt,
-                ProgressEntries = p.ProgressEntries.Select(p => new ChallengeProgressResponseDto
-                {
-                    Date = p.Date,
-                    Description = p.Description,
-                    Value = p.Value
-                }).ToList()
+                ProgressEntries = p.ProgressEntries.OrderBy(p => p.Date)
+                    .Select(p => new ChallengeProgressResponseDto 
+                    {
+                        Date = p.Date,
+                        Description = p.Description,
+                        Value = p.Value
+                    }).ToList()
             }).ToList()
         };
         

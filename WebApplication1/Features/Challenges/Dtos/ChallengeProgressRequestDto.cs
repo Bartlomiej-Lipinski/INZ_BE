@@ -2,6 +2,6 @@
 
 public record ChallengeProgressRequestDto
 {
-    public string Description { get; set; } = null!;
+    public string? Description { get; set; }
     public double Value { get; set; }
 }
