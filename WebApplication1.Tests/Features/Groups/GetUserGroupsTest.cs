@@ -56,8 +56,10 @@ public class GetUserGroupsTest : TestBase
         okResult!.Value!.Success.Should().BeTrue();
         okResult.Value.Data!.Should().NotBeNull();
         okResult.Value.Data!.Count.Should().Be(2);
-        okResult.Value.Data.Should().ContainEquivalentOf(TestDataFactory.CreateGroupResponseDto(group1.Id, group1.Name));
-        okResult.Value.Data.Should().ContainEquivalentOf(TestDataFactory.CreateGroupResponseDto(group2.Id, group2.Name));
+        okResult.Value.Data.Should().ContainEquivalentOf(
+            TestDataFactory.CreateGroupResponseDto(group1.Id, group1.Name, "#fff"));
+        okResult.Value.Data.Should().ContainEquivalentOf(
+            TestDataFactory.CreateGroupResponseDto(group2.Id, group2.Name, "#000"));
     }
     
     [Fact]

@@ -57,12 +57,13 @@ public static class TestDataFactory
         };
     }
 
-    public static GroupResponseDto CreateGroupResponseDto(string groupId, string name)
+    public static GroupResponseDto CreateGroupResponseDto(string groupId, string name, string color)
     {
         return new GroupResponseDto
         {
             Id = groupId,
-            Name = name
+            Name = name,
+            Color = color
         };
     }
 
