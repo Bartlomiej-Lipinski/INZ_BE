@@ -86,6 +86,8 @@ public class CalculateBestDateForEvent : IEndpoint
 
         foreach (var availability in ev.AvailabilityRanges)
         {
+            if (availability.AvailableFrom < ev.RangeStart && availability.AvailableTo < ev.RangeEnd) continue;
+
             for (var date = availability.AvailableFrom.Date;
                  date <= availability.AvailableTo.Date;
                  date = date.AddDays(1))

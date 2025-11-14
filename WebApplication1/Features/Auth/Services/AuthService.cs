@@ -23,8 +23,6 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
 {
     public async Task<(string token, string refreshToken)> GenerateTokensAsync(User user)
     {
-        // Implementation for generating tokens
-        // This is a placeholder implementation
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
@@ -33,7 +31,7 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Auth:Key"]
                                                                   ?? throw new InvalidOperationException()));
         //TODO fine tune token expiration times
-        var token = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddMinutes(1),
+        var token = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddMinutes(15),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         var refresh = new RefreshToken()

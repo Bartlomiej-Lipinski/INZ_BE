@@ -13,4 +13,5 @@ public record UserResponseDto
     public string? Status { get; set; }
     public string? Description { get; set; }
     public ProfilePictureResponseDto? ProfilePicture { get; set; }
+    public bool? IsTwoFactorEnabled { get; set; }
 }
