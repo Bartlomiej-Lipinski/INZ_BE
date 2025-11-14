@@ -8,7 +8,7 @@ using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
-namespace WebApplication1.Features.Challenges;
+namespace WebApplication1.Features.Challenges.Progress;
 
 public class DeleteChallengeProgress : IEndpoint
 {
@@ -53,7 +53,7 @@ public class DeleteChallengeProgress : IEndpoint
         if (participant == null)
         {
             logger.LogWarning("Challenge participant {UserId} not found in group {GroupId}. TraceId: {TraceId}",
-                challengeId, groupId, traceId);
+                userId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Challenge participant not found.", traceId));
         }
         

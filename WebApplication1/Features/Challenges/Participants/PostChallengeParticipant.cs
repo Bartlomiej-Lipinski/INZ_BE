@@ -9,7 +9,7 @@ using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
-namespace WebApplication1.Features.Challenges;
+namespace WebApplication1.Features.Challenges.Participants;
 
 public class PostChallengeParticipant : IEndpoint
 {

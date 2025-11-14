@@ -1,10 +1,10 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using WebApplication1.Features.Challenges;
+using WebApplication1.Features.Challenges.Participants;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Tests.Features.Challenges;
+namespace WebApplication1.Tests.Features.Challenges.Participants;
 
 public class PostChallengeParticipantTest : TestBase
 {
