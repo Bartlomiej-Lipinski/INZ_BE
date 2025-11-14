@@ -49,6 +49,20 @@ public class GetChallengeById : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Challenge not found.", traceId));
         }
         
+        if (!challenge.IsCompleted && DateTime.UtcNow >= challenge.EndDate)
+        {
+            challenge.IsCompleted = true;
+            foreach (var participant in challenge.Participants)
+            {
+                participant.Completed = participant.TotalProgress >= challenge.GoalValue;
+                participant.CompletedAt ??= DateTime.UtcNow;
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            logger.LogInformation("Challenge {ChallengeId} automatically completed, traceId: {TraceId}", challengeId, traceId);
+        }
+        
         var response = new ChallengeResponseDto
         {
             Id = challengeId,
