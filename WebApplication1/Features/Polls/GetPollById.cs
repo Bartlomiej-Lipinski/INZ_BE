@@ -33,6 +33,8 @@ public class GetPollById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        
+        logger.LogInformation("Fetching poll {PollId} in group {GroupId}. TraceId: {TraceId}", pollId, groupId, traceId);
 
         var poll = await dbContext.Polls
             .AsNoTracking()
@@ -62,6 +64,7 @@ public class GetPollById : IEndpoint
             }).ToList()
         };
         
+        logger.LogInformation("Poll {PollId} retrieved successfully. TraceId: {TraceId}", pollId, traceId);
         return Results.Ok(ApiResponse<PollResponseDto>.Ok(response, "Poll retrieved successfully.", traceId));
     }
 }

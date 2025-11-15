@@ -33,9 +33,14 @@ public class JoinGroup : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} attempting to join group with code {Code}. TraceId: {TraceId}",
+            userId, request.GroupCode, traceId);
+        
         if (string.IsNullOrWhiteSpace(request.GroupCode))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("Group ID and Code are required.", traceId));
+            logger.LogWarning("Invalid join request: empty code. UserId: {UserId}, TraceId: {TraceId}", 
+                userId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Group code is required.", traceId));
         }
 
         var group = await dbContext.Groups
@@ -43,22 +48,29 @@ public class JoinGroup : IEndpoint
 
         if (group == null)
         {
+            logger.LogWarning("Group not found or invalid code. Code: {Code}, UserId: {UserId}, TraceId: {TraceId}", 
+                request.GroupCode, userId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Group not found or code is invalid.", traceId));
         }
+        
         if (group.CodeExpirationTime < DateTime.UtcNow)
         {
+            logger.LogWarning("Code expired. GroupId: {GroupId}, UserId: {UserId}, TraceId: {TraceId}", 
+                group.Id, userId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("The code has expired.", traceId));
         }
+        
         if (await dbContext.GroupUsers.AnyAsync(gu => gu.GroupId == group.Id && gu.UserId == userId, cancellationToken))
         {
-            return Results
-                .BadRequest(ApiResponse<string>.Fail("You are already a member of this group.", traceId));
+            logger.LogWarning("User already a member. GroupId: {GroupId}, UserId: {UserId}, TraceId: {TraceId}", 
+                group.Id, userId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("You are already a member of this group.", traceId));
         }
 
         var groupUser = new GroupUser
         {
             GroupId = group.Id,
-            UserId = userId,
+            UserId = userId!,
             IsAdmin = false,
             AcceptanceStatus = AcceptanceStatus.Pending
         };
@@ -66,6 +78,8 @@ public class JoinGroup : IEndpoint
         await dbContext.GroupUsers.AddAsync(groupUser, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
+        logger.LogInformation("User {UserId} successfully requested to join group {GroupId}. TraceId: {TraceId}", 
+            userId, group.Id, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Successfully joined the group. Awaiting admin approval.",
             null, traceId));
     }

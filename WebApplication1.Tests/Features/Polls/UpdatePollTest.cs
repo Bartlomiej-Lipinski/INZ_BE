@@ -13,14 +13,14 @@ public class UpdatePollTest : TestBase
     public async Task UpdatePoll_Should_Update_Question_And_Options_Preserving_Votes()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var poll = TestDataFactory.CreatePoll("p1", group.Id, user.Id, "Original question");
         var option1 = TestDataFactory.CreatePollOption("o1", poll.Id, "Option 1");
         var option2 = TestDataFactory.CreatePollOption("o2", poll.Id, "Option 2");
 
-        var voter = TestDataFactory.CreateUser("voter1", "voter");
+        var voter = TestDataFactory.CreateUser("voter1", "Test","User");
         var groupVoter = TestDataFactory.CreateGroupUser(voter.Id, group.Id);
 
         option1.VotedUsers.Add(voter);
@@ -70,7 +70,7 @@ public class UpdatePollTest : TestBase
     public async Task UpdatePoll_Should_Return_NotFound_When_Poll_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -98,7 +98,7 @@ public class UpdatePollTest : TestBase
     public async Task UpdatePoll_Should_Return_Forbidden_When_User_Is_Not_Creator()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "nonAdmin");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var poll = TestDataFactory.CreatePoll("p1", group.Id, "otherUser", "Original question");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id, isAdmin: false);
@@ -128,7 +128,7 @@ public class UpdatePollTest : TestBase
     public async Task UpdatePoll_Should_Remove_Unsubmitted_Options()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var poll = TestDataFactory.CreatePoll("p1", group.Id, user.Id, "Original question");

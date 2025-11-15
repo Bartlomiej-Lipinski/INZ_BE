@@ -1,6 +1,4 @@
-﻿using WebApplication1.Infrastructure.Data.Entities.Events;
-
-namespace WebApplication1.Features.Events.Dtos;
+﻿namespace WebApplication1.Features.Events.Dtos;
 
 public record EventRequestDto
 {
@@ -13,5 +11,4 @@ public record EventRequestDto
     public int? DurationMinutes { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
-    public EventStatus Status { get; set; }
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Polls.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -35,6 +36,9 @@ public class PostPoll : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} creating poll in group {GroupId}. TraceId: {TraceId}",
+            userId, groupId, traceId);
+        
         if (string.IsNullOrWhiteSpace(request.Question))
             return Results.BadRequest(ApiResponse<string>.Fail("Question is required.", traceId));
 
@@ -42,6 +46,7 @@ public class PostPoll : IEndpoint
         {
             Id = Guid.NewGuid().ToString(),
             GroupId = groupId,
+            EntityType = EntityType.Poll,
             CreatedByUserId = userId!,
             Question = request.Question,
             CreatedAt = DateTime.UtcNow

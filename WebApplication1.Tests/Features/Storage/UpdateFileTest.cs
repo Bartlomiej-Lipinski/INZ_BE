@@ -2,6 +2,8 @@
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Storage;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Responses;
 
@@ -23,7 +25,7 @@ public class UpdateFileTest : TestBase
             "/uploads/old.jpg",
             DateTime.UtcNow,
             "entity-123",
-            "testEntity",
+            EntityType.Recommendation,
             "user1"
         );
 
@@ -31,6 +33,7 @@ public class UpdateFileTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var result = await UpdateFile.Handle(
+            "g1",
             "test-id",
             null,
             dbContext,
@@ -55,6 +58,7 @@ public class UpdateFileTest : TestBase
         var file = TestDataFactory.CreateFormFile("test.jpg", "content"u8.ToArray());
 
         var result = await UpdateFile.Handle(
+            "g1",
             "non-existent-id",
             file,
             dbContext,
@@ -85,7 +89,7 @@ public class UpdateFileTest : TestBase
             "/uploads/old.jpg",
             DateTime.UtcNow.AddDays(-1),
             "entity-123",
-            "testEntity",
+            EntityType.Recommendation,
             "user1"
         );
 
@@ -100,6 +104,7 @@ public class UpdateFileTest : TestBase
             .ReturnsAsync(newUrl);
 
         var result = await UpdateFile.Handle(
+            "g1",
             "test-id",
             file,
             dbContext,
@@ -109,8 +114,8 @@ public class UpdateFileTest : TestBase
             NullLogger<UpdateFile>.Instance,
             CancellationToken.None);
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostFile.StoredFileResponseDto>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostFile.StoredFileResponseDto>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<StoredFileResponseDto>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<StoredFileResponseDto>>;
         okResult!.Value?.Success.Should().BeTrue();
         okResult.Value?.Data?.Url.Should().Be(newUrl);
         okResult.Value?.Data?.FileName.Should().Be("new.jpg");

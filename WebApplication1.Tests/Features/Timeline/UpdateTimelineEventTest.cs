@@ -11,7 +11,7 @@ public class UpdateTimelineEventTest : TestBase
     public async Task UpdateTimelineEvent_Should_Update_Event_For_Valid_User_In_Group()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var timelineEvent = TestDataFactory.CreateTimelineEvent("e1", group.Id, "Old Title", DateTime.UtcNow.AddDays(1));
@@ -50,7 +50,7 @@ public class UpdateTimelineEventTest : TestBase
     public async Task UpdateTimelineEvent_Should_Return_NotFound_When_Event_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -79,7 +79,7 @@ public class UpdateTimelineEventTest : TestBase
     public async Task UpdateTimelineEvent_Should_Return_BadRequest_When_Data_Invalid()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var timelineEvent = TestDataFactory.CreateTimelineEvent("e1", group.Id, "Old Title", DateTime.UtcNow.AddDays(1));

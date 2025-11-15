@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -31,6 +32,10 @@ public class GetGroupEvents : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+
+        logger.LogInformation("User {UserId} started fetching events for group {GroupId}. TraceId: {TraceId}",
+            userId, groupId, traceId);
 
         var events = await dbContext.Events
             .AsNoTracking()
@@ -55,7 +60,16 @@ public class GetGroupEvents : IEndpoint
                 }).ToList()
             })
             .ToListAsync(cancellationToken);
+        
+        if (events.Count == 0)
+        {
+            logger.LogInformation("No events found for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
+            return Results.Ok(ApiResponse<List<EventResponseDto>>
+                .Ok(events, "No events found for this group.", traceId));
+        }
 
+        logger.LogInformation("User {UserId} retrieved {Count} events for group {GroupId}. TraceId: {TraceId}",
+            userId, events.Count, groupId, traceId);
         return Results.Ok(ApiResponse<List<EventResponseDto>>.Ok(events, "Group events retrieved successfully.",
             traceId));
     }

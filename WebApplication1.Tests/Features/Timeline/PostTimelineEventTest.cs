@@ -11,7 +11,7 @@ public class PostTimelineEventTest : TestBase
     public async Task PostTimelineEvent_Should_Create_Event_For_Valid_User_In_Group()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -45,7 +45,7 @@ public class PostTimelineEventTest : TestBase
     public async Task PostTimelineEvent_Should_Return_BadRequest_For_Invalid_Request()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);

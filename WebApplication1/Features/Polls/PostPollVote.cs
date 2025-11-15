@@ -35,6 +35,9 @@ public class PostPollVote : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} is attempting to vote on option {OptionId} in poll {PollId} within group {GroupId}. TraceId: {TraceId}",
+            userId, optionId, pollId, groupId, traceId);
+        
         var poll = await dbContext.Polls
             .Include(p => p.Options)
             .ThenInclude(o => o.VotedUsers)
@@ -65,11 +68,16 @@ public class PostPollVote : IEndpoint
         {
             option.VotedUsers.Remove(user);
             await dbContext.SaveChangesAsync(cancellationToken);
+            logger.LogInformation("User {UserId} removed vote from option {OptionId} in poll {PollId}. TraceId: {TraceId}",
+                userId, optionId, pollId, traceId);
             return Results.Ok(ApiResponse<string>.Ok("Vote removed.", traceId));
         }
 
         option.VotedUsers.Add(user);
         await dbContext.SaveChangesAsync(cancellationToken);
+        
+        logger.LogInformation("User {UserId} added vote to option {OptionId} in poll {PollId}. TraceId: {TraceId}",
+            userId, optionId, pollId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Vote added.", traceId));
     }
 }

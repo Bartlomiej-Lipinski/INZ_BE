@@ -34,6 +34,9 @@ public class GetUserSettlements :IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("Retrieving settlements for user {UserId} in group {GroupId}. TraceId: {TraceId}", 
+            userId, groupId, traceId);
+        
         var settlements = await dbContext.Settlements
             .AsNoTracking()
             .Include(s => s.Group)
@@ -50,6 +53,16 @@ public class GetUserSettlements :IEndpoint
             })
             .ToListAsync(cancellationToken);
         
+        if (settlements.Count == 0)
+        {
+            logger.LogInformation("No settlements found for user {UserId} in group {GroupId}. TraceId: {TraceId}", 
+                userId, groupId, traceId);
+            return Results.Ok(ApiResponse<List<SettlementResponseDto>>
+                .Ok(settlements, "No settlements found for this user.", traceId));
+        }
+        
+        logger.LogInformation("Retrieved {Count} settlements for user {UserId} in group {GroupId}. TraceId: {TraceId}", 
+            settlements.Count, userId, groupId, traceId);
         return Results.Ok(ApiResponse<List<SettlementResponseDto>>
             .Ok(settlements, "User settlements retrieved successfully.", traceId));
     }

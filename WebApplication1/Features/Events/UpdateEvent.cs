@@ -35,12 +35,17 @@ public class UpdateEvent : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} started updating event {EventId} in group {GroupId}. TraceId: {TraceId}",
+            userId, eventId, groupId, traceId);
 
         var existingEvent = await dbContext.Events
-            .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
+            .SingleOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
         if (existingEvent == null)
         {
+            logger.LogWarning("Event not found. User {UserId}, EventId {EventId}, Group {GroupId}, TraceId: {TraceId}",
+                userId, eventId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
         }
 
@@ -66,9 +71,10 @@ public class UpdateEvent : IEndpoint
         {
             if (!request.RangeStart.HasValue || !request.RangeEnd.HasValue || !request.DurationMinutes.HasValue)
             {
-                return Results.BadRequest(ApiResponse<string>
-                    .Fail("For automatic scheduling, range start, range end, and duration are required.",
-                        traceId));
+                logger.LogWarning("Missing parameters for auto-scheduled event. User {UserId}, EventId {EventId}, TraceId: {TraceId}",
+                    userId, eventId, traceId);
+                return Results.BadRequest(ApiResponse<string>.Fail(
+                    "For automatic scheduling, range start, range end, and duration are required.", traceId));
             }
         }
         
@@ -76,10 +82,15 @@ public class UpdateEvent : IEndpoint
         {
             case { RangeStart: not null, RangeEnd: not null } when
                 request.RangeEnd.Value < request.RangeStart.Value:
+                logger.LogWarning("Invalid range dates. User {UserId}, EventId {EventId}, TraceId: {TraceId}",
+                    userId, eventId, traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("Range end date cannot be earlier than start date.", traceId));
+            
             case { StartDate: not null, EndDate: not null } when
                 request.EndDate.Value < request.StartDate.Value:
+                logger.LogWarning("Invalid start/end dates. User {UserId}, EventId {EventId}, TraceId: {TraceId}",
+                    userId, eventId, traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("End date cannot be earlier than start date.", traceId));
         }
@@ -89,7 +100,6 @@ public class UpdateEvent : IEndpoint
         existingEvent.DurationMinutes = request.DurationMinutes;
         existingEvent.StartDate = request.StartDate;
         existingEvent.EndDate = request.EndDate;
-        existingEvent.Status = request.Status;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} updated event {EventId} in group {GroupId}. TraceId: {TraceId}",
@@ -109,7 +119,6 @@ public class UpdateEvent : IEndpoint
             DurationMinutes = existingEvent.DurationMinutes,
             StartDate = existingEvent.StartDate?.ToLocalTime(),
             EndDate = existingEvent.EndDate?.ToLocalTime(),
-            Status = existingEvent.Status,
             CreatedAt = existingEvent.CreatedAt.ToLocalTime()
         };
 

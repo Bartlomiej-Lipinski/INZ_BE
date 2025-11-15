@@ -35,8 +35,11 @@ public class DeleteRecommendation : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} attempting to delete recommendation {RecommendationId} in group {GroupId}. TraceId: {TraceId}",
+            userId, recommendationId, groupId, traceId);
+        
         var recommendation = await dbContext.Recommendations
-            .FirstOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
+            .SingleOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
 
         if (recommendation == null)
         {
@@ -81,7 +84,6 @@ public class DeleteRecommendation : IEndpoint
 
         logger.LogInformation("Recommendation {RecommendationId} deleted by user {UserId}. TraceId: {TraceId}", 
             recommendationId, userId, traceId);
-
         return Results.Ok(ApiResponse<string>
             .Ok("Recommendation deleted successfully.", recommendationId, traceId));
     }

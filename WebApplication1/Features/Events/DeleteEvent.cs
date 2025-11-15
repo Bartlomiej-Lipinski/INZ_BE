@@ -34,9 +34,12 @@ public class DeleteEvent : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} started deletion of event {EventId} in group {GroupId}. TraceId: {TraceId}",
+            userId, eventId, groupId, traceId);
 
         var evt = await dbContext.Events
-            .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
+            .SingleOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
         if (evt == null)
         {

@@ -13,7 +13,7 @@ public class GetGroupPollsTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
         dbContext.Users.Add(user);

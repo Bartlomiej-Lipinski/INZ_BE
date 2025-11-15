@@ -13,7 +13,7 @@ public class ChooseBestDateForEventTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Found()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "TestUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -39,7 +39,7 @@ public class ChooseBestDateForEventTest : TestBase
     public async Task Handle_Should_Choose_Best_Date_When_Valid()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(

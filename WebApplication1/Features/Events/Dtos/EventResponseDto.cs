@@ -1,6 +1,4 @@
-﻿using WebApplication1.Infrastructure.Data.Entities.Events;
-
-namespace WebApplication1.Features.Events.Dtos;
+﻿namespace WebApplication1.Features.Events.Dtos;
 
 public record EventResponseDto
 {
@@ -16,7 +14,6 @@ public record EventResponseDto
     public int? DurationMinutes { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
-    public EventStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<EventAvailabilityResponseDto> Availabilities { get; set; } = [];
     public ICollection<EventSuggestionResponseDto> Suggestions { get; set; } = [];

@@ -31,6 +31,9 @@ public class GetAmountOfJoinRequests : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("Fetching pending join requests for admin {UserId}. TraceId: {TraceId}", 
+            userId, traceId);
 
         var adminGroupIds = await dbContext.GroupUsers
             .Where(gu => gu.UserId == userId && gu.IsAdmin)

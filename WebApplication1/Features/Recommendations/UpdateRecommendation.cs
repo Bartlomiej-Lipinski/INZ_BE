@@ -36,8 +36,11 @@ public class UpdateRecommendation : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("User {UserId} attempting to update recommendation {RecommendationId} in group {GroupId}. TraceId: {TraceId}", 
+            userId, recommendationId, groupId, traceId);
+        
         var recommendation = await dbContext.Recommendations
-            .FirstOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
+            .SingleOrDefaultAsync(r => r.Id == recommendationId, cancellationToken);
 
         if (recommendation == null)
         {
@@ -54,6 +57,7 @@ public class UpdateRecommendation : IEndpoint
         
         if (string.IsNullOrWhiteSpace(request.Title) || string.IsNullOrWhiteSpace(request.Content))
         {
+            logger.LogWarning("Invalid update data from user {UserId}. TraceId: {TraceId}", userId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Title and Content are required.", traceId));
         }
         
@@ -68,7 +72,6 @@ public class UpdateRecommendation : IEndpoint
         
         logger.LogInformation("User {UserId} updated recommendation {RecommendationId}. TraceId: {TraceId}",
             userId, recommendationId, traceId);
-
         return Results.Ok(ApiResponse<string>.Ok("Recommendation updated successfully.", 
             recommendationId, traceId));
     }

@@ -2,6 +2,6 @@
 
 public record CommentRequestDto
 {
-    public string TargetType { get; set; } = null!;
+    public string EntityType { get; set; } = null!;
     public string Content { get; set; } = null!;
 }

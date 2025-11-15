@@ -14,7 +14,7 @@ public class DeleteUserTest: TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         
-        var user1 = TestDataFactory.CreateUser("u1", "Test User", "test@test.com", "testUser");
+        var user1 = TestDataFactory.CreateUser("u1", "Test","User", "test@test.com", "testUser");
         var result = await DeleteUser.Handle(
             CreateClaimsPrincipal(user1.Id), 
             dbContext,
@@ -35,7 +35,7 @@ public class DeleteUserTest: TestBase
         
         await using (var dbContext = GetInMemoryDbContext(dbName))
         {
-            dbContext.Users.Add(TestDataFactory.CreateUser("u1", "Test User", "test@test.com", "testUser"));
+            dbContext.Users.Add(TestDataFactory.CreateUser("u1", "Test","User", "test@test.com", "testUser"));
             await dbContext.SaveChangesAsync();
         }
 

@@ -13,7 +13,7 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Name_Is_Missing()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
@@ -35,7 +35,7 @@ public class PostGroupTest : TestBase
     public async Task Handle_Should_Create_Group_And_Assign_User_As_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         

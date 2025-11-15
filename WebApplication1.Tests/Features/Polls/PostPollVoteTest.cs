@@ -12,7 +12,7 @@ public class PostPollVoteTest : TestBase
     public async Task PostPollVote_Should_Add_Vote_When_Not_Voted()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var poll = TestDataFactory.CreatePoll("p1", group.Id, user.Id, "Test Question");
@@ -50,7 +50,7 @@ public class PostPollVoteTest : TestBase
     public async Task PostPollVote_Should_Remove_Vote_When_Already_Voted()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var poll = TestDataFactory.CreatePoll("p1", group.Id, user.Id, "Test Question");

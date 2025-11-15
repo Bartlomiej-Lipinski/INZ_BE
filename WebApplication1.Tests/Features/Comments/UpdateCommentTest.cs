@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Comments;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Comments;
@@ -11,7 +12,7 @@ public class UpdateCommentTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Comment_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -38,7 +39,7 @@ public class UpdateCommentTest : TestBase
     public async Task Handle_Should_Update_Comment_Successfully()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
@@ -50,7 +51,7 @@ public class UpdateCommentTest : TestBase
         dbContext.Recommendations.Add(target);
 
         var comment = TestDataFactory.CreateComment(
-            "c1", target.Id, "Recommendation", user.Id, "Old content", DateTime.UtcNow);
+            "c1", group.Id, target.Id, EntityType.Recommendation, user.Id, "Old content", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
         await dbContext.SaveChangesAsync();
         

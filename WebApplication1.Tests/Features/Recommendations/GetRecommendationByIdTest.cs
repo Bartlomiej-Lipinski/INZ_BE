@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Recommendations;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
@@ -31,7 +32,7 @@ public class GetRecommendationByIdTest : TestBase
     public async Task Handle_Should_Return_Recommendation_With_Comments_And_Reactions()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
@@ -49,10 +50,10 @@ public class GetRecommendationByIdTest : TestBase
         dbContext.Recommendations.Add(recommendation);
         
         var comment = TestDataFactory
-            .CreateComment("c1", recommendation.Id, "Recommendation", user.Id, "Nice!", DateTime.UtcNow);
+            .CreateComment("c1", group.Id, recommendation.Id, EntityType.Recommendation, user.Id, "Nice!", DateTime.UtcNow);
         dbContext.Comments.Add(comment);
 
-        var reaction = TestDataFactory.CreateReaction(recommendation.Id, "Recommendation", user.Id);
+        var reaction = TestDataFactory.CreateReaction(group.Id, recommendation.Id, EntityType.Recommendation, user.Id);
         dbContext.Reactions.Add(reaction);
         await dbContext.SaveChangesAsync();
         

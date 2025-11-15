@@ -12,7 +12,7 @@ public class DeleteEventTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
@@ -33,7 +33,7 @@ public class DeleteEventTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Event_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -58,8 +58,8 @@ public class DeleteEventTest : TestBase
     public async Task Handle_Should_Return_Forbid_When_User_Is_Not_Owner_Or_Admin()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var owner = TestDataFactory.CreateUser("u1", "owner");
-        var otherUser = TestDataFactory.CreateUser("u2", "other");
+        var owner = TestDataFactory.CreateUser("u1", "Test","User");
+        var otherUser = TestDataFactory.CreateUser("u2", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         dbContext.Users.AddRange(owner, otherUser);
         dbContext.Groups.Add(group);
@@ -90,7 +90,7 @@ public class DeleteEventTest : TestBase
     public async Task Handle_Should_Delete_Event_When_User_Is_Owner()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var owner = TestDataFactory.CreateUser("u1", "owner");
+        var owner = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         dbContext.Users.Add(owner);
         dbContext.Groups.Add(group);

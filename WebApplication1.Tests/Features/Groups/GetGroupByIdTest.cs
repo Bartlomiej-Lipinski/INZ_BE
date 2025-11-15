@@ -12,7 +12,7 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_Ok_With_Group_When_Group_Exists()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("group1", "Group", "#000000", "CODE2");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
@@ -46,7 +46,7 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
@@ -71,7 +71,7 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Id_Is_NullOrEmpty()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
         
@@ -96,7 +96,7 @@ public class GetGroupByIdTest : TestBase
     public async Task Handle_Should_Return_Ok_With_Correct_Dto_Properties()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("group2", "Another Group", "#000000", "CODE2");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);

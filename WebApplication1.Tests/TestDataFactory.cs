@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using WebApplication1.Features.Auth;
+using WebApplication1.Features.Challenges.Dtos;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Features.Groups.Dtos;
@@ -8,12 +9,14 @@ using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Features.Timeline.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Challenges;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
+using WebApplication1.Infrastructure.Data.Enums;
 
 namespace WebApplication1.Tests;
 
@@ -54,12 +57,13 @@ public static class TestDataFactory
         };
     }
 
-    public static GroupResponseDto CreateGroupResponseDto(string groupId, string name)
+    public static GroupResponseDto CreateGroupResponseDto(string groupId, string name, string color)
     {
         return new GroupResponseDto
         {
             Id = groupId,
-            Name = name
+            Name = name,
+            Color = color
         };
     }
 
@@ -85,11 +89,11 @@ public static class TestDataFactory
     }
 
     public static User CreateUser(
-        string? id = null,
-        string? name = null,
+        string id,
+        string name,
+        string surname,
         string? email = null,
         string? userName = null,
-        string? surname = null, 
         DateOnly? birthDate = null)
     {
         ArgumentNullException.ThrowIfNull(id, nameof(id));
@@ -157,25 +161,27 @@ public static class TestDataFactory
     }
 
     public static Comment CreateComment(
-        string id, string targetId, string targetType, string userId, string content, DateTime createdAt)
+        string id, string groupId, string targetId, EntityType entityType, string userId, string content, DateTime createdAt)
     {
         return new Comment
         {
             Id = id,
+            GroupId = groupId,
             TargetId = targetId,
-            TargetType = targetType,
+            EntityType = entityType,
             UserId = userId,
             Content = content,
             CreatedAt = createdAt
         };
     }
 
-    public static Reaction CreateReaction(string targetId, string targetType, string userId)
+    public static Reaction CreateReaction(string groupId, string targetId, EntityType entityType, string userId)
     {
         return new Reaction
         {
+            GroupId = groupId,
             TargetId = targetId,
-            TargetType = targetType,
+            EntityType = entityType,
             UserId = userId,
         };
     }
@@ -193,11 +199,11 @@ public static class TestDataFactory
         };
     }
 
-    public static CommentRequestDto CreateCommentRequestDto(string content, string? targetType = "Recommendation")
+    public static CommentRequestDto CreateCommentRequestDto(string content, string targetType = "Recommendation")
     {
         return new CommentRequestDto
         {
-            TargetType = targetType,
+            EntityType = targetType,
             Content = content
         };
     }
@@ -319,7 +325,7 @@ public static class TestDataFactory
         string url,
         DateTime uploadedAt,
         string entityId,
-        string entityType,
+        EntityType entityType,
         string uploadedBy)
     {
         return new StoredFile
@@ -336,13 +342,13 @@ public static class TestDataFactory
         };
     }
 
-    public static IFormFile CreateFormFile(string fileName, byte[] content)
+    public static IFormFile CreateFormFile(string fileName, byte[] content, string contentType = "image/jpeg")
     {
         var stream = new MemoryStream(content);
         return new FormFile(stream, 0, content.Length, "file", fileName)
         {
             Headers = new HeaderDictionary(),
-            ContentType = "application/octet-stream"
+            ContentType = contentType
         };
     }
 
@@ -445,6 +451,89 @@ public static class TestDataFactory
             Title = title,
             Date = date,
             Description = description
+        };
+    }
+
+    public static Challenge CreateChallenge(
+        string id,
+        string groupId,
+        string userId,
+        string name,
+        string description,
+        DateTime startDate,
+        DateTime endDate,
+        List<ChallengeParticipant> participants,
+        string goalUnit,
+        double goalValue,
+        bool isCompleted = false)
+    {
+        return new Challenge
+        {
+            Id = id,
+            GroupId = groupId,
+            UserId = userId,
+            EntityType = EntityType.Challenge,
+            Name = name,
+            Description = description,
+            StartDate = startDate,
+            EndDate = endDate,
+            GoalUnit = goalUnit,
+            GoalValue = goalValue,
+            IsCompleted = isCompleted,
+            Participants = participants,
+        };
+    }
+
+    public static ChallengeRequestDto CreateChallengeRequestDto(
+        string name, 
+        string description,
+        DateTime startDate,
+        DateTime endDate,
+        string goalUnit,
+        double goalValue)
+    {
+        return new ChallengeRequestDto
+        {
+            Name = name,
+            Description = description,
+            StartDate = startDate,
+            EndDate = endDate,
+            GoalUnit = goalUnit,
+            GoalValue = goalValue
+        };
+    }
+
+    public static ChallengeParticipant CreateChallengeParticipant(
+        string challengeId, string userId, DateTime joinedAt, double totalProgress)
+    {
+        return new ChallengeParticipant
+        {
+            ChallengeId = challengeId,
+            UserId = userId,
+            JoinedAt = joinedAt,
+            TotalProgress = totalProgress,
+        };
+    }
+
+    public static ChallengeProgress CreateChallengeProgress(
+        string id, string challengeId, string userId, string description, double value)
+    {
+        return new ChallengeProgress
+        {
+            Id = id,
+            ChallengeId = challengeId,
+            UserId = userId,
+            Description = description,
+            Value = value
+        };
+    }
+
+    public static ChallengeProgressRequestDto CreateChallengeProgressRequestDto(string description, double value)
+    {
+        return new ChallengeProgressRequestDto
+        {
+            Description = description,
+            Value = value
         };
     }
     

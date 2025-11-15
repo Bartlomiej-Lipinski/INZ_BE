@@ -6,6 +6,7 @@ using WebApplication1.Features.Timeline.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -32,6 +33,10 @@ public class GetTimeline : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} retrieving timeline for group {GroupId}. TraceId: {TraceId}", 
+            userId, groupId, traceId);
 
         var group = await dbContext.Groups
             .AsNoTracking()
@@ -76,6 +81,12 @@ public class GetTimeline : IEndpoint
             .OrderBy(e => e.Date)
             .ToList();
         
+        if (result.Count == 0)
+            return Results.Ok(ApiResponse<List<TimelineEventResponseDto>>
+                .Ok(result, "No timeline found for this group.", traceId));
+        
+        logger.LogInformation("Timeline retrieved for group {GroupId}. Total events: {Count}. TraceId: {TraceId}",
+            groupId, result.Count, traceId);
         return Results.Ok(ApiResponse<List<TimelineEventResponseDto>>
             .Ok(result, "Timeline retrieved successfully.", traceId));
     }

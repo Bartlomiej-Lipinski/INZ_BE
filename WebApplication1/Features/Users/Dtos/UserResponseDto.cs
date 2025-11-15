@@ -1,4 +1,6 @@
-﻿namespace WebApplication1.Features.Users.Dtos;
+﻿using WebApplication1.Features.Storage.Dtos;
+
+namespace WebApplication1.Features.Users.Dtos;
 
 public record UserResponseDto
 {
@@ -10,6 +12,6 @@ public record UserResponseDto
     public DateOnly? BirthDate { get; set; }
     public string? Status { get; set; }
     public string? Description { get; set; }
-    public string? Photo { get; set; }
+    public ProfilePictureResponseDto? ProfilePicture { get; set; }
     public bool? IsTwoFactorEnabled { get; set; }
 }

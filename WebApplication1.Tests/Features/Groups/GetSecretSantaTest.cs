@@ -13,7 +13,7 @@ public class GetSecretSantaTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Group_Has_Less_Than_Two_Users()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
 
@@ -38,8 +38,8 @@ public class GetSecretSantaTest : TestBase
     public async Task Handle_Should_Return_Ok_With_Pairs_When_Succeeds()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user1 = TestDataFactory.CreateUser("u1", "User1");
-        var user2 = TestDataFactory.CreateUser("u2", "User2");
+        var user1 = TestDataFactory.CreateUser("u1", "Test","User");
+        var user2 = TestDataFactory.CreateUser("u2", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var gu1 = TestDataFactory.CreateGroupUser(user1.Id, group.Id);
         var gu2 = TestDataFactory.CreateGroupUser(user2.Id, group.Id);

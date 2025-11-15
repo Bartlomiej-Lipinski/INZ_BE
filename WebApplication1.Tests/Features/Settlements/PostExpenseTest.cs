@@ -20,8 +20,8 @@ public class PostExpenseTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var group = TestDataFactory.CreateGroup("g1", "Trip Group");
-        var user1 = TestDataFactory.CreateUser("u1", "Alice");
-        var user2 = TestDataFactory.CreateUser("u2", "Bob");
+        var user1 = TestDataFactory.CreateUser("u1", "Test","User");
+        var user2 = TestDataFactory.CreateUser("u2", "Test","User");
         var gu1 = TestDataFactory.CreateGroupUser(user1.Id, group.Id);
         var gu2 = TestDataFactory.CreateGroupUser(user2.Id, group.Id);
         dbContext.Groups.Add(group);
@@ -72,7 +72,7 @@ public class PostExpenseTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var group = TestDataFactory.CreateGroup("g1", "Group");
-        var user = TestDataFactory.CreateUser("u1", "Alice");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
         dbContext.Users.Add(user);
@@ -111,7 +111,7 @@ public class PostExpenseTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var group = TestDataFactory.CreateGroup("g1", "Group");
-        var user = TestDataFactory.CreateUser("u1", "Alice");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var gu = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);
         dbContext.Users.Add(user);

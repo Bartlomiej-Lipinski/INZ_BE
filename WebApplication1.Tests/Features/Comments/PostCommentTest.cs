@@ -13,7 +13,7 @@ public class PostCommentTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Target_Not_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -24,7 +24,7 @@ public class PostCommentTest : TestBase
         var result = await PostComment.Handle(
             group.Id,
             "nonexistent",
-            TestDataFactory.CreateCommentRequestDto("Recommendation", "Hello!"),
+            TestDataFactory.CreateCommentRequestDto("Hello!"),
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
@@ -39,7 +39,7 @@ public class PostCommentTest : TestBase
     public async Task Handle_Should_Create_Comment_When_User_Is_Member()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Groups.Add(group);

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -32,6 +33,10 @@ public class ChooseBestDateForEvent : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+
+        logger.LogInformation("User {UserId} attempts to choose best date {SuggestionId} for event {EventId}. TraceId: {TraceId}",
+            userId, suggestionId, eventId, traceId);
 
         var evt = await dbContext.Events
             .Include(e => e.Suggestions)
@@ -52,6 +57,8 @@ public class ChooseBestDateForEvent : IEndpoint
 
         await dbContext.SaveChangesAsync(cancellationToken);
         
+        logger.LogInformation("User {UserId} set best date for event {EventId} to {StartDate}. TraceId: {TraceId}",
+            userId, eventId, evt.StartDate, traceId);
         return Results.Ok(ApiResponse<string>.Ok(null!, "Best date chosen successfully.", traceId));
     }
 }

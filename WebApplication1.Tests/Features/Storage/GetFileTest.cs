@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using WebApplication1.Features.Storage;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Infrastructure.Service;
 
 namespace WebApplication1.Tests.Features.Storage;
@@ -15,6 +16,7 @@ public class GetFileTest : TestBase
         var mockStorageService = new Mock<IStorageService>();
 
         var result = await GetFile.Handle(
+            "g1",
             "non-existent-id",
             dbContext,
             mockStorageService.Object,
@@ -39,7 +41,7 @@ public class GetFileTest : TestBase
             "/uploads/profile/test.jpg",
             DateTime.UtcNow,
             "entity-123",
-            "testEntity",
+            EntityType.Recommendation,
             "user1"
         );
 
@@ -54,6 +56,7 @@ public class GetFileTest : TestBase
             .ReturnsAsync(memoryStream);
 
         var result = await GetFile.Handle(
+            "g1",
             "test-id",
             dbContext,
             mockStorageService.Object,
@@ -85,7 +88,7 @@ public class GetFileTest : TestBase
             "/uploads/missing.jpg",
             DateTime.UtcNow,
             "entity-123",
-            "testEntity",
+            EntityType.Recommendation,
             "user1"
         );
 
@@ -97,6 +100,7 @@ public class GetFileTest : TestBase
             .ReturnsAsync((Stream?)null);
 
         var result = await GetFile.Handle(
+            "g1",
             "test-id",
             dbContext,
             mockStorageService.Object,

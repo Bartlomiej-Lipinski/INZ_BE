@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 
@@ -39,7 +41,15 @@ public class GetAllUsers : IEndpoint
                 BirthDate = u.BirthDate,
                 Status = u.Status,
                 Description = u.Description,
-                Photo = u.Photo
+                ProfilePicture = u.StoredFiles
+                    .Where(f => f.EntityType == EntityType.User)
+                    .Select(f => new ProfilePictureResponseDto
+                    {
+                        FileName = f.FileName,
+                        ContentType = f.ContentType,
+                        Size = f.Size,
+                        Url = f.Url
+                    }).FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 

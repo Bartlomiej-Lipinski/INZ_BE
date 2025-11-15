@@ -13,7 +13,7 @@ public class PostAvailabilityTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "test");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
@@ -35,7 +35,7 @@ public class PostAvailabilityTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "test");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "test");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -61,7 +61,7 @@ public class PostAvailabilityTest : TestBase
     public async Task Handle_Should_Create_New_Availability_When_Not_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "test");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "test");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(
@@ -97,7 +97,7 @@ public class PostAvailabilityTest : TestBase
     public async Task Handle_Should_Update_Existing_Availability()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "test");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "test");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(

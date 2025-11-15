@@ -13,7 +13,7 @@ public class CalculateBestDateForEventTests : TestBase
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Found()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -37,7 +37,7 @@ public class CalculateBestDateForEventTests : TestBase
     public async Task Handle_Should_Return_Best_Date_When_Valid()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "testUser");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var startDate = new DateTime(2024, 1, 1);
@@ -91,8 +91,8 @@ public class CalculateBestDateForEventTests : TestBase
     public void GetBestDateAndTime_Should_Select_Date_With_Most_Points()
     {
         var startDate = new DateTime(2024, 1, 1);
-        var user1 = TestDataFactory.CreateUser("user-1", "User1");
-        var user2 = TestDataFactory.CreateUser("user-2", "User2");
+        var user1 = TestDataFactory.CreateUser("user-1", "Test","User");
+        var user2 = TestDataFactory.CreateUser("user-2", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
 
         var evt = TestDataFactory.CreateEvent(
@@ -132,7 +132,7 @@ public class CalculateBestDateForEventTests : TestBase
     public void GetBestDateAndTime_Should_Return_Fallback_When_No_Availabilities()
     {
         var startDate = new DateTime(2024, 1, 1);
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
 
         var evt = TestDataFactory.CreateEvent(
@@ -163,9 +163,9 @@ public class CalculateBestDateForEventTests : TestBase
     public void GetBestDateAndTime_Should_Handle_Overlapping_Availabilities()
     {
         var startDate = new DateTime(2024, 1, 1);
-        var user1 = TestDataFactory.CreateUser("user-1", "User1");
-        var user2 = TestDataFactory.CreateUser("user-2", "User2");
-        var user3 = TestDataFactory.CreateUser("user-3", "User3");
+        var user1 = TestDataFactory.CreateUser("user-1", "Test","User");
+        var user2 = TestDataFactory.CreateUser("user-2", "Test","User");
+        var user3 = TestDataFactory.CreateUser("user-3", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
 
         var evt = TestDataFactory.CreateEvent(
@@ -208,9 +208,9 @@ public class CalculateBestDateForEventTests : TestBase
     public void GetBestDateAndTime_Should_Select_Best_Date_With_Multiple_AvailabilityRanges()
     {
         var startDate = new DateTime(2024, 1, 1);
-        var user1 = TestDataFactory.CreateUser("user-1", "User1");
-        var user2 = TestDataFactory.CreateUser("user-2", "User2");
-        var user3 = TestDataFactory.CreateUser("user-3", "User3");
+        var user1 = TestDataFactory.CreateUser("user-1", "Test","User");
+        var user2 = TestDataFactory.CreateUser("user-2", "Test","User");
+        var user3 = TestDataFactory.CreateUser("user-3", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
 
         var evt = TestDataFactory.CreateEvent(

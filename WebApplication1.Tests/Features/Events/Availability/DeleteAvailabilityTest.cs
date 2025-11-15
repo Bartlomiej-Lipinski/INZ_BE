@@ -13,7 +13,7 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "user");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
@@ -33,7 +33,7 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Event_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -57,7 +57,7 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Availability_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(
@@ -84,7 +84,7 @@ public class DeleteAvailabilityTest : TestBase
     public async Task Handle_Should_Delete_Availability_When_Exists()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group 1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var evt = TestDataFactory.CreateEvent(

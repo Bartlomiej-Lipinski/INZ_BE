@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -15,7 +16,7 @@ public class PostReaction : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("/groups/{groupId}/reactions/{targetId}/{targetType}", Handle)
+        app.MapPost("/groups/{groupId}/reactions/{targetId}/{entityType}", Handle)
             .WithName("PostReaction")
             .WithDescription("Adds or removes a like reaction to a target by a group member")
             .WithTags("Reactions")
@@ -26,7 +27,7 @@ public class PostReaction : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string targetId,
-        [FromRoute] string targetType,
+        [FromRoute] string entityType,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -35,10 +36,24 @@ public class PostReaction : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
-
-        var target = targetType switch
+        
+        logger.LogInformation("User {UserId} attempts to toggle reaction on target {TargetId} in group {GroupId}. TraceId: {TraceId}",
+            userId, targetId, groupId, traceId);
+        
+        if (!Enum.TryParse<EntityType>(entityType, true, out var parsedEntityType))
         {
-            "Recommendation" => await dbContext.Recommendations
+            logger.LogWarning("User {UserId} provided invalid entity type '{EntityType}' for target {TargetId}. TraceId: {TraceId}",
+                userId, entityType, targetId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type.", traceId));
+        }
+
+        object? target = parsedEntityType switch
+        {
+            EntityType.Comment => await dbContext.Comments
+                .Include(c => c.Group)
+                .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
+            
+            EntityType.Recommendation => await dbContext.Recommendations
                 .Include(r => r.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
             
@@ -47,7 +62,8 @@ public class PostReaction : IEndpoint
 
         if (target == null)
         {
-            logger.LogWarning("Target {TargetId} not found. TraceId: {TraceId}", targetId, traceId);
+            logger.LogWarning("Target {TargetId} not found for entity type {EntityType}. TraceId: {TraceId}",
+                targetId, parsedEntityType, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Target not found.", traceId));
         }
 
@@ -68,8 +84,9 @@ public class PostReaction : IEndpoint
 
         var reaction = new Reaction
         {
+            GroupId = groupId,
             TargetId = targetId,
-            TargetType = targetType,
+            EntityType = parsedEntityType,
             UserId = userId!
         };
 

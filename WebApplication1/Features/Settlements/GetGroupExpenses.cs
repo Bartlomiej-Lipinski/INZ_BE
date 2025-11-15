@@ -31,7 +31,8 @@ public class GetGroupExpenses : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-
+        logger.LogInformation("Retrieving expenses for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
+        
         var expenses = await dbContext.Expenses
             .AsNoTracking()
             .Include(e => e.Beneficiaries)
@@ -54,7 +55,16 @@ public class GetGroupExpenses : IEndpoint
                 }).ToList()
             })
             .ToListAsync(cancellationToken);
+        
+        if (expenses.Count == 0)
+        {
+            logger.LogInformation("No expenses found for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
+            return Results.Ok(ApiResponse<List<ExpenseResponseDto>>
+                .Ok(expenses, "No expenses found for this group.", traceId));
+        }
 
+        logger.LogInformation("Retrieved {Count} expenses for group {GroupId}. TraceId: {TraceId}", 
+            expenses.Count, groupId, traceId);
         return Results.Ok(ApiResponse<List<ExpenseResponseDto>>
             .Ok(expenses, "Group expenses retrieved successfully.", traceId));
     }

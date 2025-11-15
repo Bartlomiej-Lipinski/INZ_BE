@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -35,11 +36,15 @@ public class PostRecommendation : IEndpoint
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
         
+        logger.LogInformation("Creating recommendation in group {GroupId} by user {UserId}. TraceId: {TraceId}", 
+            groupId, userId, traceId);
+        
         if (string.IsNullOrWhiteSpace(groupId) || string.IsNullOrWhiteSpace(request.Title) ||
             string.IsNullOrWhiteSpace(request.Content))
         {
-            return Results.BadRequest(ApiResponse<string>.Fail("GroupId, Title and Content are required.", 
-                traceId));
+            logger.LogWarning("Invalid recommendation data provided by user {UserId}. TraceId: {TraceId}",
+                userId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("GroupId, Title and Content are required.", traceId));
         }
 
         var recommendation = new Recommendation
@@ -47,9 +52,10 @@ public class PostRecommendation : IEndpoint
             Id = Guid.NewGuid().ToString(),
             GroupId = groupId,
             UserId = userId!,
-            Title = request.Title.Trim(),
-            Content = request.Content.Trim(),
-            Category = request.Category?.Trim(),
+            EntityType = EntityType.Recommendation,
+            Title = request.Title,
+            Content = request.Content,
+            Category = request.Category,
             ImageUrl = request.ImageUrl,
             LinkUrl = request.LinkUrl,
             CreatedAt = DateTime.UtcNow
@@ -61,7 +67,6 @@ public class PostRecommendation : IEndpoint
         logger.LogInformation(
             "User {UserId} added new recommendation {RecommendationId} in group {GroupId}. TraceId: {TraceId}",
             userId, recommendation.Id, groupId, traceId);
-
         return Results.Ok(ApiResponse<string>
             .Ok("Recommendation created successfully.", recommendation.Id, traceId));
     }

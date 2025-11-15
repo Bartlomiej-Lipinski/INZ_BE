@@ -12,7 +12,7 @@ public class GetExpenseByIdTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Group_Does_Not_Exist()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
@@ -33,7 +33,7 @@ public class GetExpenseByIdTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Expense_Not_Found()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         dbContext.Users.Add(user);
@@ -58,7 +58,7 @@ public class GetExpenseByIdTest : TestBase
     public async Task Handle_Should_Return_Expense_When_Exists_And_User_Is_Member()
     {
         await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user = TestDataFactory.CreateUser("u1", "User1");
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
         var group = TestDataFactory.CreateGroup("g1", "Group1");
         var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
         var expense = TestDataFactory.CreateExpense("e1", group.Id, user.Id, "Test Expense",100m, true);

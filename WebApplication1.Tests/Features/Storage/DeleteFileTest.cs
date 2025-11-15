@@ -2,6 +2,7 @@
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Storage;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Responses;
 
@@ -16,6 +17,7 @@ public class DeleteFileTest : TestBase
         var mockStorageService = new Mock<IStorageService>();
 
         var result = await DeleteFile.Handle(
+            "g1",
             "non-existent-id",
             dbContext,
             mockStorageService.Object,
@@ -35,8 +37,11 @@ public class DeleteFileTest : TestBase
     public async Task Handle_Should_Delete_File_Successfully()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var group = TestDataFactory.CreateGroup(id: "g1", name: "Test Group", color: "#FFFFFF");
         var mockStorageService = new Mock<IStorageService>();
-
+        dbContext.Groups.Add(group);
+        await dbContext.SaveChangesAsync();
+        
         var storedFile = TestDataFactory.CreateStoredFile(
             "test-id",
             "test.jpg",
@@ -45,13 +50,14 @@ public class DeleteFileTest : TestBase
             "/uploads/profile/test.jpg",
             DateTime.UtcNow,
             "entity-123",
-            "testEntity",
+            EntityType.Recommendation,
             "user1");
 
         dbContext.StoredFiles.Add(storedFile);
         await dbContext.SaveChangesAsync();
 
         var result = await DeleteFile.Handle(
+            group.Id,
             "test-id",
             dbContext,
             mockStorageService.Object,

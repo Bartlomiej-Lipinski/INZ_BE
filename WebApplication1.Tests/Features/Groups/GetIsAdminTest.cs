@@ -11,7 +11,7 @@ public class GetIsAdminTest : TestBase
     public async Task GetIsAdmin_ReturnsTrue_ForAdminUser()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user1 = TestDataFactory.CreateUser("user1");
+        var user1 = TestDataFactory.CreateUser("user1", "Test","User");
         var group = TestDataFactory.CreateGroup("group1");
         dbContext.Users.Add(user1);
         dbContext.Groups.Add(group);
@@ -39,7 +39,7 @@ public class GetIsAdminTest : TestBase
     public async Task GetIsAdmin_ReturnsFalse_ForNonAdminUser()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var user1 = TestDataFactory.CreateUser("user1");
+        var user1 = TestDataFactory.CreateUser("user1", "Test","User");
         var group = TestDataFactory.CreateGroup("group1");
         dbContext.Users.Add(user1);
         dbContext.Groups.Add(group);

@@ -23,18 +23,22 @@ public class GetUserGroups : IEndpoint
             .RequireAuthorization();
     }
 
-    public static async Task<ApiResponse<IEnumerable<GroupResponseDto>>> Handle(
+    public static async Task<IResult> Handle(
         ClaimsPrincipal currentUser,
         AppDbContext dbContext,
         HttpContext httpContext,
+        ILogger<GetUserGroups> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.GetUserId();
+        var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("Fetching groups for user {UserId}. TraceId: {TraceId}", 
+            userId, traceId);
 
         var groups = await dbContext.GroupUsers.AsNoTracking()
             .AsQueryable()
-            .Where(c => c.UserId == currentUserId && c.AcceptanceStatus == AcceptanceStatus.Accepted)
+            .Where(c => c.UserId == userId && c.AcceptanceStatus == AcceptanceStatus.Accepted)
             .Select(c => new GroupResponseDto
             {
                 Id = c.GroupId,
@@ -42,7 +46,17 @@ public class GetUserGroups : IEndpoint
                 Color = c.Group.Color
             })
             .ToListAsync(cancellationToken);
+        
+        if (groups.Count == 0)
+        {
+            logger.LogInformation("No groups found for user {UserId}. TraceId: {TraceId}", 
+                userId, traceId);
+            return Results.Ok(ApiResponse<List<GroupResponseDto>>.Ok(groups, "No groups found for this user.", traceId));
+        }
 
-        return ApiResponse<IEnumerable<GroupResponseDto>>.Ok(groups, null, traceId);
+        logger.LogInformation("Retrieved {Count} groups for user {UserId}. TraceId: {TraceId}", 
+            groups.Count, userId, traceId);
+        return Results.Ok(ApiResponse<List<GroupResponseDto>>
+            .Ok(groups, "Groups retrieved successfully.", traceId));
     }
 }

@@ -1,11 +1,13 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
+using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Storage;
 
@@ -13,15 +15,17 @@ public class UpdateFile : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("/files/{id}", Handle)
+        app.MapPut("/groups/{groupId}/files/{id}", Handle)
             .WithName("UpdateFile")
             .WithDescription("Replace existing file")
             .WithTags("Storage")
             .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>()
             .Accepts<IFormFile>("multipart/form-data");
     }
 
     public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
         [FromRoute] string id,
         IFormFile file,
         AppDbContext dbContext,
@@ -32,7 +36,7 @@ public class UpdateFile : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
-        var currentUserId = currentUser.GetUserId();
+        var userId = currentUser.GetUserId();
 
         var record = await dbContext.StoredFiles.FindAsync([id], cancellationToken);
         if (record == null)
@@ -47,7 +51,7 @@ public class UpdateFile : IEndpoint
         await storage.DeleteFileAsync(record.Url, cancellationToken);
 
         string newUrl;
-        using (var stream = file.OpenReadStream())
+        await using (var stream = file.OpenReadStream())
         {
             newUrl = await storage.SaveFileAsync(stream, file.FileName, file.ContentType, cancellationToken);
         }
@@ -60,20 +64,20 @@ public class UpdateFile : IEndpoint
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("User {UserId} updated file {FileId}. TraceId: {TraceId}", currentUserId, id, traceId);
+        logger.LogInformation("User {UserId} updated file {FileId}. TraceId: {TraceId}", userId, id, traceId);
 
-        var dto = new PostFile.StoredFileResponseDto
+        var dto = new StoredFileResponseDto
         {
             Id = record.Id,
             FileName = record.FileName,
             ContentType = record.ContentType,
             Size = record.Size,
             Url = record.Url,
-            EntityType = record.EntityType,
-            EntityId = record.EntityId,
+            EntityType = record.EntityType.ToString(),
+            EntityId = record.EntityId!,
             UploadedAt = record.UploadedAt
         };
 
-        return Results.Ok(ApiResponse<PostFile.StoredFileResponseDto>.Ok(dto, "File updated.", traceId));
+        return Results.Ok(ApiResponse<StoredFileResponseDto>.Ok(dto, "File updated.", traceId));
     }
 }

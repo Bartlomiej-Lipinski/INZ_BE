@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
@@ -32,6 +33,11 @@ public class GetReactionsForTarget: IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+
+        logger.LogInformation(
+            "User {UserId} fetching reactions for target {TargetId} in group {GroupId}. TraceId: {TraceId}",
+            userId, targetId, groupId, traceId);
 
         var reactions = await dbContext.Reactions
             .AsNoTracking()
@@ -41,17 +47,21 @@ public class GetReactionsForTarget: IEndpoint
                 UserId = c.UserId,
             })
             .ToListAsync(cancellationToken);
-
-        if (reactions.Count == 0)
-        {
-            logger.LogInformation("No reactions found for {TargetId}. TraceId: {TraceId}", targetId, traceId);
-            return Results.Ok(ApiResponse<List<ReactionDto>>
-                .Ok([], "No reactions found.", traceId));
-        }
         
         logger.LogInformation("Fetched {Count} reactions for {TargetId}. TraceId: {TraceId}", 
             reactions.Count, targetId, traceId);
+        
+        if (reactions.Count == 0)
+        {
+            logger.LogInformation(
+                "No reactions found for target {TargetId}. TraceId: {TraceId}", targetId, traceId);
+            return Results.Ok(ApiResponse<List<ReactionDto>>
+                .Ok(reactions, "No reactions found for this target.", traceId));
+        }
 
+        logger.LogInformation(
+            "Retrieved {Count} reactions for target {TargetId}. TraceId: {TraceId}", 
+            reactions.Count, targetId, traceId);
         return Results.Ok(ApiResponse<List<ReactionDto>>
             .Ok(reactions, "Reactions retrieved successfully.", traceId));
     }

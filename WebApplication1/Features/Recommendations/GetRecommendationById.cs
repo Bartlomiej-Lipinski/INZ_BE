@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
@@ -33,9 +34,12 @@ public class GetRecommendationById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        logger.LogInformation("Fetching recommendation {RecommendationId} in group {GroupId}. TraceId: {TraceId}",
+            recommendationId, groupId, traceId);
         
         if (string.IsNullOrWhiteSpace(recommendationId))
         {
+            logger.LogWarning("Recommendation ID is missing. TraceId: {TraceId}", traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Recommendation ID is required.", traceId));
         }
         
@@ -54,12 +58,12 @@ public class GetRecommendationById : IEndpoint
         var comments = await dbContext.Comments
             .AsNoTracking()
             .Include(c => c.User)
-            .Where(c => c.TargetId == recommendationId && c.TargetType == "Recommendation")
+            .Where(c => c.TargetId == recommendationId && c.EntityType == EntityType.Recommendation)
             .ToListAsync(cancellationToken);
 
         var reactions = await dbContext.Reactions
             .AsNoTracking()
-            .Where(r => r.TargetId == recommendationId && r.TargetType == "Recommendation")
+            .Where(r => r.TargetId == recommendationId && r.EntityType == EntityType.Recommendation)
             .ToListAsync(cancellationToken);
 
         var response = new RecommendationResponseDto
@@ -85,6 +89,8 @@ public class GetRecommendationById : IEndpoint
             }).ToList()
         };
 
+        logger.LogInformation("Recommendation retrieved successfully: {RecommendationId}. TraceId: {TraceId}",
+            recommendationId, traceId);
         return Results.Ok(ApiResponse<RecommendationResponseDto>.Ok(response, null, traceId));
     }
 }

@@ -2,6 +2,7 @@
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Storage;
+using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Responses;
 
@@ -16,7 +17,8 @@ public class PostFileTest : TestBase
         var mockStorageService = new Mock<IStorageService>();
 
         var result = await PostFile.Handle(
-            "testEntity",
+            "g1",
+            "Recommendation",
             "entity-123",
             null,
             dbContext,
@@ -46,7 +48,8 @@ public class PostFileTest : TestBase
             .ReturnsAsync(expectedUrl);
 
         var result = await PostFile.Handle(
-            "testEntity",
+            "g1",
+            "Recommendation",
             "entity-123",
             file,
             dbContext,
@@ -56,12 +59,12 @@ public class PostFileTest : TestBase
             NullLogger<PostFile>.Instance,
             CancellationToken.None);
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostFile.StoredFileResponseDto>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PostFile.StoredFileResponseDto>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<StoredFileResponseDto>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<StoredFileResponseDto>>;
         okResult!.Value?.Success.Should().BeTrue();
         okResult.Value?.Data?.Url.Should().Be(expectedUrl);
         okResult.Value?.Data?.FileName.Should().Be("test.jpg");
-        okResult.Value?.Data?.EntityType.Should().Be("testEntity");
+        okResult.Value?.Data?.EntityType.Should().Be("Recommendation");
         okResult.Value?.Data?.EntityId.Should().Be("entity-123");
         okResult.Value?.Message.Should().Be("File uploaded.");
         okResult.Value?.TraceId.Should().Be("test-trace-id");
