@@ -10,7 +10,7 @@ public class StoredFile
     public string UploadedById { get; set; } = null!;
     
     public EntityType EntityType { get; set; }
-    public string? EntityId { get; set; } = null!;
+    public string? EntityId { get; set; }
 
     public string FileName { get; set; } = null!;
     public string ContentType { get; set; } = null!;
