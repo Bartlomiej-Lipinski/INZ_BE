@@ -8,7 +8,7 @@ public record StoredFileResponseDto
     public long Size { get; set; }
     public string Url { get; set; } = null!;
     public string EntityType { get; set; } = null!;
-    public string? EntityId { get; set; } = null!;
+    public string? EntityId { get; set; }
     public FileCategoryResponseDto? FileCategory { get; set; }
     public DateTime UploadedAt { get; set; }
 }
