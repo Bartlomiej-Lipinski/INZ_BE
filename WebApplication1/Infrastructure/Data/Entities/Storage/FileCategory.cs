@@ -1,8 +1,8 @@
 ﻿using WebApplication1.Infrastructure.Data.Entities.Groups;
 
-namespace WebApplication1.Infrastructure.Data.Entities.Materials;
+namespace WebApplication1.Infrastructure.Data.Entities.Storage;
 
-public class MaterialCategory
+public class FileCategory
 {
     public string Id { get; set; } = null!;
     public string GroupId { get; set; } = null!;

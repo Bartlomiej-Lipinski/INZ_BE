@@ -5,7 +5,6 @@ using WebApplication1.Infrastructure.Data.Entities.Challenges;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
-using WebApplication1.Infrastructure.Data.Entities.Materials;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
@@ -38,8 +37,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Challenge> Challenges { get; set; } = null!;
     public DbSet<ChallengeParticipant> ChallengeParticipants { get; set; } = null!;
     public DbSet<ChallengeProgress> ChallengeProgresses { get; set; } = null!;
-    public DbSet<Material> Materials { get; set; } = null!;
-    public DbSet<MaterialCategory> MaterialCategories { get; set; } = null!;
+    public DbSet<FileCategory> FileCategories { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -113,12 +111,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(sf => sf.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             
-            entity.HasMany(g => g.Materials)
-                .WithOne(sf => sf.Group)
-                .HasForeignKey(sf => sf.GroupId)
-                .OnDelete(DeleteBehavior.Cascade);
-            
-            entity.HasMany(g => g.MaterialCategories)
+            entity.HasMany(g => g.FileCategories)
                 .WithOne(sf => sf.Group)
                 .HasForeignKey(sf => sf.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -341,6 +334,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(sf => sf.UploadedById)
                 .OnDelete(DeleteBehavior.Cascade);
             
+            entity.HasOne(sf => sf.FileCategory)
+                .WithMany()
+                .HasForeignKey(sf => sf.CategoryId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
             entity.HasIndex(sf => new { sf.UploadedById, sf.EntityType });
             entity.HasIndex(sf => new { sf.EntityId, sf.EntityType });
         });
@@ -548,42 +546,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
         });
         
-        builder.Entity<Material>(entity =>
-        {
-            entity.HasKey(m => m.Id);
-            entity.Property(m => m.GroupId).IsRequired();
-            entity.Property(m => m.UserId).IsRequired();
-            entity.Property(m => m.Title).IsRequired().HasMaxLength(200);
-            entity.Property(m => m.Description).HasMaxLength(1000);
-            entity.Property(m => m.Content);
-            entity.Property(m => m.CreatedAt).IsRequired();
-
-            entity.HasOne(m => m.Group)
-                .WithMany(g => g.Materials)
-                .HasForeignKey(m => m.GroupId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(m => m.User)
-                .WithMany(u => u.Materials)
-                .HasForeignKey(m => m.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(m => m.MaterialCategory)
-                .WithMany()
-                .HasForeignKey(m => m.CategoryId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasIndex(m => new { m.GroupId, m.CreatedAt });
-        });
-        
-        builder.Entity<MaterialCategory>(entity =>
+        builder.Entity<FileCategory>(entity =>
         {
             entity.HasKey(c => c.Id);
             entity.Property(c => c.GroupId).IsRequired();
             entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
 
             entity.HasOne(c => c.Group)
-                .WithMany(g => g.MaterialCategories)
+                .WithMany(g => g.FileCategories)
                 .HasForeignKey(c => c.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
 
