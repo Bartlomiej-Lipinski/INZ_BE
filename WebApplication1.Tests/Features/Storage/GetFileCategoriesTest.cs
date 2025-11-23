@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Storage;
+using WebApplication1.Features.Storage.Categories;
 using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Shared.Responses;
 
