@@ -5,6 +5,7 @@ using WebApplication1.Infrastructure.Data.Entities.Challenges;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Entities.Materials;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
@@ -37,6 +38,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Challenge> Challenges { get; set; } = null!;
     public DbSet<ChallengeParticipant> ChallengeParticipants { get; set; } = null!;
     public DbSet<ChallengeProgress> ChallengeProgresses { get; set; } = null!;
+    public DbSet<Material> Materials { get; set; } = null!;
+    public DbSet<MaterialCategory> MaterialCategories { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -106,6 +109,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
             
             entity.HasMany(g => g.Reactions)
+                .WithOne(sf => sf.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.Materials)
+                .WithOne(sf => sf.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.MaterialCategories)
                 .WithOne(sf => sf.Group)
                 .HasForeignKey(sf => sf.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -533,6 +546,48 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithMany(p => p.ProgressEntries)
                 .HasForeignKey(c => new { c.ChallengeId, c.UserId })
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<Material>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+            entity.Property(m => m.GroupId).IsRequired();
+            entity.Property(m => m.UserId).IsRequired();
+            entity.Property(m => m.Title).IsRequired().HasMaxLength(200);
+            entity.Property(m => m.Description).HasMaxLength(1000);
+            entity.Property(m => m.Content);
+            entity.Property(m => m.CreatedAt).IsRequired();
+
+            entity.HasOne(m => m.Group)
+                .WithMany(g => g.Materials)
+                .HasForeignKey(m => m.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.User)
+                .WithMany(u => u.Materials)
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(m => m.MaterialCategory)
+                .WithMany()
+                .HasForeignKey(m => m.CategoryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(m => new { m.GroupId, m.CreatedAt });
+        });
+        
+        builder.Entity<MaterialCategory>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.GroupId).IsRequired();
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+
+            entity.HasOne(c => c.Group)
+                .WithMany(g => g.MaterialCategories)
+                .HasForeignKey(c => c.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => new { c.GroupId, c.Name }).IsUnique();
         });
     }
 }

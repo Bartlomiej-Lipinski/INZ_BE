@@ -1,6 +1,7 @@
 ﻿using WebApplication1.Infrastructure.Data.Entities.Challenges;
 using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
+using WebApplication1.Infrastructure.Data.Entities.Materials;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
@@ -26,4 +27,6 @@ public class Group
     public ICollection<Challenge> Challenges { get; set; } = new List<Challenge>();
     public ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
     public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
+    public ICollection<Material> Materials { get; set; } = new List<Material>();
+    public ICollection<MaterialCategory> MaterialCategories { get; set; } = new List<MaterialCategory>();
 }
