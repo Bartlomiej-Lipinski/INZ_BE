@@ -11,6 +11,7 @@ public class StoredFile
     
     public EntityType EntityType { get; set; }
     public string? EntityId { get; set; }
+    public string? CategoryId { get; set; }
 
     public string FileName { get; set; } = null!;
     public string ContentType { get; set; } = null!;
@@ -20,4 +21,5 @@ public class StoredFile
 
     public Group? Group { get; set; } = null!;
     public User UploadedBy { get; set; } = null!;
+    public FileCategory? FileCategory { get; set; }
 }

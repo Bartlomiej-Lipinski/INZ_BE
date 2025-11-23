@@ -34,7 +34,8 @@ public class GetFileTest : TestBase
         var mockStorageService = new Mock<IStorageService>();
 
         var storedFile = TestDataFactory.CreateStoredFile(
-            "test-id", 
+            "test-id",
+            "g1",
             "test.jpg",
             "image/jpeg",
             100,
@@ -42,7 +43,8 @@ public class GetFileTest : TestBase
             DateTime.UtcNow,
             "entity-123",
             EntityType.Recommendation,
-            "user1"
+            "user1",
+            null
         );
 
         dbContext.StoredFiles.Add(storedFile);
@@ -82,6 +84,7 @@ public class GetFileTest : TestBase
 
         var storedFile = TestDataFactory.CreateStoredFile(
             "test-id",
+            "g1",
             "missing.jpg",
             "image/jpeg",
             100,
@@ -89,7 +92,8 @@ public class GetFileTest : TestBase
             DateTime.UtcNow,
             "entity-123",
             EntityType.Recommendation,
-            "user1"
+            "user1",
+            null
         );
 
         dbContext.StoredFiles.Add(storedFile);

@@ -319,18 +319,21 @@ public static class TestDataFactory
 
     public static StoredFile CreateStoredFile(
         string id,
+        string groupId,
         string fileName,
         string contentType,
         int size,
         string url,
         DateTime uploadedAt,
-        string entityId,
+        string? entityId,
         EntityType entityType,
-        string uploadedBy)
+        string uploadedById,
+        string? categoryId)
     {
         return new StoredFile
         {
             Id = id,
+            GroupId = groupId,
             FileName = fileName,
             ContentType = contentType,
             Size = size,
@@ -338,7 +341,8 @@ public static class TestDataFactory
             UploadedAt = uploadedAt,
             EntityId = entityId,
             EntityType = entityType,
-            UploadedById = uploadedBy
+            UploadedById = uploadedById,
+            CategoryId = categoryId
         };
     }
 
@@ -534,6 +538,16 @@ public static class TestDataFactory
         {
             Description = description,
             Value = value
+        };
+    }
+
+    public static FileCategory CreateFileCategory(string id, string groupId, string name)
+    {
+        return new FileCategory
+        {
+            Id = id,
+            GroupId = groupId,
+            Name = name
         };
     }
     

@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
@@ -40,6 +41,15 @@ public class DeleteFile : IEndpoint
         {
             logger.LogInformation("File {Id} not found for delete. TraceId: {TraceId}", id, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("File not found.", traceId));
+        }
+        
+        var groupUser = httpContext.Items["GroupUser"] as GroupUser;
+        var isAdmin = groupUser?.IsAdmin ?? false;
+        if (record.UploadedById != userId && !isAdmin)
+        {
+            logger.LogWarning("User {UserId} attempted to delete file {FileId} they do not own and is not admin. " +
+                              "TraceId: {TraceId}", userId, id, traceId);
+            return Results.Forbid();
         }
 
         await storage.DeleteFileAsync(record.Url, cancellationToken);

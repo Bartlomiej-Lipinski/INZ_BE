@@ -38,6 +38,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Challenge> Challenges { get; set; } = null!;
     public DbSet<ChallengeParticipant> ChallengeParticipants { get; set; } = null!;
     public DbSet<ChallengeProgress> ChallengeProgresses { get; set; } = null!;
+    public DbSet<FileCategory> FileCategories { get; set; } = null!;
     public DbSet<Quiz> Quizzes { get; set; } = null!;
     public DbSet<QuizQuestion> QuizQuestions { get; set; } = null!;
     public DbSet<QuizAnswerOption> QuizAnswerOptions { get; set; } = null!;
@@ -115,10 +116,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithOne(sf => sf.Group)
                 .HasForeignKey(sf => sf.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
-            entity.HasMany(g => g.Quizzes)
+
+            entity.HasMany(g => g.FileCategories)
                 .WithOne(sf => sf.Group)
                 .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.Quizzes)
+                .WithOne(q => q.Group)
+                .HasForeignKey(q => q.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
             
             entity.HasIndex(g => g.Code).IsUnique();
@@ -339,6 +345,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(sf => sf.UploadedById)
                 .OnDelete(DeleteBehavior.Cascade);
             
+            entity.HasOne(sf => sf.FileCategory)
+                .WithMany()
+                .HasForeignKey(sf => sf.CategoryId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+            
             entity.HasIndex(sf => new { sf.UploadedById, sf.EntityType });
             entity.HasIndex(sf => new { sf.EntityId, sf.EntityType });
         });
@@ -545,6 +557,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(c => new { c.ChallengeId, c.UserId })
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        builder.Entity<FileCategory>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.GroupId).IsRequired();
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+
+            entity.HasOne(c => c.Group)
+                .WithMany(g => g.FileCategories)
+                .HasForeignKey(c => c.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => new { c.GroupId, c.Name }).IsUnique();
+        });
         
         builder.Entity<Quiz>(entity =>
         {
@@ -636,19 +662,19 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
 
             entity.HasIndex(a => new { a.QuizId, a.UserId });
         });
-        
+
         builder.Entity<QuizAttemptAnswer>(entity =>
         {
             entity.HasKey(a => a.Id);
             entity.Property(a => a.AttemptId).IsRequired();
             entity.Property(a => a.QuestionId).IsRequired();
             entity.Property(a => a.TextAnswer).HasMaxLength(2000);
-            
+
             entity.HasOne(a => a.QuizAttempt)
                 .WithMany(q => q.Answers)
                 .HasForeignKey(a => a.AttemptId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             entity.HasOne(a => a.QuizQuestion)
                 .WithMany()
                 .HasForeignKey(a => a.QuestionId)

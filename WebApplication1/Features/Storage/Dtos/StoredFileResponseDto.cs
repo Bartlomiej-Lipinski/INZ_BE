@@ -2,12 +2,13 @@
 
 public record StoredFileResponseDto
 {
-    public string Id { get; init; } = null!;
-    public string FileName { get; init; } = null!;
-    public string ContentType { get; init; } = null!;
-    public long Size { get; init; }
-    public string Url { get; init; } = null!;
-    public string EntityType { get; init; } = null!;
-    public string EntityId { get; init; } = null!;
-    public DateTime UploadedAt { get; init; }
+    public string Id { get; set; } = null!;
+    public string FileName { get; set; } = null!;
+    public string ContentType { get; set; } = null!;
+    public long Size { get; set; }
+    public string Url { get; set; } = null!;
+    public string EntityType { get; set; } = null!;
+    public string? EntityId { get; set; }
+    public FileCategoryResponseDto? FileCategory { get; set; }
+    public DateTime UploadedAt { get; set; }
 }
