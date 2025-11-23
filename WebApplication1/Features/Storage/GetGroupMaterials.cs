@@ -52,7 +52,7 @@ public class GetGroupMaterials : IEndpoint
             query = query.Where(f => f.UploadedById == uploadedById);
 
         var materials = await query
-            .OrderBy(f => f.UploadedAt)
+            .OrderByDescending(f => f.UploadedAt)
             .Select(f => new StoredFileResponseDto
             {
                 Id = f.Id,
@@ -62,7 +62,11 @@ public class GetGroupMaterials : IEndpoint
                 Url = f.Url,
                 EntityType = f.EntityType.ToString(),
                 UploadedAt = f.UploadedAt,
-                FileCategory = f.FileCategory != null ? new FileCategoryResponseDto { Name = f.FileCategory.Name } : null
+                FileCategory = f.FileCategory != null ? new FileCategoryResponseDto
+                {
+                    Id = f.FileCategory.Id, 
+                    Name = f.FileCategory.Name
+                } : null
             })
             .ToListAsync(cancellationToken);
         

@@ -75,7 +75,7 @@ public class DeleteFileCategoryTest : TestBase
         dbContext.StoredFiles.AddRange(file1, file2);
         await dbContext.SaveChangesAsync();
 
-        var result = await DeleteFileCategory.Handle(
+        await DeleteFileCategory.Handle(
             groupId,
             category.Id,
             dbContext,

@@ -337,7 +337,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasOne(sf => sf.FileCategory)
                 .WithMany()
                 .HasForeignKey(sf => sf.CategoryId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
             
             entity.HasIndex(sf => new { sf.UploadedById, sf.EntityType });
             entity.HasIndex(sf => new { sf.EntityId, sf.EntityType });

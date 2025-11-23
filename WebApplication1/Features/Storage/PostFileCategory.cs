@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Shared.Endpoints;
@@ -42,6 +43,16 @@ public class PostFileCategory: IEndpoint
             logger.LogWarning("Category creation failed: name is required. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
                 userId, groupId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Category name is required.", traceId));
+        }
+        
+        var exists = await dbContext.FileCategories
+            .AnyAsync(c => c.GroupId == groupId && c.Name == name, cancellationToken);
+
+        if (exists)
+        {
+            logger.LogWarning("Category creation failed: category with name '{Name}' already exists in group {GroupId}. TraceId: {TraceId}",
+                name, groupId, traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("Category with this name already exists.", traceId));
         }
         
         var category = new FileCategory

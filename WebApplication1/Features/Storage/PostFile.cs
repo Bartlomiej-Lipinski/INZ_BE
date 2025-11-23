@@ -102,7 +102,7 @@ public class PostFile : IEndpoint
             EntityId = record.EntityId,
             UploadedAt = record.UploadedAt,
             FileCategory = category != null 
-                ? new FileCategoryResponseDto { Name = category.Name } 
+                ? new FileCategoryResponseDto { Id = category.Id, Name = category.Name } 
                 : null
         };
 

@@ -41,6 +41,7 @@ public class GetFileCategories : IEndpoint
             .Where(c => c.GroupId == groupId)
             .Select(c => new FileCategoryResponseDto
             {
+                Id = c.Id,
                 Name = c.Name
             })
             .ToListAsync(cancellationToken);

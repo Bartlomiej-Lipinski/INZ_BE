@@ -21,5 +21,5 @@ public class StoredFile
 
     public Group? Group { get; set; } = null!;
     public User UploadedBy { get; set; } = null!;
-    public FileCategory FileCategory { get; set; }
+    public FileCategory? FileCategory { get; set; }
 }
