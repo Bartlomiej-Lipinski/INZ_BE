@@ -341,7 +341,8 @@ public static class TestDataFactory
             UploadedAt = uploadedAt,
             EntityId = entityId,
             EntityType = entityType,
-            UploadedById = uploadedById
+            UploadedById = uploadedById,
+            CategoryId = categoryId
         };
     }
 
