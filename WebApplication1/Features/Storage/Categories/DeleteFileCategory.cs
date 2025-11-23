@@ -56,15 +56,6 @@ public class DeleteFileCategory: IEndpoint
                 userId, categoryId, traceId);
             return Results.Forbid();
         }
-
-        var files = await dbContext.StoredFiles
-            .Where(f => f.CategoryId == categoryId)
-            .ToListAsync(cancellationToken);
-
-        foreach (var file in files)
-        {
-            file.CategoryId = null;
-        }
         
         dbContext.FileCategories.Remove(category);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -72,6 +63,6 @@ public class DeleteFileCategory: IEndpoint
         logger.LogInformation("Category {CategoryId} deleted by user {UserId}. TraceId: {TraceId}",
             categoryId, userId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok(null!, "Category deleted.", traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Category deleted successfully.", traceId));
     }
 }

@@ -68,6 +68,6 @@ public class PostFileCategory: IEndpoint
         logger.LogInformation("User {UserId} created category {CategoryId} for group {GroupId}. TraceId: {TraceId}",
             userId, category.Id, groupId, traceId);
 
-        return Results.Ok(ApiResponse<FileCategory>.Ok(category, "Category created.", traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Category created.", traceId));
     }
 }
