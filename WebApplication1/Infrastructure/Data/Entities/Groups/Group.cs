@@ -26,4 +26,5 @@ public class Group
     public ICollection<Challenge> Challenges { get; set; } = new List<Challenge>();
     public ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
     public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
+    public ICollection<FileCategory> FileCategories { get; set; } = new List<FileCategory>();
 }

@@ -37,6 +37,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<Challenge> Challenges { get; set; } = null!;
     public DbSet<ChallengeParticipant> ChallengeParticipants { get; set; } = null!;
     public DbSet<ChallengeProgress> ChallengeProgresses { get; set; } = null!;
+    public DbSet<FileCategory> FileCategories { get; set; } = null!;
     
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -106,6 +107,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Cascade);
             
             entity.HasMany(g => g.Reactions)
+                .WithOne(sf => sf.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.FileCategories)
                 .WithOne(sf => sf.Group)
                 .HasForeignKey(sf => sf.GroupId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -328,6 +334,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .HasForeignKey(sf => sf.UploadedById)
                 .OnDelete(DeleteBehavior.Cascade);
             
+            entity.HasOne(sf => sf.FileCategory)
+                .WithMany()
+                .HasForeignKey(sf => sf.CategoryId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+            
             entity.HasIndex(sf => new { sf.UploadedById, sf.EntityType });
             entity.HasIndex(sf => new { sf.EntityId, sf.EntityType });
         });
@@ -533,6 +545,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .WithMany(p => p.ProgressEntries)
                 .HasForeignKey(c => new { c.ChallengeId, c.UserId })
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<FileCategory>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.GroupId).IsRequired();
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+
+            entity.HasOne(c => c.Group)
+                .WithMany(g => g.FileCategories)
+                .HasForeignKey(c => c.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => new { c.GroupId, c.Name }).IsUnique();
         });
     }
 }
