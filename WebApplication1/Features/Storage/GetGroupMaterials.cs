@@ -10,7 +10,7 @@ using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
 
-namespace WebApplication1.Features.Materials;
+namespace WebApplication1.Features.Storage;
 
 public class GetGroupMaterials : IEndpoint
 {
@@ -19,7 +19,7 @@ public class GetGroupMaterials : IEndpoint
         app.MapGet("/groups/{groupId}/materials", Handle)
             .WithName("GetGroupMaterials")
             .WithDescription("Retrieves all materials for a specific group with optional filters")
-            .WithTags("Materials")
+            .WithTags("Storage")
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }

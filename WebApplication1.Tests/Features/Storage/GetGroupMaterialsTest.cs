@@ -1,11 +1,11 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using WebApplication1.Features.Materials;
+using WebApplication1.Features.Storage;
 using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Responses;
 
-namespace WebApplication1.Tests.Features.Materials;
+namespace WebApplication1.Tests.Features.Storage;
 
 public class GetGroupMaterialsTest : TestBase
 {

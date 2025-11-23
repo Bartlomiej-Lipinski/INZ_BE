@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
@@ -31,7 +32,8 @@ public class PostFile : IEndpoint
         [FromRoute] string groupId,
         [FromRoute] string entityType,
         [FromRoute] string entityId,
-        IFormFile file,
+        [FromForm] IFormFile file,
+        [FromForm] string? categoryId,
         AppDbContext dbContext,
         IStorageService storage,
         ClaimsPrincipal currentUser,
@@ -52,6 +54,16 @@ public class PostFile : IEndpoint
         if (file == null || file.Length == 0)
             return Results.BadRequest(ApiResponse<string>.Fail("No file uploaded.", traceId));
 
+        FileCategory? category = null;
+        if (!string.IsNullOrWhiteSpace(categoryId))
+        {
+            category = await dbContext.FileCategories
+                .FirstOrDefaultAsync(c => c.Id == categoryId && c.GroupId == groupId, cancellationToken);
+
+            if (category == null)
+                return Results.BadRequest(ApiResponse<string>.Fail("Category does not exist in this group.", traceId));
+        }
+        
         string url;
         await using (var stream = file.OpenReadStream())
         {
@@ -65,6 +77,7 @@ public class PostFile : IEndpoint
             UploadedById = userId!,
             EntityType = parsedEntityType,
             EntityId = entityId,
+            CategoryId = category?.Id,
             FileName = file.FileName,
             ContentType = file.ContentType,
             Size = file.Length,
@@ -87,7 +100,10 @@ public class PostFile : IEndpoint
             Url = record.Url,
             EntityType = record.EntityType.ToString(),
             EntityId = record.EntityId,
-            UploadedAt = record.UploadedAt
+            UploadedAt = record.UploadedAt,
+            FileCategory = category != null 
+                ? new FileCategoryResponseDto { Name = category.Name } 
+                : null
         };
 
         return Results.Ok(ApiResponse<StoredFileResponseDto>.Ok(dto, "File uploaded.", traceId));
