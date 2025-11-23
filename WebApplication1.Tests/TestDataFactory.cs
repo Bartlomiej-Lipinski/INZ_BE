@@ -327,7 +327,8 @@ public static class TestDataFactory
         DateTime uploadedAt,
         string? entityId,
         EntityType entityType,
-        string uploadedById)
+        string uploadedById,
+        string? categoryId)
     {
         return new StoredFile
         {
@@ -536,6 +537,16 @@ public static class TestDataFactory
         {
             Description = description,
             Value = value
+        };
+    }
+
+    public static FileCategory CreateFileCategory(string id, string groupId, string name)
+    {
+        return new FileCategory
+        {
+            Id = id,
+            GroupId = groupId,
+            Name = name
         };
     }
     

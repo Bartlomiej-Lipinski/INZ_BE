@@ -27,7 +27,8 @@ public class GetGroupMaterialsTest : TestBase
             DateTime.UtcNow.AddDays(-1),
             null,
             EntityType.Material,
-            user.Id
+            user.Id,
+            null
         );
         var material2 = TestDataFactory.CreateStoredFile(
             "m2",
@@ -39,7 +40,8 @@ public class GetGroupMaterialsTest : TestBase
             DateTime.UtcNow,
             null,
             EntityType.Material,
-            user.Id
+            user.Id,
+            null
         );
 
         dbContext.Users.Add(user);

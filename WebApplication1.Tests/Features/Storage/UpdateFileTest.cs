@@ -27,7 +27,8 @@ public class UpdateFileTest : TestBase
             DateTime.UtcNow,
             "entity-123",
             EntityType.Recommendation,
-            "user1"
+            "user1",
+            null
         );
 
         dbContext.StoredFiles.Add(existingFile);
@@ -92,7 +93,8 @@ public class UpdateFileTest : TestBase
             DateTime.UtcNow.AddDays(-1),
             "entity-123",
             EntityType.Recommendation,
-            "user1"
+            "user1",
+            null
         );
 
         dbContext.StoredFiles.Add(existingFile);
