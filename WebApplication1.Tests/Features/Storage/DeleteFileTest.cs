@@ -44,6 +44,7 @@ public class DeleteFileTest : TestBase
         
         var storedFile = TestDataFactory.CreateStoredFile(
             "test-id",
+            group.Id,
             "test.jpg",
             "image/jpeg",
             100,

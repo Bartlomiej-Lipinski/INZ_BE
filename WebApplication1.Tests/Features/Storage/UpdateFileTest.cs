@@ -19,6 +19,7 @@ public class UpdateFileTest : TestBase
 
         var existingFile = TestDataFactory.CreateStoredFile(
             "test-id",
+            "g1",
             "old.jpg",
             "image/jpeg",
             100,
@@ -83,6 +84,7 @@ public class UpdateFileTest : TestBase
 
         var existingFile = TestDataFactory.CreateStoredFile(
             "test-id",
+            "g1",
             "old.jpg",
             "image/jpeg",
             100,

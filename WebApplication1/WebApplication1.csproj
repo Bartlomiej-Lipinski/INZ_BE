@@ -30,7 +30,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Features\Materials\" />
       <Folder Include="Migrations\" />
       <Folder Include="Storage\" />
     </ItemGroup>

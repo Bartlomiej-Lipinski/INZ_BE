@@ -319,18 +319,20 @@ public static class TestDataFactory
 
     public static StoredFile CreateStoredFile(
         string id,
+        string groupId,
         string fileName,
         string contentType,
         int size,
         string url,
         DateTime uploadedAt,
-        string entityId,
+        string? entityId,
         EntityType entityType,
-        string uploadedBy)
+        string uploadedById)
     {
         return new StoredFile
         {
             Id = id,
+            GroupId = groupId,
             FileName = fileName,
             ContentType = contentType,
             Size = size,
@@ -338,7 +340,7 @@ public static class TestDataFactory
             UploadedAt = uploadedAt,
             EntityId = entityId,
             EntityType = entityType,
-            UploadedById = uploadedBy
+            UploadedById = uploadedById
         };
     }
 
