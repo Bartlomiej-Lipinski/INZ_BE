@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Http;
 using WebApplication1.Features.Auth;
 using WebApplication1.Features.Challenges.Dtos;
@@ -5,6 +6,7 @@ using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Features.Polls.Dtos;
+using WebApplication1.Features.Quizzes.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Features.Timeline.Dtos;
@@ -560,6 +562,39 @@ public static class TestDataFactory
             GroupId = groupId,
             UserId = userId,
             Title = title
+        };
+    }
+
+    public static QuizRequestDto CreateQuizRequestDto(string title, List<QuizQuestionRequestDto> questions)
+    {
+        return new QuizRequestDto
+        {
+            Title = title,
+            Questions = questions
+        };
+    }
+    
+    public static QuizQuestionRequestDto CreateSingleChoiceQuestion(string content, List<(string Text, bool IsCorrect)> options)
+    {
+        return new QuizQuestionRequestDto
+        {
+            Type = QuizQuestionType.SingleChoice,
+            Content = content,
+            Options = options.Select(o => new QuizAnswerOptionRequestDto
+            {
+                Text = o.Text,
+                IsCorrect = o.IsCorrect
+            }).ToList()
+        };
+    }
+    
+    public static QuizQuestionRequestDto CreateTrueFalseQuestion(string content, bool correctAnswer)
+    {
+        return new QuizQuestionRequestDto
+        {
+            Type = QuizQuestionType.TrueFalse,
+            Content = content,
+            CorrectTrueFalse = correctAnswer
         };
     }
     

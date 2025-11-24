@@ -6,7 +6,6 @@ public class QuizAttemptAnswer
     public string AttemptId { get; set; } = null!;
     public string QuestionId { get; set; } = null!;
 
-    public string? TextAnswer { get; set; }
     public string? SelectedOptionId { get; set; }
     public bool? SelectedTrueFalse { get; set; }
     

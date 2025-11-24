@@ -10,5 +10,5 @@ public class QuizAttempt
 
     public Quiz Quiz { get; set; } = null!;
     public User User { get; set; } = null!;
-    public ICollection<QuizAttemptAnswer> Answers { get; set; }
+    public ICollection<QuizAttemptAnswer> Answers { get; set; } = new List<QuizAttemptAnswer>();
 }

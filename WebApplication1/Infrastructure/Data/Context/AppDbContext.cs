@@ -607,7 +607,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.Property(q => q.QuizId).IsRequired();
             entity.Property(q => q.Type).IsRequired();
             entity.Property(q => q.Content).IsRequired().HasMaxLength(2000);
-            entity.Property(q => q.CorrectAnswerText).HasMaxLength(2000);
 
             entity.HasMany(q => q.Options)
                 .WithOne(o => o.Question)
@@ -668,7 +667,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasKey(a => a.Id);
             entity.Property(a => a.AttemptId).IsRequired();
             entity.Property(a => a.QuestionId).IsRequired();
-            entity.Property(a => a.TextAnswer).HasMaxLength(2000);
 
             entity.HasOne(a => a.QuizAttempt)
                 .WithMany(q => q.Answers)

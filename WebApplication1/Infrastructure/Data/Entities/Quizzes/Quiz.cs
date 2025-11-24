@@ -13,6 +13,6 @@ public class Quiz
 
     public Group Group { get; set; } = null!;
     public User User { get; set; } = null!;
-    public ICollection<QuizQuestion> Questions { get; set; }
-    public ICollection<QuizAttempt> Attempts { get; set; }
+    public ICollection<QuizQuestion> Questions { get; set; } = new List<QuizQuestion>();
+    public ICollection<QuizAttempt> Attempts { get; set; } = new List<QuizAttempt>();
 }
