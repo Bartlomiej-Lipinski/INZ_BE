@@ -14,6 +14,7 @@ using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
+using WebApplication1.Infrastructure.Data.Entities.Quizzes;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Enums;
@@ -548,6 +549,17 @@ public static class TestDataFactory
             Id = id,
             GroupId = groupId,
             Name = name
+        };
+    }
+
+    public static Quiz CreateQuiz(string id, string groupId, string userId, string title)
+    {
+        return new Quiz
+        {
+            Id = id,
+            GroupId = groupId,
+            UserId = userId,
+            Title = title
         };
     }
     
