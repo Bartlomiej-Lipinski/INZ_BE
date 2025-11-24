@@ -598,6 +598,52 @@ public static class TestDataFactory
         };
     }
     
+    public static QuizQuestion CreateSingleChoiceQuestion(
+        string id,
+        string quizId,
+        string content,
+        List<(string Text, bool IsCorrect)> options)
+    {
+        var question = new QuizQuestion
+        {
+            Id = id,
+            QuizId = quizId,
+            Content = content,
+            Type = QuizQuestionType.SingleChoice,
+            Options = new List<QuizAnswerOption>()
+        };
+
+        foreach (var (text, isCorrect) in options)
+        {
+            question.Options.Add(new QuizAnswerOption
+            {
+                Id = Guid.NewGuid().ToString(),
+                QuestionId = id,
+                Text = text,
+                IsCorrect = isCorrect
+            });
+        }
+
+        return question;
+    }
+
+    public static QuizQuestion CreateTrueFalseQuestion(
+        string id,
+        string quizId,
+        string content,
+        bool correctAnswer)
+    {
+        return new QuizQuestion
+        {
+            Id = id,
+            QuizId = quizId,
+            Content = content,
+            Type = QuizQuestionType.TrueFalse,
+            CorrectTrueFalse = correctAnswer,
+            Options = new List<QuizAnswerOption>()
+        };
+    }
+    
     private static string GenerateUniqueCode()
     {
         return Guid.NewGuid().ToString()[..8].ToUpper();

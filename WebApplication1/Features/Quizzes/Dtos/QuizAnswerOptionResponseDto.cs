@@ -2,7 +2,8 @@
 
 public record QuizAnswerOptionResponseDto
 {
-    public string Id { get; set; }
-    public string Text { get; set; }
-    public bool IsCorrect { get; set; }
+    public string Id { get; set; } = null!;
+    public string QuestionId { get; set; } = null!;
+    public string Text { get; set; } = null!;
+    public bool? IsCorrect { get; set; }
 }
