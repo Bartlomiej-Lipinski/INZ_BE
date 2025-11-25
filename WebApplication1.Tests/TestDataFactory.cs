@@ -643,6 +643,25 @@ public static class TestDataFactory
             Options = new List<QuizAnswerOption>()
         };
     }
+
+    public static QuizAttemptRequestDto CreateQuizAttemptRequestDto(List<QuizAttemptAnswerRequestDto> answers)
+    {
+        return new QuizAttemptRequestDto
+        {
+            Answers = answers
+        };
+    }
+
+    public static QuizAttemptAnswerRequestDto CreateQuizAttemptAnswerRequestDto(
+        string questionId, string? selectedOptionId = null, bool? selectedTrueFalse = null)
+    {
+        return new QuizAttemptAnswerRequestDto
+        {
+            QuestionId = questionId,
+            SelectedOptionId = selectedOptionId,
+            SelectedTrueFalse = selectedTrueFalse
+        };
+    }
     
     private static string GenerateUniqueCode()
     {
