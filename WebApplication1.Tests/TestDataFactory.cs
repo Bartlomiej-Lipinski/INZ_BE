@@ -663,6 +663,19 @@ public static class TestDataFactory
         };
     }
     
+    public static QuizAttempt CreateQuizAttempt(string id, string quizId, string userId, int score, DateTime completedAt)
+    {
+        return new QuizAttempt
+        {
+            Id = id,
+            QuizId = quizId,
+            UserId = userId,
+            Score = score,
+            CompletedAt = completedAt,
+            Answers = new List<QuizAttemptAnswer>()
+        };
+    }
+    
     private static string GenerateUniqueCode()
     {
         return Guid.NewGuid().ToString()[..8].ToUpper();
