@@ -104,11 +104,7 @@ public class UpdatePoll : IEndpoint
             Options = existingPoll.Options.Select(o => new PollOptionDto
             {
                 Text = o.Text,
-                VotedUsers = o.VotedUsers.Select(u => new UserResponseDto
-                {
-                    Id = u.Id,
-                    Username = u.UserName
-                }).ToList()
+                VotedUsersIds = o.VotedUsers.Select(u => u.Id).ToList()
             }).ToList()
         };
         
