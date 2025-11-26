@@ -588,8 +588,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasOne(q => q.User)
                 .WithMany(g => g.Quizzes)
                 .HasForeignKey(q => q.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+                .OnDelete(DeleteBehavior.Restrict);
+            
             entity.HasMany(q => q.Questions)
                 .WithOne(qt => qt.Quiz)
                 .HasForeignKey(qt => qt.QuizId)
@@ -652,8 +652,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasOne(a => a.User)
                 .WithMany(q => q.QuizAttempts)
                 .HasForeignKey(a => a.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+                .OnDelete(DeleteBehavior.Restrict);
+            
             entity.HasMany(a => a.Answers)
                 .WithOne(ans => ans.QuizAttempt)
                 .HasForeignKey(ans => ans.AttemptId)
@@ -676,8 +676,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
             entity.HasOne(a => a.QuizQuestion)
                 .WithMany()
                 .HasForeignKey(a => a.QuestionId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+                .OnDelete(DeleteBehavior.Restrict);
+            
             entity.HasIndex(a => a.AttemptId);
         });
     }

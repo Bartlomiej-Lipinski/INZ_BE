@@ -50,6 +50,7 @@ public class GetQuizWithCorrectAnswers : IEndpoint
         var response = new QuizResponseDto
         {
             Id = quiz.Id,
+            GroupId = quiz.GroupId,
             Title = quiz.Title,
             Description = quiz.Description,
             CreatedAt = quiz.CreatedAt,

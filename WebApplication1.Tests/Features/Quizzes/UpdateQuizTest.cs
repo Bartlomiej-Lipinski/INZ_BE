@@ -36,6 +36,9 @@ public class UpdateQuizTest : TestBase
                 TestDataFactory.CreateTrueFalseQuestion("Question 2?", true)
             ]
         );
+        
+        var httpContext = CreateHttpContext(user.Id);
+        httpContext.Items["GroupUser"] = groupUser;
 
         var result = await UpdateQuiz.Handle(
             group.Id,
@@ -43,7 +46,7 @@ public class UpdateQuizTest : TestBase
             request,
             dbContext,
             CreateClaimsPrincipal(user.Id),
-            CreateHttpContext(user.Id),
+            httpContext,
             NullLogger<UpdateQuiz>.Instance,
             CancellationToken.None
         );

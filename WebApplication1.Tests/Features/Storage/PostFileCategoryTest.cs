@@ -36,7 +36,7 @@ public class PostFileCategoryTest : TestBase
         var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
         okResult!.Value!.Success.Should().BeTrue();
 
-        var categoryInDb = await dbContext.FileCategories.FirstOrDefaultAsync();;
+        var categoryInDb = await dbContext.FileCategories.FirstOrDefaultAsync();
         categoryInDb.Should().NotBeNull();
         categoryInDb.Name.Should().Be(categoryName);
     }

@@ -4,7 +4,7 @@ public class QuizAttempt
 {
     public string Id { get; set; } = null!;
     public string QuizId { get; set; } = null!;
-    public string UserId { get; set; }
+    public string UserId { get; set; } = null!;
     public DateTime CompletedAt { get; set; }
     public int Score { get; set; }
 

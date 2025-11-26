@@ -7,5 +7,5 @@ public class QuizAnswerOption
     public string Text { get; set; } = null!;
     public bool IsCorrect { get; set; }
 
-    public QuizQuestion Question { get; set; }
+    public QuizQuestion Question { get; set; } = null!;
 }

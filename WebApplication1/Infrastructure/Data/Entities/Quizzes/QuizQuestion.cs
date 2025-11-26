@@ -10,7 +10,7 @@ public class QuizQuestion
     public bool? CorrectTrueFalse { get; set; }
 
     public ICollection<QuizAnswerOption> Options { get; set; } = new List<QuizAnswerOption>();
-    public Quiz Quiz { get; set; }
+    public Quiz Quiz { get; set; } = null!;
 }
 
 public enum QuizQuestionType

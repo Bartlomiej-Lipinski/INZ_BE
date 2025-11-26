@@ -38,36 +38,9 @@ public class PostQuiz : IEndpoint
         logger.LogInformation("User {UserId} creating quiz in group {GroupId}. TraceId: {TraceId}",
             userId, groupId, traceId);
         
-        if (string.IsNullOrWhiteSpace(request.Title))
-            return Results.BadRequest(ApiResponse<string>.Fail("Title is required.", traceId));
-
-        if (request.Questions.Count == 0)
-            return Results.BadRequest(ApiResponse<string>.Fail("Quiz must contain at least one question.", traceId));
-        
-        foreach (var q in request.Questions)
-        {
-            if (string.IsNullOrWhiteSpace(q.Content))
-                return Results.BadRequest(ApiResponse<string>.Fail("Question content is required.", traceId));
-
-            switch (q.Type)
-            {
-                case QuizQuestionType.SingleChoice when q.Options == null || q.Options.Count < 2:
-                    return Results.BadRequest(ApiResponse<string>.Fail("SingleChoice question must have at least 2 options.", traceId));
-                case QuizQuestionType.SingleChoice:
-                {
-                    var correctCount = q.Options.Count(o => o.IsCorrect);
-                    if (correctCount != 1)
-                        return Results.BadRequest(ApiResponse<string>.Fail("SingleChoice must have exactly 1 correct option.", traceId));
-                    break;
-                }
-                case QuizQuestionType.TrueFalse: 
-                    if (q.CorrectTrueFalse == null)
-                        return Results.BadRequest(ApiResponse<string>.Fail("TrueFalse question must have correct answer defined.", traceId));
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+        var validationResult = QuizValidator.ValidateQuizRequest(request, traceId);
+        if (validationResult != null)
+            return Results.BadRequest(validationResult);
         
         var quiz = new Quiz
         {

@@ -41,6 +41,7 @@ public class GetGroupQuizzes : IEndpoint
             .Select(q => new QuizResponseDto
             {
                 Id = q.Id,
+                GroupId = q.GroupId,
                 Title = q.Title,
                 Description = q.Description,
                 CreatedAt = q.CreatedAt,
