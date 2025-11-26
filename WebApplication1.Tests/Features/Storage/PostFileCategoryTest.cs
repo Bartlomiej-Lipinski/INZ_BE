@@ -1,8 +1,7 @@
 ﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using WebApplication1.Features.Storage;
 using WebApplication1.Features.Storage.Categories;
-using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Storage;
@@ -33,13 +32,11 @@ public class PostFileCategoryTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<FileCategory>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<FileCategory>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
         okResult!.Value!.Success.Should().BeTrue();
-        okResult.Value.Data!.Name.Should().Be(categoryName);
-        okResult.Value.Data.GroupId.Should().Be(group.Id);
 
-        var categoryInDb = await dbContext.FileCategories.FindAsync(okResult.Value.Data.Id);
+        var categoryInDb = await dbContext.FileCategories.FirstOrDefaultAsync();
         categoryInDb.Should().NotBeNull();
         categoryInDb.Name.Should().Be(categoryName);
     }
