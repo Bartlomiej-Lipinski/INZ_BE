@@ -4,6 +4,7 @@ using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
+using WebApplication1.Infrastructure.Data.Entities.Quizzes;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Entities.Tokens;
@@ -50,4 +51,6 @@ public class User : IdentityUser
     public ICollection<Challenge> Challenges { get; set; } = new List<Challenge>();
     public ICollection<ChallengeParticipant> ChallengeParticipants { get; set; } = new List<ChallengeParticipant>();
     public ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
+    public ICollection<Quiz> Quizzes { get; set; } = new List<Quiz>();
+    public ICollection<QuizAttempt> QuizAttempts { get; set; } = new List<QuizAttempt>();
 }

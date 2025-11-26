@@ -5,6 +5,7 @@ using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Features.Polls.Dtos;
+using WebApplication1.Features.Quizzes.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Features.Settlements.Dtos;
 using WebApplication1.Features.Timeline.Dtos;
@@ -14,6 +15,7 @@ using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
+using WebApplication1.Infrastructure.Data.Entities.Quizzes;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Enums;
@@ -548,6 +550,128 @@ public static class TestDataFactory
             Id = id,
             GroupId = groupId,
             Name = name
+        };
+    }
+
+    public static Quiz CreateQuiz(string id, string groupId, string userId, string title)
+    {
+        return new Quiz
+        {
+            Id = id,
+            GroupId = groupId,
+            UserId = userId,
+            Title = title
+        };
+    }
+
+    public static QuizRequestDto CreateQuizRequestDto(string title, List<QuizQuestionRequestDto> questions)
+    {
+        return new QuizRequestDto
+        {
+            Title = title,
+            Questions = questions
+        };
+    }
+    
+    public static QuizQuestionRequestDto CreateSingleChoiceQuestion(string content, List<(string Text, bool IsCorrect)> options)
+    {
+        return new QuizQuestionRequestDto
+        {
+            Type = QuizQuestionType.SingleChoice,
+            Content = content,
+            Options = options.Select(o => new QuizAnswerOptionRequestDto
+            {
+                Text = o.Text,
+                IsCorrect = o.IsCorrect
+            }).ToList()
+        };
+    }
+    
+    public static QuizQuestionRequestDto CreateTrueFalseQuestion(string content, bool correctAnswer)
+    {
+        return new QuizQuestionRequestDto
+        {
+            Type = QuizQuestionType.TrueFalse,
+            Content = content,
+            CorrectTrueFalse = correctAnswer
+        };
+    }
+    
+    public static QuizQuestion CreateSingleChoiceQuestion(
+        string id,
+        string quizId,
+        string content,
+        List<(string Text, bool IsCorrect)> options)
+    {
+        var question = new QuizQuestion
+        {
+            Id = id,
+            QuizId = quizId,
+            Content = content,
+            Type = QuizQuestionType.SingleChoice,
+            Options = new List<QuizAnswerOption>()
+        };
+
+        foreach (var (text, isCorrect) in options)
+        {
+            question.Options.Add(new QuizAnswerOption
+            {
+                Id = Guid.NewGuid().ToString(),
+                QuestionId = id,
+                Text = text,
+                IsCorrect = isCorrect
+            });
+        }
+
+        return question;
+    }
+
+    public static QuizQuestion CreateTrueFalseQuestion(
+        string id,
+        string quizId,
+        string content,
+        bool correctAnswer)
+    {
+        return new QuizQuestion
+        {
+            Id = id,
+            QuizId = quizId,
+            Content = content,
+            Type = QuizQuestionType.TrueFalse,
+            CorrectTrueFalse = correctAnswer,
+            Options = new List<QuizAnswerOption>()
+        };
+    }
+
+    public static QuizAttemptRequestDto CreateQuizAttemptRequestDto(List<QuizAttemptAnswerRequestDto> answers)
+    {
+        return new QuizAttemptRequestDto
+        {
+            Answers = answers
+        };
+    }
+
+    public static QuizAttemptAnswerRequestDto CreateQuizAttemptAnswerRequestDto(
+        string questionId, string? selectedOptionId = null, bool? selectedTrueFalse = null)
+    {
+        return new QuizAttemptAnswerRequestDto
+        {
+            QuestionId = questionId,
+            SelectedOptionId = selectedOptionId,
+            SelectedTrueFalse = selectedTrueFalse
+        };
+    }
+    
+    public static QuizAttempt CreateQuizAttempt(string id, string quizId, string userId, int score, DateTime completedAt)
+    {
+        return new QuizAttempt
+        {
+            Id = id,
+            QuizId = quizId,
+            UserId = userId,
+            Score = score,
+            CompletedAt = completedAt,
+            Answers = new List<QuizAttemptAnswer>()
         };
     }
     

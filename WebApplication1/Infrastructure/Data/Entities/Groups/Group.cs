@@ -3,6 +3,7 @@ using WebApplication1.Infrastructure.Data.Entities.Comments;
 using WebApplication1.Infrastructure.Data.Entities.Events;
 using WebApplication1.Infrastructure.Data.Entities.Settlements;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
+using WebApplication1.Infrastructure.Data.Entities.Quizzes;
 using WebApplication1.Infrastructure.Data.Entities.Storage;
 
 namespace WebApplication1.Infrastructure.Data.Entities.Groups;
@@ -27,4 +28,5 @@ public class Group
     public ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
     public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
     public ICollection<FileCategory> FileCategories { get; set; } = new List<FileCategory>();
+    public ICollection<Quiz> Quizzes { get; set; } = new List<Quiz>();
 }
