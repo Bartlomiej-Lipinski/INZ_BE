@@ -15,13 +15,14 @@ public class PostFileTest : TestBase
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
         var mockStorageService = new Mock<IStorageService>();
+        
+        var request = TestDataFactory.CreateUploadFileRequestDto(null, null);
 
         var result = await PostFile.Handle(
             "g1",
             "Recommendation",
             "entity-123",
-            null,
-            null,
+            request,
             dbContext,
             mockStorageService.Object,
             CreateClaimsPrincipal("user1"),
@@ -47,13 +48,14 @@ public class PostFileTest : TestBase
         mockStorageService
             .Setup(x => x.SaveFileAsync(It.IsAny<Stream>(), file.FileName, file.ContentType, CancellationToken.None))
             .ReturnsAsync(expectedUrl);
+        
+        var request = TestDataFactory.CreateUploadFileRequestDto(file, null);
 
         var result = await PostFile.Handle(
             "g1",
             "Recommendation",
             "entity-123",
-            file,
-            null,
+            request,
             dbContext,
             mockStorageService.Object,
             CreateClaimsPrincipal("user1"),

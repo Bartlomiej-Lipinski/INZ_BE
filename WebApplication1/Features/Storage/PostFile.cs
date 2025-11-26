@@ -32,8 +32,7 @@ public class PostFile : IEndpoint
         [FromRoute] string groupId,
         [FromRoute] string entityType,
         [FromRoute] string entityId,
-        [FromForm] IFormFile file,
-        [FromForm] string? categoryId,
+        [FromForm] UploadFileRequestDto request,
         AppDbContext dbContext,
         IStorageService storage,
         ClaimsPrincipal currentUser,
@@ -51,23 +50,23 @@ public class PostFile : IEndpoint
             return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type.", traceId));
         }
 
-        if (file == null || file.Length == 0)
+        if (request.File == null || request.File.Length == 0)
             return Results.BadRequest(ApiResponse<string>.Fail("No file uploaded.", traceId));
 
         FileCategory? category = null;
-        if (!string.IsNullOrWhiteSpace(categoryId))
+        if (!string.IsNullOrWhiteSpace(request.CategoryId))
         {
             category = await dbContext.FileCategories
-                .FirstOrDefaultAsync(c => c.Id == categoryId && c.GroupId == groupId, cancellationToken);
+                .FirstOrDefaultAsync(c => c.Id == request.CategoryId && c.GroupId == groupId, cancellationToken);
 
             if (category == null)
                 return Results.BadRequest(ApiResponse<string>.Fail("Category does not exist in this group.", traceId));
         }
         
         string url;
-        await using (var stream = file.OpenReadStream())
+        await using (var stream = request.File.OpenReadStream())
         {
-            url = await storage.SaveFileAsync(stream, file.FileName, file.ContentType, cancellationToken);
+            url = await storage.SaveFileAsync(stream, request.File.FileName, request.File.ContentType, cancellationToken);
         }
 
         var record = new StoredFile
@@ -78,9 +77,9 @@ public class PostFile : IEndpoint
             EntityType = parsedEntityType,
             EntityId = entityId,
             CategoryId = category?.Id,
-            FileName = file.FileName,
-            ContentType = file.ContentType,
-            Size = file.Length,
+            FileName = request.File.FileName,
+            ContentType = request.File.ContentType,
+            Size = request.File.Length,
             Url = url,
             UploadedAt = DateTime.UtcNow
         };

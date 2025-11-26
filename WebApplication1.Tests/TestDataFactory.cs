@@ -8,6 +8,7 @@ using WebApplication1.Features.Polls.Dtos;
 using WebApplication1.Features.Quizzes.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Features.Settlements.Dtos;
+using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Features.Timeline.Dtos;
 using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Challenges;
@@ -672,6 +673,15 @@ public static class TestDataFactory
             Score = score,
             CompletedAt = completedAt,
             Answers = new List<QuizAttemptAnswer>()
+        };
+    }
+
+    public static UploadFileRequestDto CreateUploadFileRequestDto(IFormFile file, string? categoryId)
+    {
+        return new UploadFileRequestDto
+        {
+            File = file,
+            CategoryId = categoryId
         };
     }
     
