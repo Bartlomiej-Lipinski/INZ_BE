@@ -18,8 +18,8 @@ public class StoredFile
     public long Size { get; set; }
     public string Url { get; set; } = null!;
     public DateTime UploadedAt { get; set; }
-
-    public Group? Group { get; set; } = null!;
+    
+    public Group? Group { get; set; }
     public User UploadedBy { get; set; } = null!;
     public FileCategory? FileCategory { get; set; }
 }
