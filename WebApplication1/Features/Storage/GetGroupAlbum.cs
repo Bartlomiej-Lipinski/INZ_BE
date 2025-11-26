@@ -41,6 +41,7 @@ public class GetGroupAlbum : IEndpoint
         var album = await dbContext.StoredFiles
             .AsNoTracking()
             .Where(f => f.GroupId == groupId && f.EntityType == EntityType.AlbumMedia)
+            .OrderByDescending(f => f.UploadedAt)
             .Select(f => new StoredFileResponseDto
             {
                 Id = f.Id,
@@ -60,7 +61,7 @@ public class GetGroupAlbum : IEndpoint
                 .Ok(album, "No album found for this group.", traceId));
         }
         
-        logger.LogInformation("User {UserId} retrieved {Count} album for group {GroupId}. TraceId: {TraceId}",
+        logger.LogInformation("User {UserId} retrieved {Count} album items for group {GroupId}. TraceId: {TraceId}",
             userId, album.Count, groupId, traceId);
         return Results.Ok(ApiResponse<List<StoredFileResponseDto>>.Ok(album, "Group album retrieved successfully.",
             traceId));
