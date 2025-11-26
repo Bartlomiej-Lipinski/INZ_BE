@@ -79,6 +79,9 @@ public class UpdateQuizTest : TestBase
 
         var request = TestDataFactory.CreateQuizRequestDto("New Quiz", []);
 
+        var httpContext = CreateHttpContext(user.Id);
+        httpContext.Items["GroupUser"] = groupUser;
+        
         var result = await UpdateQuiz.Handle(
             group.Id,
             "nonexistent",

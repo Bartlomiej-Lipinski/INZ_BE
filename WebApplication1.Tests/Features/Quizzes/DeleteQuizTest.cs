@@ -23,6 +23,9 @@ public class DeleteQuizTest : TestBase
         dbContext.Quizzes.Add(quiz);
         await dbContext.SaveChangesAsync();
         
+        var httpContext = CreateHttpContext(user.Id);
+        httpContext.Items["GroupUser"] = groupUser;
+        
         var result = await DeleteQuiz.Handle(
             group.Id,
             quiz.Id,
