@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Polls.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Polls;
 using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
@@ -41,6 +42,8 @@ public class PostPoll : IEndpoint
         
         if (string.IsNullOrWhiteSpace(request.Question))
             return Results.BadRequest(ApiResponse<string>.Fail("Question is required.", traceId));
+        
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var poll = new Poll
         {
@@ -59,8 +62,23 @@ public class PostPoll : IEndpoint
             Text = o.Text
         }).ToList();
         
+        var feedItem = new GroupFeedItem
+        {
+            Id = Guid.NewGuid().ToString(),
+            GroupId = groupId,
+            UserId = userId!,
+            Type = FeedItemType.Poll,
+            EntityId = poll.Id,
+            StoredFileId = null,
+            Title = request.Question,
+            Description = null,
+            CreatedAt = DateTime.UtcNow
+        };
+        
         dbContext.Polls.Add(poll);
+        dbContext.GroupFeedItems.Add(feedItem);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         
         logger.LogInformation("User {UserId} added new poll {PollId} in group {GroupId}. TraceId: {TraceId}",
             userId, poll.Id, groupId, traceId);

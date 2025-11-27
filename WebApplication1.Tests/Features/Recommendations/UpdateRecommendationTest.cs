@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using WebApplication1.Features.Recommendations;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
@@ -20,11 +22,13 @@ public class UpdateRecommendationTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
         
+        var mockStorageService = new Mock<IStorageService>();
         var result = await UpdateRecommendation.Handle(
             group.Id,
             "nonexistent",
             TestDataFactory.CreateRecommendationRequestDto("Title", "Content"),
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
             NullLogger<UpdateRecommendation>.Instance,
@@ -54,11 +58,13 @@ public class UpdateRecommendationTest : TestBase
 
         await dbContext.SaveChangesAsync();
         
+        var mockStorageService = new Mock<IStorageService>();
         var result = await UpdateRecommendation.Handle(
             group.Id,
             "rec1",
             TestDataFactory.CreateRecommendationRequestDto("Hacked!", "Evil update"),
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal(otherUser.Id),
             CreateHttpContext(otherUser.Id),
             NullLogger<UpdateRecommendation>.Instance,
@@ -86,6 +92,7 @@ public class UpdateRecommendationTest : TestBase
 
         await dbContext.SaveChangesAsync();
         
+        var mockStorageService = new Mock<IStorageService>();
         var result = await UpdateRecommendation.Handle(
             group.Id,
             "rec1",
@@ -97,6 +104,7 @@ public class UpdateRecommendationTest : TestBase
                 "https://example.com"
             ),
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
             NullLogger<UpdateRecommendation>.Instance,

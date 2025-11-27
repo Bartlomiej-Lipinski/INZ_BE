@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using WebApplication1.Features.Recommendations;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Recommendations;
@@ -26,10 +28,12 @@ public class PostRecommendationTest : TestBase
             "You should read 'Clean Code'.", 
             "Books");
         
+        var mockStorageService = new Mock<IStorageService>();
         var result = await PostRecommendation.Handle(
             group.Id,
             dto,
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
             NullLogger<PostRecommendation>.Instance,
@@ -55,10 +59,12 @@ public class PostRecommendationTest : TestBase
         
         var dto = TestDataFactory.CreateRecommendationRequestDto("", "");
 
+        var mockStorageService = new Mock<IStorageService>();
         var result = await PostRecommendation.Handle(
             "g1",
             dto,
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal("u1"),
             CreateHttpContext("u1"),
             NullLogger<PostRecommendation>.Instance,

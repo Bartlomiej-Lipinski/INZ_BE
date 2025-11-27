@@ -3,8 +3,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Events;
+using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Enums;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -21,13 +24,15 @@ public class PostEvent : IEndpoint
             .WithDescription("Creates a new event for a group")
             .WithTags("Events")
             .RequireAuthorization()
+            .Accepts<EventRequestDto>("multipart/form-data")
             .AddEndpointFilter<GroupMembershipFilter>();
     }
     
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
-        [FromBody] EventRequestDto request,
+        [FromForm] EventRequestDto request,
         AppDbContext dbContext,
+        IStorageService storage,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<PostEvent> logger,
@@ -78,6 +83,8 @@ public class PostEvent : IEndpoint
                 userId, groupId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.", traceId));
         }
+        
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var newEvent = new Event
         {
@@ -96,10 +103,58 @@ public class PostEvent : IEndpoint
             EndDate = request.EndDate,
             CreatedAt = DateTime.UtcNow
         };
+        
+        string? storedFileId = null;
+        if (request.File != null)
+        {
+            string url;
+            await using (var stream = request.File.OpenReadStream())
+            {
+                url = await storage.SaveFileAsync(
+                    stream,
+                    request.File.FileName,
+                    request.File.ContentType,
+                    cancellationToken);
+            }
+
+            storedFileId = Guid.NewGuid().ToString();
+
+            var storedFile = new StoredFile
+            {
+                Id = storedFileId,
+                GroupId = groupId,
+                UploadedById = userId!,
+                EntityType = EntityType.Event,
+                EntityId = newEvent.Id,
+                FileName = request.File.FileName,
+                ContentType = request.File.ContentType,
+                Size = request.File.Length,
+                Url = url,
+                UploadedAt = DateTime.UtcNow
+            };
+
+            dbContext.StoredFiles.Add(storedFile);
+        }
 
         dbContext.Events.Add(newEvent);
+        
+        var feedItem = new GroupFeedItem
+        {
+            Id = Guid.NewGuid().ToString(),
+            GroupId = groupId,
+            UserId = userId!,
+            Type = FeedItemType.Event,
+            EntityId = newEvent.Id,
+            StoredFileId = storedFileId,
+            Title = request.Title,
+            Description = request.Description,
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        dbContext.GroupFeedItems.Add(feedItem);
         await dbContext.SaveChangesAsync(cancellationToken);
-
+        await transaction.CommitAsync(cancellationToken);
+        
         logger.LogInformation("User {UserId} created event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, newEvent.Id, groupId, traceId);
 

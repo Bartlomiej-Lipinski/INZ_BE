@@ -40,6 +40,8 @@ public class UpdatePoll : IEndpoint
         
         logger.LogInformation("User {UserId} attempting to update poll {PollId} in group {GroupId}. TraceId: {TraceId}",
             userId, pollId, groupId, traceId);
+        
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var existingPoll = await dbContext.Polls
             .Include(p => p.Options).ThenInclude(pollOption => pollOption.VotedUsers)
@@ -89,12 +91,21 @@ public class UpdatePoll : IEndpoint
                 dbContext.PollOptions.Remove(toRemove);
             }
         }
+        
+        var feedItem = await dbContext.GroupFeedItems
+            .SingleOrDefaultAsync(f => f.EntityId == pollId && f.GroupId == groupId, cancellationToken);
+        if (feedItem != null)
+        {
+            feedItem.Title = existingPoll.Question;
+        }
+        
         await dbContext.SaveChangesAsync(cancellationToken);
         await dbContext.Entry(existingPoll)
             .Collection(p => p.Options)
             .Query()
             .Include(o => o.VotedUsers)
             .LoadAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         var response = new PollResponseDto
         {

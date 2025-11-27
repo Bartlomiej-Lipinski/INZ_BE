@@ -9,12 +9,12 @@ public class GroupFeedItem
     public string GroupId { get; set; } = null!;
     
     public FeedItemType Type { get; set; }
-    public string? Text { get; set; } 
+    public string? Title { get; set; }
+    public string? Description { get; set; } 
     public string? StoredFileId { get; set; }
+    public string? EntityId { get; set; } 
     
-    public string? EntityId { get; set; }
     public string UserId { get; set; } = null!;
-
     public DateTime CreatedAt { get; set; }
     
     public Group Group { get; set; } = null!;
@@ -28,8 +28,5 @@ public enum FeedItemType
     Event,
     Challenge,
     Poll,
-    Expense,
-    Quiz,
-    Recommendation,
-    Other
+    Recommendation
 }
