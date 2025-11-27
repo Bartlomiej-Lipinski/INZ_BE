@@ -2,6 +2,7 @@
 
 public enum EntityType
 {
+    AlbumMedia,
     Challenge,
     Comment,
     Event,
