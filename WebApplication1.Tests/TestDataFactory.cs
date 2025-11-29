@@ -685,6 +685,17 @@ public static class TestDataFactory
         };
     }
 
+    public static GroupFeedItem CreateGroupFeedItem(string id, string groupId, string title, string userId)
+    {
+        return new GroupFeedItem
+        {
+            Id = id,
+            GroupId = groupId,
+            Title = title,
+            UserId = userId
+        };
+    }
+
     public static GroupFeedItemRequestDto CreateGroupFeedItemRequestDto(string description, IFormFile? file)
     {
         return new GroupFeedItemRequestDto

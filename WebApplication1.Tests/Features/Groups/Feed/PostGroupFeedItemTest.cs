@@ -71,15 +71,8 @@ public class PostGroupFeedItemTest : TestBase
         var file = TestDataFactory.CreateFormFile("test.jpg", "abc"u8.ToArray());
 
         var request = TestDataFactory.CreateGroupFeedItemRequestDto("With file", file);
-        const string expectedUrl = "/uploads/test.jpg";
-        mockStorage
-            .Setup(x => x.SaveFileAsync(
-                It.IsAny<Stream>(), 
-                It.IsAny<string>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(expectedUrl);
+        mockStorage.Setup(s => s.SaveFileAsync(It.IsAny<Stream>(), file.FileName, file.ContentType, CancellationToken.None))
+            .ReturnsAsync("/uploads/test.jpg");
         
         var result = await PostGroupFeedItem.Handle(
             "group1",
