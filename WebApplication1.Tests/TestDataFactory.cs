@@ -684,6 +684,15 @@ public static class TestDataFactory
             CategoryId = categoryId
         };
     }
+
+    public static GroupFeedItemRequestDto CreateGroupFeedItemRequestDto(string description, IFormFile? file)
+    {
+        return new GroupFeedItemRequestDto
+        {
+            Description = description,
+            File = file
+        };
+    }
     
     private static string GenerateUniqueCode()
     {
