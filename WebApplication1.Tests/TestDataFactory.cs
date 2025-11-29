@@ -685,14 +685,16 @@ public static class TestDataFactory
         };
     }
 
-    public static GroupFeedItem CreateGroupFeedItem(string id, string groupId, string title, string userId)
+    public static GroupFeedItem CreateGroupFeedItem(
+        string id, string groupId, string title, string userId, DateTime? createdAt = null)
     {
         return new GroupFeedItem
         {
             Id = id,
             GroupId = groupId,
             Title = title,
-            UserId = userId
+            UserId = userId,
+            CreatedAt = createdAt ?? DateTime.UtcNow
         };
     }
 
