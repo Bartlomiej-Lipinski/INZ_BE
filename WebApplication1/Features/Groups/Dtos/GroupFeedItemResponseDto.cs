@@ -1,4 +1,5 @@
-﻿using WebApplication1.Infrastructure.Data.Entities;
+﻿using WebApplication1.Features.Comments.Dtos;
+using WebApplication1.Infrastructure.Data.Entities;
 
 namespace WebApplication1.Features.Groups.Dtos;
 
@@ -12,4 +13,6 @@ public record GroupFeedItemResponseDto
     public string UserId { get; set; } = null!;
     public string? StoredFileId { get; set; }
     public string? EntityId { get; set; } 
+    public List<CommentResponseDto> Comments { get; set; } = [];
+    public List<ReactionDto> Reactions { get; set; } = [];
 }

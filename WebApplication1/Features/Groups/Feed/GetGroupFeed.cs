@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Groups.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
@@ -50,7 +51,40 @@ public class GetGroupFeed : IEndpoint
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
+        
+        var feedItemsIds = feedItems.Select(r => r.Id).ToList();
+        
+        var comments = await dbContext.Comments
+            .AsNoTracking()
+            .Where(c => feedItemsIds.Contains(c.TargetId))
+            .Select(c => new
+            {
+                c.Id,
+                c.TargetId,
+                c.UserId,
+                c.Content,
+                c.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
 
+        var reactions = await dbContext.Reactions
+            .AsNoTracking()
+            .Where(r => feedItemsIds.Contains(r.TargetId))
+            .Select(r => new
+            {
+                r.TargetId,
+                r.UserId,
+            })
+            .ToListAsync(cancellationToken);
+        
+        var commentsByFeedItem = comments
+            .GroupBy(c => c.TargetId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var reactionsByFeedItem = reactions
+            .GroupBy(r => r.TargetId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+        
         var feedDtos = feedItems.Select(f => new GroupFeedItemResponseDto
         {
             Id = f.Id,
@@ -60,7 +94,22 @@ public class GetGroupFeed : IEndpoint
             CreatedAt = f.CreatedAt.ToLocalTime(),
             UserId = f.UserId,
             StoredFileId = f.StoredFileId,
-            EntityId = f.EntityId
+            EntityId = f.EntityId,
+            Comments = commentsByFeedItem.TryGetValue(f.Id, out var itemComments)
+                ? itemComments.Select(c => new CommentResponseDto
+                {
+                    Id = c.Id,
+                    UserId = c.UserId,
+                    Content = c.Content,
+                    CreatedAt = c.CreatedAt.ToLocalTime()
+                }).ToList()
+                : [],
+            Reactions = reactionsByFeedItem.TryGetValue(f.Id, out var itemReactions)
+                ? itemReactions.Select(re => new ReactionDto
+                {
+                    UserId = re.UserId,
+                }).ToList()
+                : []
         }).ToList();
 
         var response = new PagedApiResponse<GroupFeedItemResponseDto>
