@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Recommendations.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities;
+using WebApplication1.Infrastructure.Data.Entities.Storage;
 using WebApplication1.Infrastructure.Data.Enums;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -21,13 +23,15 @@ public class PostRecommendation : IEndpoint
             .WithDescription("Creates a new recommendation within a group by a member")
             .WithTags("Recommendations")
             .RequireAuthorization()
+            .Accepts<RecommendationRequestDto>("multipart/form-data")
             .AddEndpointFilter<GroupMembershipFilter>();
     }
 
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
-        [FromBody] RecommendationRequestDto request,
+        [FromForm] RecommendationRequestDto request,
         AppDbContext dbContext,
+        IStorageService storage,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<PostRecommendation> logger,
@@ -46,6 +50,8 @@ public class PostRecommendation : IEndpoint
                 userId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("GroupId, Title and Content are required.", traceId));
         }
+        
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var recommendation = new Recommendation
         {
@@ -60,9 +66,57 @@ public class PostRecommendation : IEndpoint
             LinkUrl = request.LinkUrl,
             CreatedAt = DateTime.UtcNow
         };
+        
+        string? storedFileId = null;
+        if (request.File != null)
+        {
+            string url;
+            await using (var stream = request.File.OpenReadStream())
+            {
+                url = await storage.SaveFileAsync(
+                    stream,
+                    request.File.FileName,
+                    request.File.ContentType,
+                    cancellationToken);
+            }
+
+            storedFileId = Guid.NewGuid().ToString();
+
+            var storedFile = new StoredFile
+            {
+                Id = storedFileId,
+                GroupId = groupId,
+                UploadedById = userId!,
+                EntityType = EntityType.Recommendation,
+                EntityId = recommendation.Id,
+                FileName = request.File.FileName,
+                ContentType = request.File.ContentType,
+                Size = request.File.Length,
+                Url = url,
+                UploadedAt = DateTime.UtcNow
+            };
+
+            dbContext.StoredFiles.Add(storedFile);
+        }
 
         dbContext.Recommendations.Add(recommendation);
+        
+        var feedItem = new GroupFeedItem
+        {
+            Id = Guid.NewGuid().ToString(),
+            GroupId = groupId,
+            UserId = userId!,
+            Type = FeedItemType.Recommendation,
+            EntityId = recommendation.Id,
+            StoredFileId = storedFileId,
+            Title = request.Title,
+            Description = request.Content,
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        dbContext.GroupFeedItems.Add(feedItem);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         logger.LogInformation(
             "User {UserId} added new recommendation {RecommendationId} in group {GroupId}. TraceId: {TraceId}",

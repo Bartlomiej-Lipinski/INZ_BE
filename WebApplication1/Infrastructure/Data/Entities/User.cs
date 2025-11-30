@@ -53,4 +53,5 @@ public class User : IdentityUser
     public ICollection<StoredFile> StoredFiles { get; set; } = new List<StoredFile>();
     public ICollection<Quiz> Quizzes { get; set; } = new List<Quiz>();
     public ICollection<QuizAttempt> QuizAttempts { get; set; } = new List<QuizAttempt>();
+    public ICollection<GroupFeedItem> GroupFeedItems { get; set; } = new List<GroupFeedItem>();
 }

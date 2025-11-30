@@ -1,8 +1,10 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using WebApplication1.Features.Events;
 using WebApplication1.Features.Events.Dtos;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Events;
@@ -27,11 +29,13 @@ public class PostEventTest : TestBase
             DateTime.UtcNow.AddDays(1).AddHours(2),
             "Event description", 
             "Online");
-
+        
+        var mockStorageService = new Mock<IStorageService>();
         var result = await PostEvent.Handle(
             group.Id,
             request,
             dbContext, 
+            mockStorageService.Object,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
             NullLogger<PostEvent>.Instance, 
@@ -64,11 +68,13 @@ public class PostEventTest : TestBase
         await dbContext.SaveChangesAsync();
 
         var request = TestDataFactory.CreateEventRequestDto("", DateTime.UtcNow.AddDays(1));
-
+        
+        var mockStorageService = new Mock<IStorageService>();
         var result = await PostEvent.Handle(
             group.Id, 
             request,
             dbContext, 
+            mockStorageService.Object,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
             NullLogger<PostEvent>.Instance,

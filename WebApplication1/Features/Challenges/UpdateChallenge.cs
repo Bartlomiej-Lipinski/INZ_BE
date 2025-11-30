@@ -38,6 +38,8 @@ public class UpdateChallenge : IEndpoint
         
         logger.LogInformation("Attempting to update challenge in group {GroupId} by user {UserId}. TraceId: {TraceId}",
             groupId, userId, traceId);
+        
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var existingChallenge = await dbContext.Challenges
             .SingleOrDefaultAsync(c => c.Id == challengeId && c.GroupId == groupId, cancellationToken);
@@ -79,7 +81,17 @@ public class UpdateChallenge : IEndpoint
         existingChallenge.GoalUnit = request.GoalUnit;
         existingChallenge.GoalValue = request.GoalValue;
         existingChallenge.IsCompleted = request.IsCompleted ?? false;
+        
+        var feedItem = await dbContext.GroupFeedItems
+            .SingleOrDefaultAsync(f => f.EntityId == challengeId && f.GroupId == groupId, cancellationToken);
+        if (feedItem != null)
+        {
+            feedItem.Title = existingChallenge.Name;
+            feedItem.Description = existingChallenge.Description;
+        }
+        
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} updated challenge {ChallengeId} in group {GroupId}. TraceId: {TraceId}",
             userId, challengeId, groupId, traceId);

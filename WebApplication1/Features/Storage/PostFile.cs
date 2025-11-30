@@ -49,7 +49,7 @@ public class PostFile : IEndpoint
                 entityType, userId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type.", traceId));
         }
-
+ 
         if (request.File == null || request.File.Length == 0)
             return Results.BadRequest(ApiResponse<string>.Fail("No file uploaded.", traceId));
 

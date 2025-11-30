@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebApplication1.Features.Challenges.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities;
 using WebApplication1.Infrastructure.Data.Entities.Challenges;
 using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
@@ -54,6 +55,8 @@ public class PostChallenge : IEndpoint
             return Results.BadRequest(ApiResponse<string>
                 .Fail("Range end cannot be earlier than range start.", traceId));
         }
+        
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
             
         var challenge = new Challenge
         {
@@ -71,8 +74,23 @@ public class PostChallenge : IEndpoint
             CreatedAt = DateTime.UtcNow
         };
         
+        var feedItem = new GroupFeedItem
+        {
+            Id = Guid.NewGuid().ToString(),
+            GroupId = groupId,
+            UserId = userId!,
+            Type = FeedItemType.Challenge,
+            EntityId = challenge.Id,
+            StoredFileId = null,
+            Title = request.Name,
+            Description = request.Description,
+            CreatedAt = DateTime.UtcNow
+        };
+        
+        dbContext.GroupFeedItems.Add(feedItem);
         dbContext.Challenges.Add(challenge);
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         
         logger.LogInformation("User {UserId} created challenge {ChallengeId} in group {GroupId}. TraceId: {TraceId}",
             userId, challenge.Id, groupId, traceId);
