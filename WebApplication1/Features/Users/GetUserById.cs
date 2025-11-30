@@ -60,6 +60,7 @@ public class GetUserById : IEndpoint
                     .Where(f => f.EntityType == EntityType.User)
                     .Select(f => new ProfilePictureResponseDto
                     {
+                        Id = f.Id,
                         FileName = f.FileName,
                         ContentType = f.ContentType,
                         Size = f.Size,

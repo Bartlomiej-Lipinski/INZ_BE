@@ -123,6 +123,7 @@ public class AuthController(
                 Surname = request.Surname,
                 Email = request.Email,
                 BirthDate = request.BirthDate,
+                TwoFactorEnabled = false
             };
 
             var result = await userManager.CreateAsync(user, request.Password);

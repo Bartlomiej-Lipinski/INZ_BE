@@ -5,7 +5,6 @@ using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
-using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Storage;
 
@@ -17,8 +16,7 @@ public class GetFileById : IEndpoint
             .WithName("GetFileById")
             .WithDescription("Download file by id")
             .WithTags("Storage")
-            .RequireAuthorization()
-            .AddEndpointFilter<GroupMembershipFilter>();
+            .RequireAuthorization();
     }
 
     public static async Task<IResult> Handle(
