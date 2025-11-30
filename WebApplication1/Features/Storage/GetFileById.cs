@@ -1,0 +1,62 @@
+﻿using System.Diagnostics;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Service;
+using WebApplication1.Shared.Endpoints;
+using WebApplication1.Shared.Extensions;
+using WebApplication1.Shared.Validators;
+
+namespace WebApplication1.Features.Storage;
+
+public class GetFileById : IEndpoint
+{
+    public void RegisterEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/files/{id}", Handle)
+            .WithName("GetFile")
+            .WithDescription("Download file by id")
+            .WithTags("Storage")
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
+    }
+
+    public static async Task<IResult> Handle(
+        [FromRoute] string id,
+        AppDbContext dbContext,
+        IStorageService storage,
+        ClaimsPrincipal currentUser,
+        HttpContext httpContext,
+        ILogger<GetFile> logger,
+        CancellationToken cancellationToken)
+    {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+        var record = await dbContext.StoredFiles.FindAsync([id], cancellationToken);
+        if (record == null)
+        {
+            logger.LogInformation("File {Id} not found. TraceId: {TraceId}", id, traceId);
+            return Results.NotFound();
+        }
+
+        var stream = await storage.OpenReadAsync(record.Url, cancellationToken);
+        if (stream == null)
+        {
+            logger.LogInformation("Physical file for {Id} not found. TraceId: {TraceId}", id, traceId);
+            return Results.NotFound();
+        }
+
+        if (currentUser.GetUserId() != record.UploadedById)
+        {
+            logger.LogError("User attempted to access file {Id} without permission. TraceId: {TraceId}", id, traceId);
+            return Results.Forbid();
+        }
+
+        logger.LogInformation("Serving file {Id} to request. TraceId: {TraceId}", id, traceId);
+
+        var contentType = string.IsNullOrWhiteSpace(record.ContentType)
+            ? "application/octet-stream"
+            : record.ContentType;
+        return Results.File(stream, contentType, record.FileName, enableRangeProcessing: true);
+    }
+}
