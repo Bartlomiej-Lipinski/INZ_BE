@@ -14,7 +14,7 @@ public class GetFileById : IEndpoint
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("/files/{id}", Handle)
-            .WithName("GetFile")
+            .WithName("GetFileById")
             .WithDescription("Download file by id")
             .WithTags("Storage")
             .RequireAuthorization()

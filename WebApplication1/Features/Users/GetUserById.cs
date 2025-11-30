@@ -1,8 +1,7 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
-using WebApplication1.Features.Storage;
 using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
@@ -34,7 +33,7 @@ public class GetUserById : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var currentUserId = currentUser.GetUserId();
-        
+
         if (currentUserId != id)
         {
             logger.LogWarning("Unauthorized access attempt to user ID: {UserId}. TraceId: {TraceId}", id, traceId);
@@ -56,6 +55,7 @@ public class GetUserById : IEndpoint
                 BirthDate = u.BirthDate,
                 Status = u.Status,
                 Description = u.Description,
+                IsTwoFactorEnabled = u.TwoFactorEnabled,
                 ProfilePicture = u.StoredFiles
                     .Where(f => f.EntityType == EntityType.User)
                     .Select(f => new ProfilePictureResponseDto
