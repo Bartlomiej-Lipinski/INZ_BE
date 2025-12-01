@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
     public DbSet<QuizAnswerOption> QuizAnswerOptions { get; set; } = null!;
     public DbSet<QuizAttempt> QuizAttempts { get; set; } = null!;
     public DbSet<QuizAttemptAnswer> QuizAttemptAnswers { get; set; } = null!;
+    public DbSet<GroupFeedItem> GroupFeedItems { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -679,6 +680,33 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbCo
                 .OnDelete(DeleteBehavior.Restrict);
             
             entity.HasIndex(a => a.AttemptId);
+        });
+        
+        builder.Entity<GroupFeedItem>(entity =>
+        {
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.GroupId).IsRequired();
+            entity.Property(i => i.Type).IsRequired();
+            entity.Property(i => i.CreatedAt).IsRequired();
+            entity.Property(i => i.UserId).IsRequired();
+
+            entity.HasOne(i => i.Group)
+                .WithMany(g => g.GroupFeedItems)
+                .HasForeignKey(i => i.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(i => i.User)
+                .WithMany(u => u.GroupFeedItems)
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(i => i.StoredFile)
+                .WithMany()
+                .HasForeignKey(i => i.StoredFileId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasIndex(i => i.CreatedAt);
+            entity.HasIndex(i => new { i.GroupId, i.CreatedAt });
         });
     }
 }

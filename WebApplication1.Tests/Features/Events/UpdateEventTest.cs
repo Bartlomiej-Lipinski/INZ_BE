@@ -1,8 +1,10 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using WebApplication1.Features.Events;
 using WebApplication1.Features.Events.Dtos;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Events;
@@ -29,11 +31,13 @@ public class UpdateEventTest : TestBase
         var updateDto = TestDataFactory.CreateEventRequestDto(
             "New Title", null, null, "Updated Description");
         
+        var mockStorageService = new Mock<IStorageService>();
         var result = await UpdateEvent.Handle(
             group.Id,
             existingEvent.Id,
             updateDto,
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
             NullLogger<UpdateEvent>.Instance,
@@ -67,11 +71,13 @@ public class UpdateEventTest : TestBase
 
         var updateDto = TestDataFactory.CreateEventRequestDto("New Title");
         
+        var mockStorageService = new Mock<IStorageService>();
         var result = await UpdateEvent.Handle(
             group.Id,
             existingEvent.Id,
             updateDto,
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal(otherUser.Id),
             CreateHttpContext(),
             NullLogger<UpdateEvent>.Instance,
@@ -95,11 +101,13 @@ public class UpdateEventTest : TestBase
 
         var updateDto = TestDataFactory.CreateEventRequestDto("New Title");
         
+        var mockStorageService = new Mock<IStorageService>();
         var result = await UpdateEvent.Handle(
             group.Id,
             "nonexistent-event",
             updateDto,
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
             NullLogger<UpdateEvent>.Instance,
@@ -117,11 +125,13 @@ public class UpdateEventTest : TestBase
 
         var updateDto = TestDataFactory.CreateEventRequestDto("New Title");
         
+        var mockStorageService = new Mock<IStorageService>();
         var result = await UpdateEvent.Handle(
             "nonexistent-group",
             "event-id",
             updateDto,
             dbContext,
+            mockStorageService.Object,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
             NullLogger<UpdateEvent>.Instance,

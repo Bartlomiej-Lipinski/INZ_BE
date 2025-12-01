@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Events.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Entities.Storage;
+using WebApplication1.Infrastructure.Data.Enums;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -20,14 +23,16 @@ public class UpdateEvent : IEndpoint
             .WithDescription("Updates an existing event in a group")
             .WithTags("Events")
             .RequireAuthorization()
+            .Accepts<EventRequestDto>("multipart/form-data")
             .AddEndpointFilter<GroupMembershipFilter>();
     }
     
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string eventId,
-        [FromBody] EventRequestDto request,
+        [FromForm] EventRequestDto request,
         AppDbContext dbContext,
+        IStorageService storage,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<UpdateEvent> logger,
@@ -38,6 +43,8 @@ public class UpdateEvent : IEndpoint
         
         logger.LogInformation("User {UserId} started updating event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, eventId, groupId, traceId);
+        
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var existingEvent = await dbContext.Events
             .SingleOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
@@ -100,7 +107,61 @@ public class UpdateEvent : IEndpoint
         existingEvent.DurationMinutes = request.DurationMinutes;
         existingEvent.StartDate = request.StartDate;
         existingEvent.EndDate = request.EndDate;
+        
+        var feedItem = await dbContext.GroupFeedItems
+            .SingleOrDefaultAsync(f => f.EntityId == eventId && f.GroupId == groupId, cancellationToken);
+        if (feedItem != null)
+        {
+            feedItem.Title = existingEvent.Title;
+            feedItem.Description = existingEvent.Description;
+        }
+
+        if (request.File != null)
+        {
+            if (feedItem?.StoredFileId != null)
+            {
+                var oldFile = await dbContext.StoredFiles
+                    .SingleOrDefaultAsync(f => f.Id == feedItem.StoredFileId, cancellationToken);
+
+                if (oldFile != null)
+                {
+                    await storage.DeleteFileAsync(oldFile.Url, cancellationToken);
+                    dbContext.StoredFiles.Remove(oldFile);
+                }
+            }
+            
+            string url;
+            await using (var stream = request.File.OpenReadStream())
+            {
+                url = await storage.SaveFileAsync(
+                    stream,
+                    request.File.FileName,
+                    request.File.ContentType,
+                    cancellationToken);
+            }
+
+            var storedFileId = Guid.NewGuid().ToString();
+
+            var storedFile = new StoredFile
+            {
+                Id = storedFileId,
+                GroupId = groupId,
+                UploadedById = userId!,
+                EntityType = EntityType.Event,
+                EntityId = eventId,
+                FileName = request.File.FileName,
+                ContentType = request.File.ContentType,
+                Size = request.File.Length,
+                Url = url,
+                UploadedAt = DateTime.UtcNow
+            };
+            
+            feedItem!.StoredFileId = storedFileId;
+            dbContext.StoredFiles.Add(storedFile);
+        }
+        
         await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} updated event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, eventId, groupId, traceId);
