@@ -42,11 +42,14 @@ public class GetGroupFeed : IEndpoint
         var feedItemsQuery = dbContext.GroupFeedItems
             .AsNoTracking()
             .Include(f => f.StoredFile)
-            .Include(f => f.User)
             .Where(f => f.GroupId == groupId)
             .OrderByDescending(f => f.CreatedAt);
 
-        var totalItems = await feedItemsQuery.CountAsync(cancellationToken);
+        var totalItems = await dbContext.GroupFeedItems
+            .AsNoTracking()
+            .Where(f => f.GroupId == groupId)
+            .CountAsync(cancellationToken);
+        
         var feedItems = await feedItemsQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)

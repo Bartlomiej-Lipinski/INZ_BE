@@ -62,7 +62,7 @@ public class UpdateGroupFeedItem : IEndpoint
             return Results.Forbid();
         }
         
-        if (string.IsNullOrWhiteSpace(request.Description) && request.File == null)
+        if (string.IsNullOrWhiteSpace(request.Description) && request.File == null && feedItem.StoredFileId == null)
             return Results.BadRequest(ApiResponse<string>.Fail("Feed item must contain text or a file.", traceId));
         
         if (request.File != null)
@@ -79,6 +79,7 @@ public class UpdateGroupFeedItem : IEndpoint
 
             if (feedItem.StoredFile != null)
             {
+                await storage.DeleteFileAsync(feedItem.StoredFile.Url, cancellationToken);
                 feedItem.StoredFile.FileName = request.File.FileName;
                 feedItem.StoredFile.ContentType = request.File.ContentType;
                 feedItem.StoredFile.Size = request.File.Length;
@@ -112,6 +113,6 @@ public class UpdateGroupFeedItem : IEndpoint
         logger.LogInformation("User {UserId} updated feed item {FeedItemId} in group {GroupId}. TraceId: {TraceId}",
             userId, feedItemId, groupId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok("Feed item updated successfully.", feedItem.Id, traceId));
+        return Results.Ok(ApiResponse<string>.Ok(feedItem.Id, "Feed item updated successfully.", traceId));
     }
 }

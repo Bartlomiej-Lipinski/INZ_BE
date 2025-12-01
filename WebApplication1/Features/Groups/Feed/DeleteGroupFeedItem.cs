@@ -3,6 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -26,6 +27,7 @@ public class DeleteGroupFeedItem : IEndpoint
         [FromRoute] string groupId,
         [FromRoute] string feedItemId,
         AppDbContext dbContext,
+        IStorageService storage,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
         ILogger<DeleteGroupFeedItem> logger,
@@ -57,6 +59,7 @@ public class DeleteGroupFeedItem : IEndpoint
 
         if (feedItem.StoredFile != null)
         {
+            await storage.DeleteFileAsync(feedItem.StoredFile.Url, cancellationToken);
             dbContext.StoredFiles.Remove(feedItem.StoredFile);
         }
 

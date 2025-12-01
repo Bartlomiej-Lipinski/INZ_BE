@@ -96,6 +96,6 @@ public class PostGroupFeedItem : IEndpoint
         logger.LogInformation("User {UserId} added new feed item {ItemId} in group {GroupId}. TraceId: {TraceId}",
             userId, feedItem.Id, groupId, traceId);
 
-        return Results.Ok(ApiResponse<string>.Ok("Feed item created successfully.", feedItem.Id, traceId));
+        return Results.Ok(ApiResponse<string>.Ok(feedItem.Id, "Feed item created successfully.", traceId));
     }
 }

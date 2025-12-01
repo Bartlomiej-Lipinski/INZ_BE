@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using WebApplication1.Features.Groups.Feed;
 using WebApplication1.Infrastructure.Data.Enums;
+using WebApplication1.Infrastructure.Service;
 
 namespace WebApplication1.Tests.Features.Groups.Feed;
 
@@ -11,6 +13,7 @@ public class DeleteGroupFeedItemTest : TestBase
     public async Task Handle_Should_Delete_FeedItem_And_File()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var mockStorage = new Mock<IStorageService>();
         var feedItem = TestDataFactory.CreateGroupFeedItem("1", "g1", "Test feed", "user1");
         var storedFile = TestDataFactory.CreateStoredFile(
             "file1",
@@ -36,6 +39,7 @@ public class DeleteGroupFeedItemTest : TestBase
             feedItem.GroupId,
             feedItem.Id,
             dbContext,
+            mockStorage.Object,
             CreateClaimsPrincipal("user1"),
             CreateHttpContext("user1"),
             NullLogger<DeleteGroupFeedItem>.Instance,
@@ -54,11 +58,13 @@ public class DeleteGroupFeedItemTest : TestBase
     public async Task Handle_Should_Return_NotFound_If_FeedItem_DoesNotExist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var mockStorage = new Mock<IStorageService>();
 
         var result = await DeleteGroupFeedItem.Handle(
             "g1",
             "nonexistent",
             dbContext,
+            mockStorage.Object,
             CreateClaimsPrincipal("user1"),
             CreateHttpContext("user1"),
             NullLogger<DeleteGroupFeedItem>.Instance,
@@ -71,6 +77,7 @@ public class DeleteGroupFeedItemTest : TestBase
     public async Task Handle_Should_Return_Forbidden_If_User_Is_Not_Owner()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var mockStorage = new Mock<IStorageService>();
         var feedItem = TestDataFactory.CreateGroupFeedItem("1", "g1", "Test feed", "user1");
         dbContext.GroupFeedItems.Add(feedItem);
         await dbContext.SaveChangesAsync();
@@ -79,6 +86,7 @@ public class DeleteGroupFeedItemTest : TestBase
             feedItem.GroupId,
             feedItem.Id,
             dbContext,
+            mockStorage.Object,
             CreateClaimsPrincipal("user2"),
             CreateHttpContext("user2"),
             NullLogger<DeleteGroupFeedItem>.Instance,

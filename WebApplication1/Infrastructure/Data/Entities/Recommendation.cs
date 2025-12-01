@@ -1,5 +1,4 @@
-﻿using WebApplication1.Infrastructure.Data.Entities.Comments;
-using WebApplication1.Infrastructure.Data.Entities.Groups;
+﻿using WebApplication1.Infrastructure.Data.Entities.Groups;
 using WebApplication1.Infrastructure.Data.Enums;
 
 namespace WebApplication1.Infrastructure.Data.Entities;

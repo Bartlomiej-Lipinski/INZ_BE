@@ -92,7 +92,10 @@ public class UpdateRecommendation : IEndpoint
                     .SingleOrDefaultAsync(f => f.Id == feedItem.StoredFileId, cancellationToken);
 
                 if (oldFile != null)
+                {
+                    await storage.DeleteFileAsync(oldFile.Url, cancellationToken);
                     dbContext.StoredFiles.Remove(oldFile);
+                }
             }
             
             string url;
