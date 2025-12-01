@@ -40,6 +40,7 @@ public class GetGroupPolls : IEndpoint
             .OrderBy(p => p.CreatedAt)
             .Select(p => new PollResponseDto
             {
+                Id = p.Id,
                 CreatedByUserId = p.CreatedByUserId,
                 Question = p.Question,
                 CreatedAt = p.CreatedAt.ToLocalTime(),
