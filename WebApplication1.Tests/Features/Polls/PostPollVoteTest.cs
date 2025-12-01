@@ -23,11 +23,14 @@ public class PostPollVoteTest : TestBase
         dbContext.Polls.Add(poll);
         dbContext.PollOptions.Add(option);
         await dbContext.SaveChangesAsync();
+        
+        var request = TestDataFactory.CreatePollVoteRequestDto(option.Id);
+
 
         var result = await PostPollVote.Handle(
             group.Id,
             poll.Id,
-            option.Id,
+            request,
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
@@ -62,11 +65,13 @@ public class PostPollVoteTest : TestBase
         dbContext.Polls.Add(poll);
         dbContext.PollOptions.Add(option);
         await dbContext.SaveChangesAsync();
+        
+        var request = TestDataFactory.CreatePollVoteRequestDto(option.Id);
 
         var result = await PostPollVote.Handle(
             group.Id,
             poll.Id,
-            option.Id,
+            request,
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),

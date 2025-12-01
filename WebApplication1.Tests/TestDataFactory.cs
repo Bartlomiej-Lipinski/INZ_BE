@@ -706,6 +706,14 @@ public static class TestDataFactory
             File = file
         };
     }
+
+    public static PollVoteRequestDto CreatePollVoteRequestDto(string optionId)
+    {
+        return new PollVoteRequestDto
+        {
+            OptionId = optionId
+        };
+    }
     
     private static string GenerateUniqueCode()
     {

@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplication1.Features.Polls.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
@@ -25,7 +26,7 @@ public class PostPollVote : IEndpoint
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string pollId,
-        [FromBody] string optionId,
+        [FromBody] PollVoteRequestDto request,
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
@@ -36,7 +37,7 @@ public class PostPollVote : IEndpoint
         var userId = currentUser.GetUserId();
         
         logger.LogInformation("User {UserId} is attempting to vote on option {OptionId} in poll {PollId} within group {GroupId}. TraceId: {TraceId}",
-            userId, optionId, pollId, groupId, traceId);
+            userId, request.OptionId, pollId, groupId, traceId);
         
         var poll = await dbContext.Polls
             .Include(p => p.Options)
@@ -49,10 +50,10 @@ public class PostPollVote : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Poll not found.", traceId));
         }
         
-        var option = poll.Options.FirstOrDefault(o => o.Id == optionId);
+        var option = poll.Options.FirstOrDefault(o => o.Id == request.OptionId);
         if (option == null)
         {
-            logger.LogWarning("Option {OptionId} not found in poll {PollId}. TraceId: {TraceId}", optionId, pollId, traceId);
+            logger.LogWarning("Option {OptionId} not found in poll {PollId}. TraceId: {TraceId}", request.OptionId, pollId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Option not found in poll.", traceId));
         }
 
@@ -69,7 +70,7 @@ public class PostPollVote : IEndpoint
             option.VotedUsers.Remove(user);
             await dbContext.SaveChangesAsync(cancellationToken);
             logger.LogInformation("User {UserId} removed vote from option {OptionId} in poll {PollId}. TraceId: {TraceId}",
-                userId, optionId, pollId, traceId);
+                userId, request.OptionId, pollId, traceId);
             return Results.Ok(ApiResponse<string>.Ok("Vote removed.", traceId));
         }
 
@@ -77,7 +78,7 @@ public class PostPollVote : IEndpoint
         await dbContext.SaveChangesAsync(cancellationToken);
         
         logger.LogInformation("User {UserId} added vote to option {OptionId} in poll {PollId}. TraceId: {TraceId}",
-            userId, optionId, pollId, traceId);
+            userId, request.OptionId, pollId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Vote added.", traceId));
     }
 }
