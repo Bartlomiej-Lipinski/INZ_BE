@@ -32,7 +32,7 @@ public class GetGroupPolls : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         logger.LogInformation("Fetching polls for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
-        
+
         var polls = await dbContext.Polls
             .AsNoTracking()
             .Include(p => p.Options)
@@ -45,19 +45,22 @@ public class GetGroupPolls : IEndpoint
                 CreatedAt = p.CreatedAt.ToLocalTime(),
                 Options = p.Options.Select(o => new PollOptionDto
                 {
-                    Text = o.Text
+                    Id = o.Id,
+                    Text = o.Text,
+                    VotedUsersIds = o.VotedUsers.Select(u => u.Id).ToList()
                 }).ToList()
             })
             .ToListAsync(cancellationToken);
-        
+
         if (polls.Count == 0)
         {
             logger.LogInformation("No polls found for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
             return Results.Ok(ApiResponse<List<PollResponseDto>>.Ok(polls, "No polls found for this group.",
                 traceId));
         }
-        
-        logger.LogInformation("Retrieved {Count} polls for group {GroupId}. TraceId: {TraceId}", polls.Count, groupId, traceId);
+
+        logger.LogInformation("Retrieved {Count} polls for group {GroupId}. TraceId: {TraceId}", polls.Count, groupId,
+            traceId);
         return Results.Ok(ApiResponse<List<PollResponseDto>>.Ok(polls, "Group polls retrieved successfully.",
             traceId));
     }
