@@ -24,7 +24,8 @@ public class UpdateRecommendation : IEndpoint
             .WithTags("Recommendations")
             .RequireAuthorization()
             .Accepts<RecommendationRequestDto>("multipart/form-data")
-            .AddEndpointFilter<GroupMembershipFilter>();
+            .AddEndpointFilter<GroupMembershipFilter>()
+            .DisableAntiforgery();
     }
 
     public static async Task<IResult> Handle(

@@ -24,7 +24,8 @@ public class UpdateGroupFeedItem : IEndpoint
             .WithTags("GroupFeed")
             .RequireAuthorization()
             .Accepts<GroupFeedItemRequestDto>("multipart/form-data")
-            .AddEndpointFilter<GroupMembershipFilter>();
+            .AddEndpointFilter<GroupMembershipFilter>()
+            .DisableAntiforgery();
     }
 
     public static async Task<IResult> Handle(

@@ -25,7 +25,8 @@ public class PostEvent : IEndpoint
             .WithTags("Events")
             .RequireAuthorization()
             .Accepts<EventRequestDto>("multipart/form-data")
-            .AddEndpointFilter<GroupMembershipFilter>();
+            .AddEndpointFilter<GroupMembershipFilter>()
+            .DisableAntiforgery();
     }
     
     public static async Task<IResult> Handle(
