@@ -37,7 +37,7 @@ public class GetFileById : IEndpoint
             return Results.NotFound();
         }
 
-        var stream = await storage.OpenReadAsync(record.Id, cancellationToken);
+        var stream = await storage.OpenReadAsync(record.Url, cancellationToken);
         if (stream == null)
         {
             logger.LogInformation("Physical file for {Id} not found. TraceId: {TraceId}", id, traceId);
