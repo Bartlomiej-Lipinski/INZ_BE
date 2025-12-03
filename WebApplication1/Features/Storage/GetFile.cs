@@ -37,7 +37,7 @@ public class GetFile : IEndpoint
             return Results.NotFound();
         }
 
-        var stream = await storage.OpenReadAsync(record.Url, cancellationToken);
+        var stream = await storage.OpenReadAsync(record.Id, cancellationToken);
         if (stream == null)
         {
             logger.LogInformation("Physical file for {Id} not found. TraceId: {TraceId}", id, traceId);
@@ -46,7 +46,8 @@ public class GetFile : IEndpoint
 
         logger.LogInformation("Serving file {Id} to request. TraceId: {TraceId}", id, traceId);
 
-        var contentType = string.IsNullOrWhiteSpace(record.ContentType) ? "application/octet-stream" : record.ContentType;
+        var contentType = string.IsNullOrWhiteSpace(record.ContentType) 
+                ? "application/octet-stream" : record.ContentType + "; charset=utf-16";
         return Results.File(stream, contentType, record.FileName, enableRangeProcessing: true);
     }
 }

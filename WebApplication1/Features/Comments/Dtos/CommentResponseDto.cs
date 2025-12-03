@@ -1,4 +1,6 @@
-﻿namespace WebApplication1.Features.Comments.Dtos;
+﻿using WebApplication1.Features.Users.Dtos;
+
+namespace WebApplication1.Features.Comments.Dtos;
 
 public record CommentResponseDto
 {
@@ -7,4 +9,5 @@ public record CommentResponseDto
     public string UserId { get; set; } = null!;
     public string? UserName { get; set; }
     public DateTime CreatedAt { get; set; }
+    public UserResponseDto User { get; set; } = null!;
 }

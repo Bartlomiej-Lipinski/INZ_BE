@@ -25,7 +25,7 @@ public class GetFileById : IEndpoint
         IStorageService storage,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
-        ILogger<GetFile> logger,
+        ILogger<GetFileById> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
@@ -37,7 +37,7 @@ public class GetFileById : IEndpoint
             return Results.NotFound();
         }
 
-        var stream = await storage.OpenReadAsync(record.Url, cancellationToken);
+        var stream = await storage.OpenReadAsync(record.Id, cancellationToken);
         if (stream == null)
         {
             logger.LogInformation("Physical file for {Id} not found. TraceId: {TraceId}", id, traceId);
@@ -54,7 +54,7 @@ public class GetFileById : IEndpoint
 
         var contentType = string.IsNullOrWhiteSpace(record.ContentType)
             ? "application/octet-stream"
-            : record.ContentType;
+            : record.ContentType + "; charset=utf-16";
         return Results.File(stream, contentType, record.FileName, enableRangeProcessing: true);
     }
 }
