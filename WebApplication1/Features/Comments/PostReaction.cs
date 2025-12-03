@@ -36,13 +36,15 @@ public class PostReaction : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
-        
-        logger.LogInformation("User {UserId} attempts to toggle reaction on target {TargetId} in group {GroupId}. TraceId: {TraceId}",
+
+        logger.LogInformation(
+            "User {UserId} attempts to toggle reaction on target {TargetId} in group {GroupId}. TraceId: {TraceId}",
             userId, targetId, groupId, traceId);
-        
+
         if (!Enum.TryParse<EntityType>(entityType, true, out var parsedEntityType))
         {
-            logger.LogWarning("User {UserId} provided invalid entity type '{EntityType}' for target {TargetId}. TraceId: {TraceId}",
+            logger.LogWarning(
+                "User {UserId} provided invalid entity type '{EntityType}' for target {TargetId}. TraceId: {TraceId}",
                 userId, entityType, targetId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type.", traceId));
         }
@@ -52,11 +54,13 @@ public class PostReaction : IEndpoint
             EntityType.Comment => await dbContext.Comments
                 .Include(c => c.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
-            
+
             EntityType.Recommendation => await dbContext.Recommendations
                 .Include(r => r.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
-            
+            EntityType.GroupFeedItem => await dbContext.GroupFeedItems
+                .Include(gfi => gfi.Group)
+                .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
             _ => null
         };
 
@@ -68,7 +72,7 @@ public class PostReaction : IEndpoint
         }
 
         var existingReaction = await dbContext.Reactions
-            .FirstOrDefaultAsync(rr => rr.TargetId == targetId 
+            .FirstOrDefaultAsync(rr => rr.TargetId == targetId
                                        && rr.UserId == userId, cancellationToken);
 
         if (existingReaction != null)

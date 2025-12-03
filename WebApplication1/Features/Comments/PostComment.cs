@@ -24,7 +24,7 @@ public class PostComment : IEndpoint
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }
-    
+
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string targetId,
@@ -37,8 +37,9 @@ public class PostComment : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
-        
-        logger.LogInformation("User {UserId} attempts to post a comment on target {TargetId} in group {GroupId}. TraceId: {TraceId}",
+
+        logger.LogInformation(
+            "User {UserId} attempts to post a comment on target {TargetId} in group {GroupId}. TraceId: {TraceId}",
             userId, targetId, groupId, traceId);
 
         if (string.IsNullOrWhiteSpace(request.Content))
@@ -50,7 +51,8 @@ public class PostComment : IEndpoint
 
         if (!Enum.TryParse<EntityType>(request.EntityType, true, out var entityType))
         {
-            logger.LogWarning("User {UserId} provided invalid entity type '{EntityType}' for target {TargetId}. TraceId: {TraceId}",
+            logger.LogWarning(
+                "User {UserId} provided invalid entity type '{EntityType}' for target {TargetId}. TraceId: {TraceId}",
                 userId, request.EntityType, targetId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Invalid entity type.", traceId));
         }
@@ -60,14 +62,20 @@ public class PostComment : IEndpoint
             EntityType.Recommendation => await dbContext.Recommendations
                 .Include(r => r.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
-            
+
             EntityType.Challenge => await dbContext.Challenges
                 .Include(r => r.Group)
                 .FirstOrDefaultAsync(r => r.Id == targetId, cancellationToken),
-            
+            EntityType.Comment => await dbContext.Comments
+                .Include(c => c.Group)
+                .FirstOrDefaultAsync(c => c.Id == targetId, cancellationToken),
+            EntityType.GroupFeedItem => await dbContext.GroupFeedItems
+                .Include(gfi => gfi.Group)
+                .FirstOrDefaultAsync(gfi => gfi.Id == targetId, cancellationToken),
+
             _ => null
         };
-        
+
         if (target == null)
         {
             logger.LogWarning("Target {TargetId} not found for entity type {EntityType}. TraceId: {TraceId}",
