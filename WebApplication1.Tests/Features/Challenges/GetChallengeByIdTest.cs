@@ -92,7 +92,7 @@ public class GetChallengeByIdTest : TestBase
         data.Id.Should().Be(challenge.Id);
         data.Name.Should().Be("Challenge 1");
         data.Participants.Should().HaveCount(1);
-        data.Participants.First().UserId.Should().Be(user.Id);
+        data.Participants.First().User.Id.Should().Be(user.Id);
         data.Participants.First().ProgressEntries.Should().HaveCount(1);
     }
 }

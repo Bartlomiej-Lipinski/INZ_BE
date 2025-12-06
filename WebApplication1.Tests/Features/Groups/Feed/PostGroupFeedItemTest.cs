@@ -55,7 +55,7 @@ public class PostGroupFeedItemTest : TestBase
         result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
         ok!.Value!.Success.Should().BeTrue();
-        ok.Value.Data.Should().Be("Feed item created successfully.");
+        ok.Value.Message.Should().Be("Feed item created successfully.");
 
         var feedItem = dbContext.GroupFeedItems.FirstOrDefault();
         feedItem.Should().NotBeNull();

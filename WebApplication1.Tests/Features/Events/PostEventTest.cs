@@ -42,12 +42,12 @@ public class PostEventTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<EventResponseDto>>>();
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
 
-        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<EventResponseDto>>;
+        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
         ok!.Value!.Success.Should().BeTrue();
-        ok.Value.Data!.Title.Should().Be("New Event");
-
+        ok.Value.Data!.Should().NotBeNullOrEmpty();
+        
         var dbEvent = await dbContext.Events.FirstOrDefaultAsync();
         dbEvent.Should().NotBeNull();
         dbEvent.Title.Should().Be("New Event");

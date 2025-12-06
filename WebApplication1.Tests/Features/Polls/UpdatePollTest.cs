@@ -47,10 +47,12 @@ public class UpdatePollTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PollResponseDto>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PollResponseDto>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
         okResult!.Value!.Success.Should().BeTrue();
-
+        okResult.Value.Data.Should().Be("Poll updated successfully.");
+        okResult.Value.Message.Should().Be(poll.Id);
+        
         var updatedPoll = await dbContext.Polls
             .Include(p => p.Options).ThenInclude(o => o.VotedUsers)
             .FirstOrDefaultAsync(p => p.Id == poll.Id);

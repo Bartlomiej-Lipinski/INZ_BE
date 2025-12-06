@@ -12,10 +12,12 @@ public class GetGroupFeedTest : TestBase
     public async Task Handle_Should_Return_FeedItems()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var user = TestDataFactory.CreateUser("user1", "Test", "User");
         var feed1 = TestDataFactory.CreateGroupFeedItem(
             "1", "g1", "Post 1", "user1", DateTime.UtcNow.AddMinutes(-10));
         var feed2 = TestDataFactory.CreateGroupFeedItem(
             "2", "g1", "Post 2", "user1", DateTime.UtcNow);
+        dbContext.Users.Add(user);
         dbContext.GroupFeedItems.AddRange(feed1, feed2);
         await dbContext.SaveChangesAsync();
 

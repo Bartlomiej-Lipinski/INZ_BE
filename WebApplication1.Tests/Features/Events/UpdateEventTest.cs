@@ -44,7 +44,12 @@ public class UpdateEventTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<EventResponseDto>>>();
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
+
+        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
+        ok!.Value!.Success.Should().BeTrue();
+        ok.Value.Data!.Should().Be("Event updated successfully.");
+
         var updatedEvent = await dbContext.Events.FirstAsync();
         updatedEvent.Title.Should().Be("New Title");
         updatedEvent.Description.Should().Be("Updated Description");

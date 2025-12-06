@@ -50,8 +50,8 @@ public class GetJoinRequestsForAdminsTest : TestBase
             responses!.Count.Should().Be(1);
             responses[0].GroupId.Should().Be(group1.Id);
             responses[0].GroupName.Should().Be(group1.Name);
-            responses[0].UserId.Should().Be(user2.Id);
-            responses[0].UserName.Should().Be(user2.UserName);
+            responses[0].User.Id.Should().Be(user2.Id);
+            responses[0].User.Username.Should().Be(user2.UserName);
         }
     }
 }

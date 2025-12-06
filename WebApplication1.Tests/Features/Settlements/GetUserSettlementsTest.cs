@@ -41,6 +41,6 @@ public class GetUserSettlementsTest : TestBase
         ok.Value.Data.Should().HaveCount(2);
         ok.Value.Data!.Select(s => s.Id).Should().Contain(["s1", "s2"]);
         ok.Value.Data!.All(s => s.GroupId == group.Id).Should().BeTrue();
-        ok.Value.Data!.All(s => s.ToUserId == otherUser.Id).Should().BeTrue();
+        ok.Value.Data!.All(s => s.ToUser.Id == otherUser.Id).Should().BeTrue();
     }
 }

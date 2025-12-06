@@ -78,9 +78,9 @@ public class GetRecommendationByIdTest : TestBase
         var commentDto = okResult.Value.Data.Comments.First();
         commentDto.Id.Should().Be("c1");
         commentDto.Content.Should().Be("Nice!");
-        commentDto.UserId.Should().Be("u1");
+        commentDto.User.Id.Should().Be("u1");
 
         var reactionDto = okResult.Value.Data.Reactions.First();
-        reactionDto.UserId.Should().Be("u1");
+        reactionDto.Id.Should().Be("u1");
     }
 }

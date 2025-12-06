@@ -91,7 +91,7 @@ public class GetExpenseByIdTest : TestBase
         ok.Value.Data!.Id.Should().Be(expense.Id);
         ok.Value.Data!.Title.Should().Be("Test Expense");
         ok.Value.Data!.GroupId.Should().Be(group.Id);
-        ok.Value.Data!.PaidByUserId.Should().Be(user.Id);
+        ok.Value.Data!.PaidByUser.Id.Should().Be(user.Id);
         ok.Value.Data!.Beneficiaries.Should().HaveCount(1);
         ok.Value.Data!.Beneficiaries.First().Share.Should().Be(100m);
     }

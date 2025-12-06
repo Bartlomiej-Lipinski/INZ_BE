@@ -95,6 +95,6 @@ public class GetEventByIdTest : TestBase
         okResult.Value.Data!.Id.Should().Be(evt.Id);
         okResult.Value.Data.Title.Should().Be(evt.Title);
         okResult.Value.Data.GroupId.Should().Be(group.Id);
-        okResult.Value.Data.UserId.Should().Be(user.Id);
+        okResult.Value.Data.User.Id.Should().Be(user.Id);
     }
 }
