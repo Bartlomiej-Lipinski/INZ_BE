@@ -66,11 +66,11 @@ public class GetCommentsForTarget : IEndpoint
             {
                 Id = c.Id,
                 Content = c.Content,
-                UserId = c.UserId,
                 UserName = c.User.UserName,
                 CreatedAt = c.CreatedAt.ToLocalTime(),
                 User = new UserResponseDto
                 {
+                    Id = c.UserId,
                     Name = c.User.Name,
                     Surname = c.User.Surname,
                     Username = c.User.UserName,

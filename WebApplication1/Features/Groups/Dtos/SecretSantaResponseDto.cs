@@ -1,7 +1,9 @@
-﻿namespace WebApplication1.Features.Groups.Dtos;
+﻿using WebApplication1.Features.Users.Dtos;
+
+namespace WebApplication1.Features.Groups.Dtos;
 
 public record SecretSantaResponseDto
 {
-    public string Giver { get; set; } = null!;
-    public string Receiver { get; set; } = null!;
+    public UserResponseDto Giver { get; set; } = null!;
+    public UserResponseDto Receiver { get; set; } = null!;
 }

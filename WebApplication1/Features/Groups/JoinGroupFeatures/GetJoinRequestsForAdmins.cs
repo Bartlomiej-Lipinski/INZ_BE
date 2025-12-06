@@ -2,8 +2,11 @@ using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Groups;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -48,19 +51,43 @@ public class GetJoinRequestsForAdmins : IEndpoint
                          !gu.IsAdmin)
             .Include(gu => gu.Group)
             .Include(gu => gu.User)
-            .Select(gu => new JoinRequestResponseDto
-            {
-                GroupId = gu.GroupId, 
-                GroupName = gu.Group.Name,
-                UserId = gu.UserId,
-                UserName = gu.User.UserName
-                
-            }).ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
 
+        var userIds = pendingRequests.Select(c => c.UserId).Distinct().ToList();
+        
+        var profilePictures = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .GroupBy(f => f.UploadedById)
+            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
+            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
+
+        var response = pendingRequests.Select(gu => new JoinRequestResponseDto
+        {
+            GroupId = gu.GroupId,
+            GroupName = gu.Group.Name,
+            User = new UserResponseDto
+            {
+                Id = gu.UserId,
+                Name = gu.User.Name,
+                Surname = gu.User.Surname,
+                Username = gu.User.UserName,
+                ProfilePicture = profilePictures.TryGetValue(gu.UserId, out var photo)
+                    ? new ProfilePictureResponseDto
+                    {
+                        Url = photo.Url,
+                        FileName = photo.FileName,
+                        ContentType = photo.ContentType,
+                        Size = photo.Size
+                    }
+                    : null
+            }
+        })
+        .ToList();
 
         logger.LogInformation("Found {RequestCount} pending join requests for admin user: {UserId}. TraceId: {TraceId}",
             pendingRequests.Count, userId, traceId);
 
-        return Results.Ok(ApiResponse<IEnumerable<JoinRequestResponseDto>>.Ok(pendingRequests, null, traceId));
+        return Results.Ok(ApiResponse<IEnumerable<JoinRequestResponseDto>>.Ok(response, null, traceId));
     }
 }

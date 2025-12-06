@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Groups.Dtos;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 using WebApplication1.Shared.Validators;
@@ -42,42 +45,29 @@ public class GetGroupFeed : IEndpoint
         var feedItemsQuery = dbContext.GroupFeedItems
             .AsNoTracking()
             .Include(f => f.StoredFile)
+            .Include(f => f.User)
             .Where(f => f.GroupId == groupId)
             .OrderByDescending(f => f.CreatedAt);
 
-        var totalItems = await dbContext.GroupFeedItems
-            .AsNoTracking()
-            .Where(f => f.GroupId == groupId)
-            .CountAsync(cancellationToken);
+        var totalItems = await feedItemsQuery.CountAsync(cancellationToken);
         
         var feedItems = await feedItemsQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
         
-        var feedItemsIds = feedItems.Select(r => r.Id).ToList();
+        var feedItemIds = feedItems.Select(r => r.Id).ToList();
         
         var comments = await dbContext.Comments
             .AsNoTracking()
-            .Where(c => feedItemsIds.Contains(c.TargetId))
-            .Select(c => new
-            {
-                c.Id,
-                c.TargetId,
-                c.UserId,
-                c.Content,
-                c.CreatedAt
-            })
+            .Include(c => c.User)
+            .Where(c => feedItemIds.Contains(c.TargetId))
             .ToListAsync(cancellationToken);
 
         var reactions = await dbContext.Reactions
             .AsNoTracking()
-            .Where(r => feedItemsIds.Contains(r.TargetId))
-            .Select(r => new
-            {
-                r.TargetId,
-                r.UserId,
-            })
+            .Include(r => r.User)
+            .Where(r => feedItemIds.Contains(r.TargetId))
             .ToListAsync(cancellationToken);
         
         var commentsByFeedItem = comments
@@ -88,6 +78,19 @@ public class GetGroupFeed : IEndpoint
             .GroupBy(r => r.TargetId)
             .ToDictionary(g => g.Key, g => g.ToList());
         
+        var userIds = feedItems.Select(f => f.UserId)
+            .Concat(comments.Select(c => c.UserId))
+            .Concat(reactions.Select(r => r.UserId))
+            .Distinct()
+            .ToList();
+        
+        var profilePictures = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .GroupBy(f => f.UploadedById)
+            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
+            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
+        
         var feedDtos = feedItems.Select(f => new GroupFeedItemResponseDto
         {
             Id = f.Id,
@@ -95,22 +98,64 @@ public class GetGroupFeed : IEndpoint
             Title = f.Title,
             Description = f.Description,
             CreatedAt = f.CreatedAt.ToLocalTime(),
-            UserId = f.UserId,
+            User = new UserResponseDto
+            {
+                Id = f.UserId,
+                Name = f.User.Name,
+                Surname = f.User.Surname,
+                Username = f.User.UserName,
+                ProfilePicture = profilePictures.TryGetValue(f.UserId, out var photo)
+                    ? new ProfilePictureResponseDto
+                    {
+                        Url = photo.Url,
+                        FileName = photo.FileName,
+                        ContentType = photo.ContentType,
+                        Size = photo.Size
+                    }
+                    : null 
+            },
             StoredFileId = f.StoredFileId,
             EntityId = f.EntityId,
             Comments = commentsByFeedItem.TryGetValue(f.Id, out var itemComments)
                 ? itemComments.Select(c => new CommentResponseDto
                 {
                     Id = c.Id,
-                    UserId = c.UserId,
+                    User = new UserResponseDto
+                    {
+                        Id = c.UserId,
+                        Name = c.User.Name,
+                        Surname = c.User.Surname,
+                        Username = c.User.UserName,
+                        ProfilePicture = profilePictures.TryGetValue(c.UserId, out var commentsPhoto)
+                            ? new ProfilePictureResponseDto
+                            {
+                                Url = commentsPhoto.Url,
+                                FileName = commentsPhoto.FileName,
+                                ContentType = commentsPhoto.ContentType,
+                                Size = commentsPhoto.Size
+                            }
+                            : null 
+                    },
                     Content = c.Content,
                     CreatedAt = c.CreatedAt.ToLocalTime()
                 }).ToList()
                 : [],
             Reactions = reactionsByFeedItem.TryGetValue(f.Id, out var itemReactions)
-                ? itemReactions.Select(re => new ReactionDto
+                ? itemReactions.Select(re => new UserResponseDto
                 {
-                    UserId = re.UserId,
+                    Id = re.UserId,
+                    Name = re.User.Name,
+                    Surname = re.User.Surname,
+                    Username = re.User.UserName,
+                    ProfilePicture = profilePictures.TryGetValue(re.UserId, out var reactionsPhoto)
+                        ? new ProfilePictureResponseDto
+                        {
+                            Url = reactionsPhoto.Url,
+                            FileName = reactionsPhoto.FileName,
+                            ContentType = reactionsPhoto.ContentType,
+                            Size = reactionsPhoto.Size
+                        }
+                        : null 
                 }).ToList()
                 : []
         }).ToList();
