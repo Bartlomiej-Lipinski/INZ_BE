@@ -1,9 +1,11 @@
-﻿namespace WebApplication1.Features.Challenges.Dtos;
+﻿using WebApplication1.Features.Users.Dtos;
+
+namespace WebApplication1.Features.Challenges.Dtos;
 
 public record ChallengeResponseDto
 {
     public string Id { get; set; } = null!;
-    public string UserId { get; set; } = null!;
+    public UserResponseDto User { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string Description { get; set; } = null!;
     public DateTime StartDate { get; set; }

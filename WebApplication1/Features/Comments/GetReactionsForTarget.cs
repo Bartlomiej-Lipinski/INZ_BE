@@ -2,8 +2,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebApplication1.Features.Comments.Dtos;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -41,28 +43,52 @@ public class GetReactionsForTarget: IEndpoint
 
         var reactions = await dbContext.Reactions
             .AsNoTracking()
-            .Where(c => c.TargetId == targetId)
-            .Select(c => new ReactionDto
-            {
-                UserId = c.UserId,
-            })
+            .Include(r => r.User)
+            .Where(r => r.TargetId == targetId)
             .ToListAsync(cancellationToken);
         
         logger.LogInformation("Fetched {Count} reactions for {TargetId}. TraceId: {TraceId}", 
             reactions.Count, targetId, traceId);
         
-        if (reactions.Count == 0)
+        var userIds = reactions.Select(c => c.UserId).Distinct().ToList();
+        
+        var profilePictures = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .GroupBy(f => f.UploadedById)
+            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
+            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
+
+        var response = reactions.Select(r => new UserResponseDto
+        {
+            Name = r.User.Name,
+            Surname = r.User.Surname,
+            Username = r.User.UserName,
+            ProfilePicture = profilePictures.TryGetValue(r.UserId, out var photo)
+                ? new ProfilePictureResponseDto
+                {
+                    Url = photo.Url,
+                    FileName = photo.FileName,
+                    ContentType = photo.ContentType,
+                    Size = photo.Size
+                }
+                : null
+        
+        })
+        .ToList();
+        
+        if (response.Count == 0)
         {
             logger.LogInformation(
                 "No reactions found for target {TargetId}. TraceId: {TraceId}", targetId, traceId);
-            return Results.Ok(ApiResponse<List<ReactionDto>>
-                .Ok(reactions, "No reactions found for this target.", traceId));
+            return Results.Ok(ApiResponse<List<UserResponseDto>>
+                .Ok(response, "No reactions found for this target.", traceId));
         }
 
         logger.LogInformation(
             "Retrieved {Count} reactions for target {TargetId}. TraceId: {TraceId}", 
-            reactions.Count, targetId, traceId);
-        return Results.Ok(ApiResponse<List<ReactionDto>>
-            .Ok(reactions, "Reactions retrieved successfully.", traceId));
+            response.Count, targetId, traceId);
+        return Results.Ok(ApiResponse<List<UserResponseDto>>
+            .Ok(response, "Reactions retrieved successfully.", traceId));
     }
 }

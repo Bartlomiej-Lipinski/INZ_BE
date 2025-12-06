@@ -55,7 +55,7 @@ public class GetCommentsForTarget : IEndpoint
         
         var userIds = comments.Select(c => c.UserId).Distinct().ToList();
         
-        var profileImages = await dbContext.StoredFiles
+        var profilePictures = await dbContext.StoredFiles
             .AsNoTracking()
             .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
             .GroupBy(f => f.UploadedById)
@@ -74,7 +74,7 @@ public class GetCommentsForTarget : IEndpoint
                     Name = c.User.Name,
                     Surname = c.User.Surname,
                     Username = c.User.UserName,
-                    ProfilePicture = profileImages.TryGetValue(c.UserId, out var photo)
+                    ProfilePicture = profilePictures.TryGetValue(c.UserId, out var photo)
                         ? new ProfilePictureResponseDto
                         {
                             Url = photo.Url,
