@@ -1,4 +1,5 @@
 ﻿using WebApplication1.Features.Comments.Dtos;
+using WebApplication1.Features.Users.Dtos;
 
 namespace WebApplication1.Features.Recommendations.Dtos;
 
@@ -11,7 +12,7 @@ public record RecommendationResponseDto
     public string? ImageUrl { get; set; }
     public string? LinkUrl { get; set; }
     public DateTime CreatedAt { get; set; }
-    public string UserId { get; set; } = null!;
+    public UserResponseDto User { get; set; } = null!;
     public List<CommentResponseDto> Comments { get; set; } = [];
-    public List<ReactionDto> Reactions { get; set; } = [];
+    public List<UserResponseDto> Reactions { get; set; } = [];
 }

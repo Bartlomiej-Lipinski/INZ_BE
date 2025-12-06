@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Comments.Dtos;
 using WebApplication1.Features.Recommendations.Dtos;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
@@ -64,7 +66,19 @@ public class GetRecommendationById : IEndpoint
         var reactions = await dbContext.Reactions
             .AsNoTracking()
             .Where(r => r.TargetId == recommendationId && r.EntityType == EntityType.Recommendation)
+            .Include(r => r.User)
             .ToListAsync(cancellationToken);
+        
+        var userIds = comments.Select(c => c.UserId)
+            .Concat(reactions.Select(r => r.UserId))
+            .Append(recommendation.UserId).Distinct().ToList();
+        
+        var profilePictures = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .GroupBy(f => f.UploadedById)
+            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
+            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
 
         var response = new RecommendationResponseDto
         {
@@ -75,17 +89,59 @@ public class GetRecommendationById : IEndpoint
             ImageUrl = recommendation.ImageUrl,
             LinkUrl = recommendation.LinkUrl,
             CreatedAt = recommendation.CreatedAt.ToLocalTime(),
-            UserId = recommendation.UserId,
+            User = new UserResponseDto
+            {
+                Id = recommendation.UserId,
+                Name = recommendation.User.Name,
+                Surname = recommendation.User.Surname,
+                Username = recommendation.User.UserName,
+                ProfilePicture = profilePictures.TryGetValue(recommendation.UserId, out var photo)
+                    ? new ProfilePictureResponseDto
+                    {
+                        Url = photo.Url,
+                        FileName = photo.FileName,
+                        ContentType = photo.ContentType,
+                        Size = photo.Size
+                    }
+                    : null 
+            },
             Comments = comments.Select(c => new CommentResponseDto
             {
                 Id = c.Id,
-                UserId = c.UserId,
+                User = new UserResponseDto
+                {
+                    Id = c.UserId,
+                    Name = c.User.Name,
+                    Surname = c.User.Surname,
+                    Username = c.User.UserName,
+                    ProfilePicture = profilePictures.TryGetValue(c.UserId, out var commentsPhoto)
+                        ? new ProfilePictureResponseDto
+                        {
+                            Url = commentsPhoto.Url,
+                            FileName = commentsPhoto.FileName,
+                            ContentType = commentsPhoto.ContentType,
+                            Size = commentsPhoto.Size
+                        }
+                        : null 
+                },
                 Content = c.Content,
                 CreatedAt = c.CreatedAt.ToLocalTime()
             }).ToList(),
-            Reactions = reactions.Select(r => new ReactionDto
+            Reactions = reactions.Select(r => new UserResponseDto
             {
-                UserId = r.UserId
+                Id = r.UserId,
+                Name = r.User.Name,
+                Surname = r.User.Surname,
+                Username = r.User.UserName,
+                ProfilePicture = profilePictures.TryGetValue(r.UserId, out var reactionsPhoto)
+                    ? new ProfilePictureResponseDto
+                    {
+                        Url = reactionsPhoto.Url,
+                        FileName = reactionsPhoto.FileName,
+                        ContentType = reactionsPhoto.ContentType,
+                        Size = reactionsPhoto.Size
+                    }
+                    : null 
             }).ToList()
         };
 
