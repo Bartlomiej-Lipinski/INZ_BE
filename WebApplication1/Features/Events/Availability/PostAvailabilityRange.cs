@@ -3,8 +3,11 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Events.Dtos;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Events;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -109,14 +112,38 @@ public class PostAvailabilityRange : IEndpoint
 
         logger.LogInformation("User {UserId} added {Count} availability ranges for event {EventId}." +
                               " TraceId: {TraceId}", userId, addedRanges.Count, eventId, traceId);
+        
+        var userIds = addedRanges.Select(ea => ea.UserId).Distinct().ToList();
+        
+        var profilePictures = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .GroupBy(f => f.UploadedById)
+            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
+            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
 
-        var responseDtos = addedRanges.Select(r => new AvailabilityRangeResponseDto
+        var responseDtos = addedRanges.Select(ea => new AvailabilityRangeResponseDto
         {
-            Id = r.Id,
-            EventId = r.EventId,
-            UserId = r.UserId,
-            AvailableFrom = r.AvailableFrom.ToLocalTime(),
-            AvailableTo = r.AvailableTo.ToLocalTime()
+            Id = ea.Id,
+            EventId = ea.EventId,
+            User = new UserResponseDto
+            {
+                Id = ea.UserId,
+                Name = ea.User.Name,
+                Surname = ea.User.Surname,
+                Username = ea.User.UserName,
+                ProfilePicture = profilePictures.TryGetValue(ea.UserId, out var photo)
+                    ? new ProfilePictureResponseDto
+                    {
+                        Url = photo.Url,
+                        FileName = photo.FileName,
+                        ContentType = photo.ContentType,
+                        Size = photo.Size
+                    }
+                    : null 
+            },
+            AvailableFrom = ea.AvailableFrom.ToLocalTime(),
+            AvailableTo = ea.AvailableTo.ToLocalTime()
         }).ToList();
 
         return Results.Ok(ApiResponse<List<AvailabilityRangeResponseDto>>.Ok(

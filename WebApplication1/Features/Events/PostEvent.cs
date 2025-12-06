@@ -158,26 +158,6 @@ public class PostEvent : IEndpoint
         
         logger.LogInformation("User {UserId} created event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, newEvent.Id, groupId, traceId);
-
-        var responseDto = new EventResponseDto
-        {
-            Id = newEvent.Id,
-            GroupId = newEvent.GroupId,
-            UserId = newEvent.UserId,
-            Title = newEvent.Title,
-            Description = newEvent.Description,
-            Location = newEvent.Location,
-            IsAutoScheduled = newEvent.IsAutoScheduled,
-            RangeStart = newEvent.RangeStart?.ToLocalTime(),
-            RangeEnd = newEvent.RangeEnd?.ToLocalTime(),
-            DurationMinutes = newEvent.DurationMinutes,
-            StartDate = newEvent.StartDate?.ToLocalTime(),
-            EndDate = newEvent.EndDate?.ToLocalTime(),
-            CreatedAt = newEvent.CreatedAt.ToLocalTime()
-        };
-
-        logger.LogInformation("User {UserId} successfully created event {EventId} in group {GroupId}. TraceId: {TraceId}",
-            userId, newEvent.Id, groupId, traceId);
-        return Results.Ok(ApiResponse<EventResponseDto>.Ok(responseDto, "Event created successfully.", traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Event created successfully.", newEvent.Id, traceId));
     }
 }

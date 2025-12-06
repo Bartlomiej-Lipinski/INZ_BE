@@ -166,24 +166,6 @@ public class UpdateEvent : IEndpoint
 
         logger.LogInformation("User {UserId} updated event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, eventId, groupId, traceId);
-
-        var responseDto = new EventResponseDto
-        {
-            Id = existingEvent.Id,
-            GroupId = existingEvent.GroupId,
-            UserId = existingEvent.UserId,
-            Title = existingEvent.Title,
-            Description = existingEvent.Description,
-            Location = existingEvent.Location,
-            IsAutoScheduled = existingEvent.IsAutoScheduled,
-            RangeStart = existingEvent.RangeStart?.ToLocalTime(),
-            RangeEnd = existingEvent.RangeEnd?.ToLocalTime(),
-            DurationMinutes = existingEvent.DurationMinutes,
-            StartDate = existingEvent.StartDate?.ToLocalTime(),
-            EndDate = existingEvent.EndDate?.ToLocalTime(),
-            CreatedAt = existingEvent.CreatedAt.ToLocalTime()
-        };
-
-        return Results.Ok(ApiResponse<EventResponseDto>.Ok(responseDto, "Event updated successfully.", traceId));
+        return Results.Ok(ApiResponse<string>.Ok("Event updated successfully.", existingEvent.Id, traceId));
     }
 }

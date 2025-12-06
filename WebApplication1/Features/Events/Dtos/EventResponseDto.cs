@@ -1,10 +1,12 @@
-﻿namespace WebApplication1.Features.Events.Dtos;
+﻿using WebApplication1.Features.Users.Dtos;
+
+namespace WebApplication1.Features.Events.Dtos;
 
 public record EventResponseDto
 {
     public string Id { get; set; } = null!;
     public string GroupId { get; set; } = null!;
-    public string UserId { get; set; } = null!;
+    public UserResponseDto User { get; set; } = null!;
     public string Title { get; set; } = null!;
     public string? Description { get; set; }
     public string? Location { get; set; }

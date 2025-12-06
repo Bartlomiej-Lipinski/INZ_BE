@@ -3,7 +3,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Events.Dtos;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -54,11 +57,36 @@ public class GetEventById : IEndpoint
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
         }
         
+        var userIds = evt.Availabilities.Select(a => a.UserId)
+            .Append(evt.UserId).Distinct().ToList();
+        
+        var profilePictures = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .GroupBy(f => f.UploadedById)
+            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
+            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
+        
         var response = new EventResponseDto
         {
             Id = evt.Id,
             GroupId = evt.GroupId,
-            UserId = evt.UserId,
+            User = new UserResponseDto
+            {
+                Id = evt.UserId,
+                Name = evt.User.Name,
+                Surname = evt.User.Surname,
+                Username = evt.User.UserName,
+                ProfilePicture = profilePictures.TryGetValue(evt.UserId, out var photo)
+                    ? new ProfilePictureResponseDto
+                    {
+                        Url = photo.Url,
+                        FileName = photo.FileName,
+                        ContentType = photo.ContentType,
+                        Size = photo.Size
+                    }
+                    : null 
+            },
             Title = evt.Title,
             Description = evt.Description,
             Location = evt.Location,
@@ -67,7 +95,22 @@ public class GetEventById : IEndpoint
             CreatedAt = evt.CreatedAt.ToLocalTime(),
             Availabilities = evt.Availabilities.Select(ea => new EventAvailabilityResponseDto
             {
-                UserId = ea.UserId,
+                User = new UserResponseDto
+                {
+                    Id = ea.UserId,
+                    Name = ea.User.Name,
+                    Surname = ea.User.Surname,
+                    Username = ea.User.UserName,
+                    ProfilePicture = profilePictures.TryGetValue(ea.UserId, out var availibilitiesPhoto)
+                        ? new ProfilePictureResponseDto
+                        {
+                            Url = availibilitiesPhoto.Url,
+                            FileName = availibilitiesPhoto.FileName,
+                            ContentType = availibilitiesPhoto.ContentType,
+                            Size = availibilitiesPhoto.Size
+                        }
+                        : null 
+                },
                 Status = ea.Status,
                 CreatedAt = ea.CreatedAt.ToLocalTime()
             }).ToList(),
