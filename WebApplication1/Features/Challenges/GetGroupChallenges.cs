@@ -65,7 +65,11 @@ public class GetGroupChallenges : IEndpoint
         if (challengesUpdated) 
             await dbContext.SaveChangesAsync(cancellationToken);
         
-        var userIds = challenges.Select(c => c.UserId).Distinct().ToList();
+        var userIds = challenges
+            .Select(p => p.UserId)
+            .Concat(challenges.SelectMany(p => p.Participants).Select(p => p.UserId))
+            .Distinct()
+            .ToList();
         
         var profilePictures = await dbContext.StoredFiles
             .AsNoTracking()

@@ -1,10 +1,12 @@
-﻿namespace WebApplication1.Features.Settlements.Dtos;
+﻿using WebApplication1.Features.Users.Dtos;
+
+namespace WebApplication1.Features.Settlements.Dtos;
 
 public record ExpenseResponseDto
 {
     public string Id { get; set; } = null!;
     public string GroupId { get; set; } = null!;
-    public string PaidByUserId { get; set; } = null!;
+    public UserResponseDto PaidByUser { get; set; } = null!;
 
     public string Title { get; set; } = null!;
     public decimal Amount { get; set; }

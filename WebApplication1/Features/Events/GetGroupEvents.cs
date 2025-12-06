@@ -48,7 +48,11 @@ public class GetGroupEvents : IEndpoint
             .OrderBy(e => e.StartDate)
             .ToListAsync(cancellationToken);
         
-        var userIds = events.Select(e => e.UserId).Distinct().ToList();
+        var userIds = events
+            .Select(p => p.UserId)
+            .Concat(events.SelectMany(p => p.Availabilities).Select(ea => ea.UserId))
+            .Distinct()
+            .ToList();
         
         var profilePictures = await dbContext.StoredFiles
             .AsNoTracking()

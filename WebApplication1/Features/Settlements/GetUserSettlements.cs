@@ -3,7 +3,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Settlements.Dtos;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -40,30 +43,55 @@ public class GetUserSettlements :IEndpoint
         var settlements = await dbContext.Settlements
             .AsNoTracking()
             .Include(s => s.Group)
-            .Include(s => s.FromUser)
             .Include(s => s.ToUser)
             .Where(s => s.GroupId == groupId && s.FromUserId == userId)
-            .Select(s => new SettlementResponseDto
-            {
-                Id = s.Id,
-                GroupId = s.GroupId,
-                ToUserId = s.ToUserId,
-                Amount = s.Amount,
-                
-            })
             .ToListAsync(cancellationToken);
+        
+        var userIds = settlements.Select(c => c.ToUserId).ToList();
+        
+        var profilePictures = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .GroupBy(f => f.UploadedById)
+            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
+            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
+
+        var response = settlements.Select(s => new SettlementResponseDto
+        {
+            Id = s.Id,
+            GroupId = s.GroupId,
+            ToUser = new UserResponseDto
+            {
+                Id = s.ToUserId,
+                Name = s.ToUser.Name,
+                Surname = s.ToUser.Surname,
+                Username = s.ToUser.UserName,
+                ProfilePicture = profilePictures.TryGetValue(s.ToUserId, out var photo)
+                    ? new ProfilePictureResponseDto
+                    {
+                        Url = photo.Url,
+                        FileName = photo.FileName,
+                        ContentType = photo.ContentType,
+                        Size = photo.Size
+                    }
+                    : null  
+            },
+            Amount = s.Amount,
+
+        })
+        .ToList();
         
         if (settlements.Count == 0)
         {
             logger.LogInformation("No settlements found for user {UserId} in group {GroupId}. TraceId: {TraceId}", 
                 userId, groupId, traceId);
             return Results.Ok(ApiResponse<List<SettlementResponseDto>>
-                .Ok(settlements, "No settlements found for this user.", traceId));
+                .Ok(response, "No settlements found for this user.", traceId));
         }
         
         logger.LogInformation("Retrieved {Count} settlements for user {UserId} in group {GroupId}. TraceId: {TraceId}", 
             settlements.Count, userId, groupId, traceId);
         return Results.Ok(ApiResponse<List<SettlementResponseDto>>
-            .Ok(settlements, "User settlements retrieved successfully.", traceId));
+            .Ok(response, "User settlements retrieved successfully.", traceId));
     }
 }

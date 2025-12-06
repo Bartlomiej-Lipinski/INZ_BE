@@ -3,7 +3,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Settlements.Dtos;
+using WebApplication1.Features.Storage.Dtos;
+using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
+using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -54,12 +57,37 @@ public class GetExpenseById : IEndpoint
             .Include(b => b.User)
             .Where(b => b.ExpenseId == expenseId)
             .ToListAsync(cancellationToken);
+        
+        var userIds = beneficiaries.Select(c => c.UserId)
+            .Append(expense.PaidByUserId).Distinct().ToList();
+        
+        var profilePictures = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .GroupBy(f => f.UploadedById)
+            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
+            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
 
         var response = new ExpenseResponseDto
         {
             Id = expense.Id,
             GroupId = expense.GroupId,
-            PaidByUserId = expense.PaidByUserId,
+            PaidByUser = new UserResponseDto
+            {
+                Id = expense.PaidByUserId,
+                Name = expense.PaidByUser.Name,
+                Surname = expense.PaidByUser.Surname,
+                Username = expense.PaidByUser.UserName,
+                ProfilePicture = profilePictures.TryGetValue(expense.PaidByUserId, out var photo)
+                    ? new ProfilePictureResponseDto
+                    {
+                        Url = photo.Url,
+                        FileName = photo.FileName,
+                        ContentType = photo.ContentType,
+                        Size = photo.Size
+                    }
+                    : null  
+            },
             Title = expense.Title,
             Amount = expense.Amount,
             PhoneNumber = expense.PhoneNumber,
@@ -68,7 +96,22 @@ public class GetExpenseById : IEndpoint
             CreatedAt = expense.CreatedAt.ToLocalTime(),
             Beneficiaries = beneficiaries.Select(b => new ExpenseBeneficiaryDto
             {
-                UserId = b.UserId,
+                User = new UserResponseDto
+                {
+                    Id = b.UserId,
+                    Name = b.User.Name,
+                    Surname = b.User.Surname,
+                    Username = b.User.UserName,
+                    ProfilePicture = profilePictures.TryGetValue(b.UserId, out var beneficioariesPhoto)
+                        ? new ProfilePictureResponseDto
+                        {
+                            Url = beneficioariesPhoto.Url,
+                            FileName = beneficioariesPhoto.FileName,
+                            ContentType = beneficioariesPhoto.ContentType,
+                            Size = beneficioariesPhoto.Size
+                        }
+                        : null  
+                },
                 Share = b.Share
             }).ToList()
         };
