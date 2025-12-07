@@ -100,10 +100,27 @@ public class UpdatePoll : IEndpoint
         }
         
         await dbContext.SaveChangesAsync(cancellationToken);
+        await dbContext.Entry(existingPoll)
+            .Collection(p => p.Options)
+            .Query()
+            .Include(o => o.VotedUsers)
+            .LoadAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
+
+        var response = new PollResponseDto
+        {
+            CreatedByUserId = existingPoll.CreatedByUserId,
+            Question = existingPoll.Question,
+            CreatedAt = existingPoll.CreatedAt,
+            Options = existingPoll.Options.Select(o => new PollOptionDto
+            {
+                Text = o.Text,
+                VotedUsersIds = o.VotedUsers.Select(u => u.Id).ToList()
+            }).ToList()
+        };
         
         logger.LogInformation("Poll {PollId} updated successfully by user {UserId}. TraceId: {TraceId}", 
             pollId, userId, traceId);
-        return Results.Ok(ApiResponse<string>.Ok("Poll updated successfully.", pollId, traceId));
+        return Results.Ok(ApiResponse<PollResponseDto>.Ok(response, "Poll updated successfully.", traceId));
     }
 }
