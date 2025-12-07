@@ -14,7 +14,7 @@ using WebApplication1.Shared.Validators;
 
 namespace WebApplication1.Features.Recommendations;
 
-public class GetGroupRecommendations: IEndpoint
+public class GetGroupRecommendations : IEndpoint
 {
     public void RegisterEndpoint(IEndpointRouteBuilder app)
     {
@@ -36,7 +36,7 @@ public class GetGroupRecommendations: IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         logger.LogInformation("Fetching recommendations for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
-        
+
         var recommendations = await dbContext.Recommendations
             .AsNoTracking()
             .Where(r => r.GroupId == groupId)
@@ -54,7 +54,7 @@ public class GetGroupRecommendations: IEndpoint
         }
 
         var recommendationIds = recommendations.Select(r => r.Id).ToList();
-        
+
         var comments = await dbContext.Comments
             .AsNoTracking()
             .Where(c => recommendationIds.Contains(c.TargetId))
@@ -74,13 +74,13 @@ public class GetGroupRecommendations: IEndpoint
         var reactionsByRecommendation = reactions
             .GroupBy(r => r.TargetId)
             .ToDictionary(g => g.Key, g => g.ToList());
-        
+
         var userIds = recommendations.Select(f => f.UserId)
             .Concat(comments.Select(c => c.UserId))
             .Concat(reactions.Select(r => r.UserId))
             .Distinct()
             .ToList();
-        
+
         var profilePictures = await dbContext.StoredFiles
             .AsNoTracking()
             .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
@@ -106,12 +106,13 @@ public class GetGroupRecommendations: IEndpoint
                 ProfilePicture = profilePictures.TryGetValue(r.UserId, out var photo)
                     ? new ProfilePictureResponseDto
                     {
+                        Id = photo.Id,
                         Url = photo.Url,
                         FileName = photo.FileName,
                         ContentType = photo.ContentType,
                         Size = photo.Size
                     }
-                    : null 
+                    : null
             },
             Comments = commentsByRecommendation.TryGetValue(r.Id, out var recComments)
                 ? recComments.Select(c => new CommentResponseDto
@@ -126,12 +127,13 @@ public class GetGroupRecommendations: IEndpoint
                         ProfilePicture = profilePictures.TryGetValue(c.UserId, out var commentsPhoto)
                             ? new ProfilePictureResponseDto
                             {
+                                Id = commentsPhoto.Id,
                                 Url = commentsPhoto.Url,
                                 FileName = commentsPhoto.FileName,
                                 ContentType = commentsPhoto.ContentType,
                                 Size = commentsPhoto.Size
                             }
-                            : null 
+                            : null
                     },
                     Content = c.Content,
                     CreatedAt = c.CreatedAt.ToLocalTime()
@@ -147,16 +149,17 @@ public class GetGroupRecommendations: IEndpoint
                     ProfilePicture = profilePictures.TryGetValue(re.UserId, out var reactionsPhoto)
                         ? new ProfilePictureResponseDto
                         {
+                            Id = reactionsPhoto.Id,
                             Url = reactionsPhoto.Url,
                             FileName = reactionsPhoto.FileName,
                             ContentType = reactionsPhoto.ContentType,
                             Size = reactionsPhoto.Size
                         }
-                        : null 
+                        : null
                 }).ToList()
                 : []
         }).ToList();
-        
+
         if (response.Count == 0)
             return Results.Ok(ApiResponse<List<RecommendationResponseDto>>
                 .Ok(response, "No recommendations found for this group.", traceId));
