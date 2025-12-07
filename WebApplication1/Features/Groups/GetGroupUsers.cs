@@ -64,7 +64,12 @@ public class GetGroupUsers : IEndpoint
             {
                 Id = gu.User.Id,
                 Username = gu.User.UserName,
-                Email = gu.User.Email
+                Email = gu.User.Email,
+                Name = gu.User.Name,
+                Surname = gu.User.Surname,
+                BirthDate = gu.User.BirthDate,
+                Status = gu.User.Status,
+                Description = gu.User.Description
             })
             .ToList();
         
