@@ -14,7 +14,13 @@ public class GroupMembershipFilter(AppDbContext dbContext, ILogger<GroupMembersh
         var httpContext = context.HttpContext;
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = httpContext.User.GetUserId();
-        var groupId = context.GetArgument<string>(0);
+        var groupId = ResolveGroupId(context);
+
+        if (string.IsNullOrWhiteSpace(groupId))
+        {
+            logger.LogWarning("GroupId could not be resolved from request. TraceId: {TraceId}", traceId);
+            return Results.BadRequest(ApiResponse<string>.Fail("GroupId is required.", traceId));
+        }
         
         var group = await dbContext.Groups
             .AsNoTracking()
@@ -36,5 +42,39 @@ public class GroupMembershipFilter(AppDbContext dbContext, ILogger<GroupMembersh
         logger.LogWarning("User {UserId} is not a member of group {GroupId}. TraceId: {TraceId}",
             userId, groupId, traceId);
         return Results.Forbid();
+    }
+
+    private static string? ResolveGroupId(EndpointFilterInvocationContext context)
+    {
+        var httpContext = context.HttpContext;
+        if (httpContext.Request.RouteValues.TryGetValue("groupId", out var routeValue))
+        {
+            var routeGroupId = routeValue?.ToString();
+            if (!string.IsNullOrWhiteSpace(routeGroupId))
+            {
+                return routeGroupId;
+            }
+        }
+
+        if (context.Arguments.Count > 0 &&
+            context.Arguments[0] is string directGroupId &&
+            !string.IsNullOrWhiteSpace(directGroupId))
+        {
+            return directGroupId;
+        }
+
+        foreach (var argument in context.Arguments)
+        {
+            if (argument is null) continue;
+
+            var groupIdProperty = argument.GetType().GetProperty("GroupId");
+            if (groupIdProperty?.GetValue(argument) is string dtoGroupId &&
+                !string.IsNullOrWhiteSpace(dtoGroupId))
+            {
+                return dtoGroupId;
+            }
+        }
+
+        return null;
     }
 }
