@@ -86,7 +86,6 @@ public static class TestDataFactory
     {
         return new GrantAdminPrivilegesDto
         {
-            GroupId = groupId,
             UserId = userId
         };
     }
