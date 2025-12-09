@@ -2,6 +2,5 @@
 
 public record GrantAdminPrivilegesDto
 {
-    public string GroupId { get; set; } = null!;
     public string UserId { get; set; } = null!;
 }

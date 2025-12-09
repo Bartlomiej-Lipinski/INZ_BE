@@ -28,5 +28,6 @@ public enum FeedItemType
     Event,
     Challenge,
     Poll,
-    Recommendation
+    Recommendation,
+    Member
 }

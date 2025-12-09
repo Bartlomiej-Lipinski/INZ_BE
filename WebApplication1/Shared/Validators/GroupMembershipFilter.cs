@@ -15,6 +15,7 @@ public class GroupMembershipFilter(AppDbContext dbContext, ILogger<GroupMembersh
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = httpContext.User.GetUserId();
         var groupId = context.GetArgument<string>(0);
+
         
         var group = await dbContext.Groups
             .AsNoTracking()
@@ -37,4 +38,5 @@ public class GroupMembershipFilter(AppDbContext dbContext, ILogger<GroupMembersh
             userId, groupId, traceId);
         return Results.Forbid();
     }
+
 }

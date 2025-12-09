@@ -54,6 +54,7 @@ public class PostGroupFeedItem : IEndpoint
             Id = Guid.NewGuid().ToString(),
             GroupId = groupId,
             Type = FeedItemType.Post,
+            Title = request.Title,
             Description = request.Description,
             UserId = userId!,
             CreatedAt = DateTime.UtcNow

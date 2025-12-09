@@ -109,6 +109,7 @@ public class UpdateGroupFeedItem : IEndpoint
         }
 
         feedItem.Description = request.Description;
+        feedItem.Title = request.Title;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} updated feed item {FeedItemId} in group {GroupId}. TraceId: {TraceId}",
