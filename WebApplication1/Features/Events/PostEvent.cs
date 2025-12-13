@@ -28,7 +28,7 @@ public class PostEvent : IEndpoint
             .AddEndpointFilter<GroupMembershipFilter>()
             .DisableAntiforgery();
     }
-    
+
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromForm] EventRequestDto request,
@@ -41,29 +41,32 @@ public class PostEvent : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
-        
+
         logger.LogInformation("User {UserId} started creating an event in group {GroupId}. TraceId: {TraceId}",
             userId, groupId, traceId);
 
         if (string.IsNullOrWhiteSpace(request.Title))
         {
-            logger.LogWarning("Event creation failed: title is required. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+            logger.LogWarning(
+                "Event creation failed: title is required. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
                 userId, groupId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Event title is required.", traceId));
         }
-        
+
         if (request.StartDate == null && !request.IsAutoScheduled)
         {
-            logger.LogWarning("Event creation failed: start date is required for manual events. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+            logger.LogWarning(
+                "Event creation failed: start date is required for manual events. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
                 userId, groupId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("Start date is required for manual events.", traceId));
         }
-        
+
         if (request.IsAutoScheduled)
         {
             if (!request.RangeStart.HasValue || !request.RangeEnd.HasValue || !request.DurationMinutes.HasValue)
             {
-                logger.LogWarning("Event creation failed: missing scheduling parameters. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+                logger.LogWarning(
+                    "Event creation failed: missing scheduling parameters. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
                     userId, groupId, traceId);
                 return Results.BadRequest(ApiResponse<string>.Fail(
                     "For automatic scheduling, range start, range end, and duration are required.", traceId));
@@ -71,20 +74,23 @@ public class PostEvent : IEndpoint
 
             if (request.RangeEnd < request.RangeStart)
             {
-                logger.LogWarning("Event creation failed: range end before start. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+                logger.LogWarning(
+                    "Event creation failed: range end before start. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
                     userId, groupId, traceId);
-                return Results.BadRequest(ApiResponse<string>.Fail("Range end cannot be earlier than range start.", traceId));
+                return Results.BadRequest(ApiResponse<string>.Fail("Range end cannot be earlier than range start.",
+                    traceId));
             }
         }
 
-        if (request is { IsAutoScheduled: false, EndDate: not null, StartDate: not null } 
+        if (request is { IsAutoScheduled: false, EndDate: not null, StartDate: not null }
             && request.EndDate < request.StartDate)
         {
-            logger.LogWarning("Event creation failed: end date before start date. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
+            logger.LogWarning(
+                "Event creation failed: end date before start date. User {UserId}, Group {GroupId}, TraceId: {TraceId}",
                 userId, groupId, traceId);
             return Results.BadRequest(ApiResponse<string>.Fail("End date cannot be earlier than start date.", traceId));
         }
-        
+
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var newEvent = new Event
@@ -97,14 +103,14 @@ public class PostEvent : IEndpoint
             Description = request.Description,
             Location = request.Location,
             IsAutoScheduled = request.IsAutoScheduled,
-            RangeStart = request.RangeStart,
-            RangeEnd = request.RangeEnd,
+            RangeStart = request.RangeStart?.ToUniversalTime(),
+            RangeEnd = request.RangeEnd?.ToUniversalTime(),
             DurationMinutes = request.DurationMinutes,
-            StartDate = request.StartDate,
-            EndDate = request.EndDate,
+            StartDate = request.StartDate?.ToUniversalTime(),
+            EndDate = request.EndDate?.ToUniversalTime(),
             CreatedAt = DateTime.UtcNow
         };
-        
+
         string? storedFileId = null;
         if (request.File != null)
         {
@@ -138,7 +144,7 @@ public class PostEvent : IEndpoint
         }
 
         dbContext.Events.Add(newEvent);
-        
+
         var feedItem = new GroupFeedItem
         {
             Id = Guid.NewGuid().ToString(),
@@ -151,11 +157,11 @@ public class PostEvent : IEndpoint
             Description = request.Description,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         dbContext.GroupFeedItems.Add(feedItem);
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        
+
         logger.LogInformation("User {UserId} created event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, newEvent.Id, groupId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Event created successfully.", newEvent.Id, traceId));

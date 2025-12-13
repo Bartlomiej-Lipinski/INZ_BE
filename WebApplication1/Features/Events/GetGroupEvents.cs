@@ -25,7 +25,7 @@ public class GetGroupEvents : IEndpoint
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }
-    
+
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         AppDbContext dbContext,
@@ -47,13 +47,13 @@ public class GetGroupEvents : IEndpoint
             .Where(e => e.GroupId == groupId)
             .OrderBy(e => e.StartDate)
             .ToListAsync(cancellationToken);
-        
+
         var userIds = events
             .Select(p => p.UserId)
             .Concat(events.SelectMany(p => p.Availabilities).Select(ea => ea.UserId))
             .Distinct()
             .ToList();
-        
+
         var profilePictures = await dbContext.StoredFiles
             .AsNoTracking()
             .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
@@ -84,7 +84,7 @@ public class GetGroupEvents : IEndpoint
                             ContentType = photo.ContentType,
                             Size = photo.Size
                         }
-                        : null 
+                        : null
                 },
                 Availabilities = e.Availabilities.Select(ea => new EventAvailabilityResponseDto
                 {
@@ -97,19 +97,20 @@ public class GetGroupEvents : IEndpoint
                         ProfilePicture = profilePictures.TryGetValue(ea.UserId, out var availibilitiesPhoto)
                             ? new ProfilePictureResponseDto
                             {
+                                Id = availibilitiesPhoto.Id,
                                 Url = availibilitiesPhoto.Url,
                                 FileName = availibilitiesPhoto.FileName,
                                 ContentType = availibilitiesPhoto.ContentType,
                                 Size = availibilitiesPhoto.Size
                             }
-                            : null 
+                            : null
                     },
                     Status = ea.Status,
                     CreatedAt = ea.CreatedAt.ToLocalTime()
                 }).ToList()
             })
             .ToList();
-        
+
         if (events.Count == 0)
         {
             logger.LogInformation("No events found for group {GroupId}. TraceId: {TraceId}", groupId, traceId);
