@@ -67,8 +67,8 @@ public class GetGroupEvents : IEndpoint
                 Title = e.Title,
                 Description = e.Description,
                 Location = e.Location,
-                StartDate = e.StartDate,
-                EndDate = e.EndDate,
+                StartDate = e.StartDate?.ToLocalTime(),
+                EndDate = e.EndDate?.ToLocalTime(),
                 CreatedAt = e.CreatedAt.ToLocalTime(),
                 IsAutoScheduled = e.IsAutoScheduled,
                 User = new UserResponseDto
