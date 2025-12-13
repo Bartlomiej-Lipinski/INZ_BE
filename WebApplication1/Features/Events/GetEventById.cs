@@ -90,6 +90,7 @@ public class GetEventById : IEndpoint
             Title = evt.Title,
             Description = evt.Description,
             Location = evt.Location,
+            IsAutoScheduled = evt.IsAutoScheduled,
             StartDate = evt.StartDate?.ToLocalTime(),
             EndDate = evt.EndDate?.ToLocalTime(),
             CreatedAt = evt.CreatedAt.ToLocalTime(),

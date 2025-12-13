@@ -89,25 +89,25 @@ public class UpdateEvent : IEndpoint
         switch (request)
         {
             case { RangeStart: not null, RangeEnd: not null } when
-                request.RangeEnd.Value < request.RangeStart.Value:
+                request.RangeEnd.Value.ToUniversalTime() < request.RangeStart.Value.ToUniversalTime():
                 logger.LogWarning("Invalid range dates. User {UserId}, EventId {EventId}, TraceId: {TraceId}",
                     userId, eventId, traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("Range end date cannot be earlier than start date.", traceId));
             
             case { StartDate: not null, EndDate: not null } when
-                request.EndDate.Value < request.StartDate.Value:
+                request.EndDate.Value.ToUniversalTime() < request.StartDate.Value.ToUniversalTime():
                 logger.LogWarning("Invalid start/end dates. User {UserId}, EventId {EventId}, TraceId: {TraceId}",
                     userId, eventId, traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("End date cannot be earlier than start date.", traceId));
         }
 
-        existingEvent.RangeStart = request.RangeStart;
-        existingEvent.RangeEnd = request.RangeEnd;
+        existingEvent.RangeStart = request.RangeStart?.ToUniversalTime();
+        existingEvent.RangeEnd = request.RangeEnd?.ToUniversalTime();
         existingEvent.DurationMinutes = request.DurationMinutes;
-        existingEvent.StartDate = request.StartDate;
-        existingEvent.EndDate = request.EndDate;
+        existingEvent.StartDate = request.StartDate?.ToUniversalTime();
+        existingEvent.EndDate = request.EndDate?.ToUniversalTime();
         
         var feedItem = await dbContext.GroupFeedItems
             .SingleOrDefaultAsync(f => f.EntityId == eventId && f.GroupId == groupId, cancellationToken);
@@ -147,7 +147,7 @@ public class UpdateEvent : IEndpoint
             {
                 Id = storedFileId,
                 GroupId = groupId,
-                UploadedById = userId!,
+                UploadedById = userId,
                 EntityType = EntityType.Event,
                 EntityId = eventId,
                 FileName = request.File.FileName,
