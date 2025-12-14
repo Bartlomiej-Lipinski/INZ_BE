@@ -3,11 +3,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Events.Dtos;
-using WebApplication1.Features.Storage.Dtos;
-using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Data.Entities.Events;
-using WebApplication1.Infrastructure.Data.Enums;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Extensions;
 using WebApplication1.Shared.Responses;
@@ -113,46 +110,39 @@ public class PostAvailabilityRange : IEndpoint
         logger.LogInformation("User {UserId} added {Count} availability ranges for event {EventId}." +
                               " TraceId: {TraceId}", userId, addedRanges.Count, eventId, traceId);
         
-        var rangesWithUsers = await dbContext.EventAvailabilityRanges
-            .AsNoTracking()
-            .Where(ar => ar.EventId == eventId && ar.UserId == userId)
-            .Include(ar => ar.User)
+        var groupMemberIds = await dbContext.GroupUsers
+            .Where(gu => gu.GroupId == groupId)
+            .Select(gu => gu.UserId)
             .ToListAsync(cancellationToken);
-        
-        var userIds = rangesWithUsers.Select(ea => ea.UserId).Distinct().ToList();
-        
-        var profilePictures = await dbContext.StoredFiles
-            .AsNoTracking()
-            .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
-            .GroupBy(f => f.UploadedById)
-            .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
-            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
 
-        var responseDtos = rangesWithUsers.Select(ea => new AvailabilityRangeResponseDto
-        {
-            Id = ea.Id,
-            EventId = ea.EventId,
-            User = new UserResponseDto
-            {
-                Id = ea.UserId,
-                Name = ea.User.Name,
-                Surname = ea.User.Surname,
-                Username = ea.User.UserName,
-                ProfilePicture = profilePictures.TryGetValue(ea.UserId, out var photo)
-                    ? new ProfilePictureResponseDto
-                    {
-                        Url = photo.Url,
-                        FileName = photo.FileName,
-                        ContentType = photo.ContentType,
-                        Size = photo.Size
-                    }
-                    : null 
-            },
-            AvailableFrom = ea.AvailableFrom.ToLocalTime(),
-            AvailableTo = ea.AvailableTo.ToLocalTime()
-        }).ToList();
+        var usersWithAvailability = await dbContext.EventAvailabilityRanges
+            .Where(ar => ar.EventId == eventId)
+            .Select(ar => ar.UserId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
 
-        return Results.Ok(ApiResponse<List<AvailabilityRangeResponseDto>>.Ok(
-            responseDtos, "Availability ranges added successfully.", traceId));
+        var allUsersSubmitted = groupMemberIds.All(id => usersWithAvailability.Contains(id));
+
+        if (!allUsersSubmitted)
+            return Results.Ok(ApiResponse<string>.Ok(null, "Availability ranges added successfully.", traceId));
+        logger.LogInformation("All users submitted availability for event {EventId}. Calculating best date.", eventId);
+        
+        var cbdeLogger = httpContext.RequestServices
+            .GetRequiredService<ILogger<CalculateBestDateForEvent>>();
+
+        await CalculateBestDateForEvent.Handle(
+            groupId,
+            eventId,
+            dbContext,
+            currentUser,
+            httpContext,
+            cbdeLogger,
+            cancellationToken
+        );
+
+        evt.IsAutoScheduled = false;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Results.Ok(ApiResponse<string>.Ok(null, "Availability ranges added successfully.", traceId));
     }
 }
