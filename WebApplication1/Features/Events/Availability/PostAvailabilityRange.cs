@@ -113,7 +113,13 @@ public class PostAvailabilityRange : IEndpoint
         logger.LogInformation("User {UserId} added {Count} availability ranges for event {EventId}." +
                               " TraceId: {TraceId}", userId, addedRanges.Count, eventId, traceId);
         
-        var userIds = addedRanges.Select(ea => ea.UserId).Distinct().ToList();
+        var rangesWithUsers = await dbContext.EventAvailabilityRanges
+            .AsNoTracking()
+            .Where(ar => ar.EventId == eventId && ar.UserId == userId)
+            .Include(ar => ar.User)
+            .ToListAsync(cancellationToken);
+        
+        var userIds = rangesWithUsers.Select(ea => ea.UserId).Distinct().ToList();
         
         var profilePictures = await dbContext.StoredFiles
             .AsNoTracking()
@@ -122,7 +128,7 @@ public class PostAvailabilityRange : IEndpoint
             .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
             .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
 
-        var responseDtos = addedRanges.Select(ea => new AvailabilityRangeResponseDto
+        var responseDtos = rangesWithUsers.Select(ea => new AvailabilityRangeResponseDto
         {
             Id = ea.Id,
             EventId = ea.EventId,
