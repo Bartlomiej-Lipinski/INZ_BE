@@ -93,6 +93,9 @@ public class GetEventById : IEndpoint
             IsAutoScheduled = evt.IsAutoScheduled,
             StartDate = evt.StartDate?.ToLocalTime(),
             EndDate = evt.EndDate?.ToLocalTime(),
+            RangeStart = evt.RangeStart?.ToLocalTime(),
+            RangeEnd = evt.RangeEnd?.ToLocalTime(),
+            DurationMinutes = evt.DurationMinutes,
             CreatedAt = evt.CreatedAt.ToLocalTime(),
             Availabilities = evt.Availabilities.Select(ea => new EventAvailabilityResponseDto
             {

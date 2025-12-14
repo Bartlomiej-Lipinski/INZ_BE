@@ -17,7 +17,7 @@ public class DeleteAvailabilityRange: IEndpoint
         app.MapDelete("/groups/{groupId}/events/{eventId}/availability-range", Handle)
             .WithName("DeleteAvailabilityRange")
             .WithDescription("Deletes all availability ranges for the current user within an event")
-            .WithTags("Availability")
+            .WithTags("Availabilities")
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }

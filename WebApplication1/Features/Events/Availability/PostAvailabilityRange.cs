@@ -22,7 +22,7 @@ public class PostAvailabilityRange : IEndpoint
         app.MapPost("/groups/{groupId}/events/{eventId}/availability-range", Handle)
             .WithName("PostAvailabilityRange")
             .WithDescription("Adds an availability range for a user within an event")
-            .WithTags("Availability")
+            .WithTags("Availabilities")
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }
