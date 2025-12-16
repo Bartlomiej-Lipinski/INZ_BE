@@ -36,10 +36,11 @@ public class PostAvailabilityRange : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
-        
-        logger.LogInformation("User {UserId} attempts to post {Count} availability ranges for event {EventId} in group {GroupId}. TraceId: {TraceId}",
+
+        logger.LogInformation(
+            "User {UserId} attempts to post {Count} availability ranges for event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, request.Count, eventId, groupId, traceId);
-        
+
         var evt = await dbContext.Events
             .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
 
@@ -49,7 +50,7 @@ public class PostAvailabilityRange : IEndpoint
                 eventId, groupId, traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
         }
-        
+
         var existingRanges = await dbContext.EventAvailabilityRanges
             .Where(ar => ar.EventId == eventId && ar.UserId == userId)
             .ToListAsync(cancellationToken);
@@ -60,14 +61,15 @@ public class PostAvailabilityRange : IEndpoint
             logger.LogInformation("Removed {Count} old availability ranges for user {UserId} in event {EventId}." +
                                   " TraceId: {TraceId}", existingRanges.Count, userId, eventId, traceId);
         }
-        
+
         var addedRanges = new List<EventAvailabilityRange>();
-        
+
         foreach (var r in request)
         {
             if (r.AvailableFrom >= r.AvailableTo)
             {
-                logger.LogWarning("Invalid range for user {UserId}: AvailableFrom {From} >= AvailableTo {To}. TraceId: {TraceId}",
+                logger.LogWarning(
+                    "Invalid range for user {UserId}: AvailableFrom {From} >= AvailableTo {To}. TraceId: {TraceId}",
                     userId, r.AvailableFrom, r.AvailableTo, traceId);
                 return Results.BadRequest(ApiResponse<string>
                     .Fail("AvailableTo must be later than AvailableFrom.", traceId));
@@ -80,20 +82,22 @@ public class PostAvailabilityRange : IEndpoint
                 {
                     logger.LogWarning("Range {From}-{To} for user {UserId} is outside event range. TraceId: {TraceId}",
                         r.AvailableFrom, r.AvailableTo, userId, traceId);
-                    return Results.BadRequest(ApiResponse<string>.Fail("Availability range outside event range.", traceId));
+                    return Results.BadRequest(ApiResponse<string>.Fail("Availability range outside event range.",
+                        traceId));
                 }
             }
 
             var hasOverlap = addedRanges.Any(ar =>
                 ar.AvailableFrom < r.AvailableTo &&
                 ar.AvailableTo > r.AvailableFrom);
-            
+
             if (hasOverlap)
             {
                 logger.LogWarning("User {UserId} submitted overlapping ranges. TraceId: {TraceId}", userId, traceId);
-                return Results.BadRequest(ApiResponse<string>.Fail("One or more ranges in the request overlap with each other.", traceId));
+                return Results.BadRequest(
+                    ApiResponse<string>.Fail("One or more ranges in the request overlap with each other.", traceId));
             }
-            
+
             addedRanges.Add(new EventAvailabilityRange
             {
                 Id = Guid.NewGuid().ToString(),
@@ -103,13 +107,13 @@ public class PostAvailabilityRange : IEndpoint
                 AvailableTo = r.AvailableTo
             });
         }
-        
+
         await dbContext.EventAvailabilityRanges.AddRangeAsync(addedRanges, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("User {UserId} added {Count} availability ranges for event {EventId}." +
                               " TraceId: {TraceId}", userId, addedRanges.Count, eventId, traceId);
-        
+
         var groupMemberIds = await dbContext.GroupUsers
             .Where(gu => gu.GroupId == groupId)
             .Select(gu => gu.UserId)
@@ -126,7 +130,7 @@ public class PostAvailabilityRange : IEndpoint
         if (!allUsersSubmitted)
             return Results.Ok(ApiResponse<string>.Ok(null, "Availability ranges added successfully.", traceId));
         logger.LogInformation("All users submitted availability for event {EventId}. Calculating best date.", eventId);
-        
+
         var cbdeLogger = httpContext.RequestServices
             .GetRequiredService<ILogger<CalculateBestDateForEvent>>();
 
@@ -140,7 +144,6 @@ public class PostAvailabilityRange : IEndpoint
             cancellationToken
         );
 
-        evt.IsAutoScheduled = false;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return Results.Ok(ApiResponse<string>.Ok(null, "Availability ranges added successfully.", traceId));

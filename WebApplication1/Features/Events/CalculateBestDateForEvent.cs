@@ -34,8 +34,9 @@ public class CalculateBestDateForEvent : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var userId = currentUser.GetUserId();
-        
-        logger.LogInformation("User {UserId} starts calculating best dates for event {EventId} in group {GroupId}. TraceId: {TraceId}",
+
+        logger.LogInformation(
+            "User {UserId} starts calculating best dates for event {EventId} in group {GroupId}. TraceId: {TraceId}",
             userId, eventId, groupId, traceId);
 
         var evt = await dbContext.Events
@@ -67,16 +68,26 @@ public class CalculateBestDateForEvent : IEndpoint
                 AvailableUserCount = availablePeople
             };
             evt.Suggestions.Add(evtSuggestion);
-            
-            logger.LogInformation("Suggested date {Date} for event {EventId} with {Count} available users. TraceId: {TraceId}",
+
+            logger.LogInformation(
+                "Suggested date {Date} for event {EventId} with {Count} available users. TraceId: {TraceId}",
                 date, eventId, availablePeople, traceId);
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        logger.LogInformation("Finished calculating best dates for event {EventId}. Total suggestions: {Count}. TraceId: {TraceId}",
+        logger.LogInformation(
+            "Finished calculating best dates for event {EventId}. Total suggestions: {Count}. TraceId: {TraceId}",
             eventId, evt.Suggestions.Count, traceId);
-        return Results.Ok(ApiResponse<List<EventSuggestion>>.Ok(evt.Suggestions.ToList()));
+        return Results.Ok(ApiResponse<List<EventSuggestionDto>>.Ok(
+            evt.Suggestions.Select(s => new EventSuggestionDto
+            {
+                Id = s.Id,
+                EventId = s.EventId,
+                StartTime = s.StartTime,
+                AvailableUserCount = s.AvailableUserCount
+            }).ToList()
+        ));
     }
 
     public static List<(DateTime date, int availablePeople)> GetBestDateAndTime(Event ev)
@@ -149,4 +160,12 @@ public class CalculateBestDateForEvent : IEndpoint
 
         return results;
     }
+}
+
+public class EventSuggestionDto
+{
+    public string Id { get; set; }
+    public string EventId { get; set; }
+    public DateTime StartTime { get; set; }
+    public int AvailableUserCount { get; set; }
 }

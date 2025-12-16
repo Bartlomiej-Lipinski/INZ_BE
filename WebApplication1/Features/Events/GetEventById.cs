@@ -25,7 +25,7 @@ public class GetEventById : IEndpoint
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }
-    
+
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string eventId,
@@ -53,20 +53,21 @@ public class GetEventById : IEndpoint
 
         if (evt == null)
         {
-            logger.LogWarning("Event {EventId} not found in group {GroupId}. TraceId: {TraceId}", eventId, groupId, traceId);
+            logger.LogWarning("Event {EventId} not found in group {GroupId}. TraceId: {TraceId}", eventId, groupId,
+                traceId);
             return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
         }
-        
+
         var userIds = evt.Availabilities.Select(a => a.UserId)
             .Append(evt.UserId).Distinct().ToList();
-        
+
         var profilePictures = await dbContext.StoredFiles
             .AsNoTracking()
             .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
             .GroupBy(f => f.UploadedById)
             .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
             .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
-        
+
         var response = new EventResponseDto
         {
             Id = evt.Id,
@@ -85,7 +86,7 @@ public class GetEventById : IEndpoint
                         ContentType = photo.ContentType,
                         Size = photo.Size
                     }
-                    : null 
+                    : null
             },
             Title = evt.Title,
             Description = evt.Description,
@@ -113,19 +114,21 @@ public class GetEventById : IEndpoint
                             ContentType = availibilitiesPhoto.ContentType,
                             Size = availibilitiesPhoto.Size
                         }
-                        : null 
+                        : null
                 },
                 Status = ea.Status,
                 CreatedAt = ea.CreatedAt.ToLocalTime()
             }).ToList(),
             Suggestions = evt.Suggestions.Select(s => new EventSuggestionResponseDto
             {
+                Id = s.Id,
                 StartTime = s.StartTime.ToLocalTime(),
                 AvailableUserCount = s.AvailableUserCount
             }).ToList()
         };
 
-        logger.LogInformation("User {UserId} successfully fetched event {EventId} from group {GroupId}. TraceId: {TraceId}",
+        logger.LogInformation(
+            "User {UserId} successfully fetched event {EventId} from group {GroupId}. TraceId: {TraceId}",
             userId, eventId, groupId, traceId);
         return Results.Ok(ApiResponse<EventResponseDto>.Ok(response, null, traceId));
     }
