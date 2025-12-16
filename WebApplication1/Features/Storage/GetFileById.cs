@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Infrastructure.Service;
 using WebApplication1.Shared.Endpoints;
@@ -43,8 +44,14 @@ public class GetFileById : IEndpoint
             logger.LogInformation("Physical file for {Id} not found. TraceId: {TraceId}", id, traceId);
             return Results.NotFound();
         }
+        
+        var groupUsersIds = await dbContext.GroupUsers
+            .AsNoTracking()
+            .Where(gm => gm.GroupId == record.GroupId)
+            .Select(gm => gm.UserId)
+            .ToListAsync(cancellationToken);
 
-        if (currentUser.GetUserId() != record.UploadedById)
+        if (groupUsersIds.Contains(currentUser.GetUserId()) == false)
         {
             logger.LogError("User attempted to access file {Id} without permission. TraceId: {TraceId}", id, traceId);
             return Results.Forbid();
