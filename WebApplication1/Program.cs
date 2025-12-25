@@ -25,6 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IStorageService, LocalStorageService>();
 builder.Services.AddScoped<IEmailService, PostmarkEmailService>();
+builder.Services.AddScoped<ISettlementCalculator, SettlementCalculatorService>();
 builder.Services.AddLoginSecurity();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
