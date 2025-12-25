@@ -19,9 +19,10 @@ public class SettlementCalculatorService : ISettlementCalculator
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         await dbContext.Database.ExecuteSqlRawAsync(
-            "SELECT * FROM Expenses WHERE GroupId = {0} FOR UPDATE", groupId);
+            """SELECT * FROM "Expenses" WHERE "GroupId" = {0} FOR UPDATE""", groupId);
+
         await dbContext.Database.ExecuteSqlRawAsync(
-            "SELECT * FROM Settlements WHERE GroupId = {0} FOR UPDATE", groupId);
+            """SELECT * FROM "Settlements" WHERE "GroupId" = {0} FOR UPDATE""", groupId);
 
         try
         {
