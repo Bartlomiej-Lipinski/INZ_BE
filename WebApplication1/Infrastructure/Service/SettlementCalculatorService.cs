@@ -18,18 +18,12 @@ public class SettlementCalculatorService : ISettlementCalculator
         logger.LogInformation("Recalculating settlements for expense {Action} in group {GroupId}", action, groupId);
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """SELECT * FROM "Expenses" WHERE "GroupId" = {0} FOR UPDATE""", groupId);
-
-        await dbContext.Database.ExecuteSqlRawAsync(
-            """SELECT * FROM "Settlements" WHERE "GroupId" = {0} FOR UPDATE""", groupId);
+        var settlements = await dbContext.Settlements
+            .Where(s => s.GroupId == groupId)
+            .ToListAsync(cancellationToken);
 
         try
         {
-            var settlements = await dbContext.Settlements
-                .Where(s => s.GroupId == groupId)
-                .ToListAsync(cancellationToken);
-
             var balances = new Dictionary<string, decimal>();
             foreach (var settlement in settlements)
             {
