@@ -80,13 +80,19 @@ public class GetRecommendationById : IEndpoint
             .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
             .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
 
+        var file = await dbContext.StoredFiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f =>
+                f.GroupId == groupId &&
+                f.EntityType == EntityType.Recommendation &&
+                f.EntityId == recommendationId, cancellationToken: cancellationToken);
+
         var response = new RecommendationResponseDto
         {
             Id = recommendation.Id,
             Title = recommendation.Title,
             Content = recommendation.Content,
             Category = recommendation.Category,
-            ImageUrl = recommendation.ImageUrl,
             LinkUrl = recommendation.LinkUrl,
             CreatedAt = recommendation.CreatedAt.ToLocalTime(),
             User = new UserResponseDto
@@ -105,6 +111,7 @@ public class GetRecommendationById : IEndpoint
                     }
                     : null 
             },
+            StoredFileId = file?.Id,
             Comments = comments.Select(c => new CommentResponseDto
             {
                 Id = c.Id,

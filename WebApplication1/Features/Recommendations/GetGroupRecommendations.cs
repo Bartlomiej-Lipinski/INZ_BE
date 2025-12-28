@@ -87,14 +87,22 @@ public class GetGroupRecommendations : IEndpoint
             .GroupBy(f => f.UploadedById)
             .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
             .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
-
+        
+        var filesByRecommendation = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f =>
+                f.GroupId == groupId &&
+                f.EntityType == EntityType.Recommendation &&
+                recommendationIds.Contains(f.EntityId!))
+            .GroupBy(f => f.EntityId)
+            .ToDictionaryAsync(g => g.Key, g => g.ToList(), cancellationToken);
+        
         var response = recommendations.Select(r => new RecommendationResponseDto
         {
             Id = r.Id,
             Title = r.Title,
             Content = r.Content,
             Category = r.Category,
-            ImageUrl = r.ImageUrl,
             LinkUrl = r.LinkUrl,
             CreatedAt = r.CreatedAt.ToLocalTime(),
             User = new UserResponseDto
@@ -114,6 +122,7 @@ public class GetGroupRecommendations : IEndpoint
                     }
                     : null
             },
+            StoredFileId = filesByRecommendation.TryGetValue(r.Id, out var files) ? files.First().Id : null,
             Comments = commentsByRecommendation.TryGetValue(r.Id, out var recComments)
                 ? recComments.Select(c => new CommentResponseDto
                 {

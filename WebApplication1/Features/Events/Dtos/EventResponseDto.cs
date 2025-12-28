@@ -17,6 +17,7 @@ public record EventResponseDto
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? StoredFileId { get; set; }
     public List<EventAvailabilityResponseDto> Availabilities { get; set; } = [];
     public ICollection<EventSuggestionResponseDto> Suggestions { get; set; } = [];
 }

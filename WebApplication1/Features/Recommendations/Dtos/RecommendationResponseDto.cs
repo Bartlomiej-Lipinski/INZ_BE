@@ -9,10 +9,10 @@ public record RecommendationResponseDto
     public string Title { get; set; } = null!;
     public string Content { get; set; } = null!;
     public string? Category { get; set; }
-    public string? ImageUrl { get; set; }
     public string? LinkUrl { get; set; }
     public DateTime CreatedAt { get; set; }
     public UserResponseDto User { get; set; } = null!;
+    public string? StoredFileId { get; set; }
     public List<CommentResponseDto> Comments { get; set; } = [];
     public List<UserResponseDto> Reactions { get; set; } = [];
 }

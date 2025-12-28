@@ -67,6 +67,13 @@ public class GetEventById : IEndpoint
             .GroupBy(f => f.UploadedById)
             .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
             .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
+        
+        var file = await dbContext.StoredFiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(f =>
+                f.GroupId == groupId &&
+                f.EntityType == EntityType.Event &&
+                f.EntityId == eventId, cancellationToken: cancellationToken);
 
         var response = new EventResponseDto
         {
@@ -98,6 +105,7 @@ public class GetEventById : IEndpoint
             RangeEnd = evt.RangeEnd?.ToLocalTime(),
             DurationMinutes = evt.DurationMinutes,
             CreatedAt = evt.CreatedAt.ToLocalTime(),
+            StoredFileId = file?.Id,
             Availabilities = evt.Availabilities.Select(ea => new EventAvailabilityResponseDto
             {
                 User = new UserResponseDto

@@ -60,7 +60,18 @@ public class GetGroupEvents : IEndpoint
             .GroupBy(f => f.UploadedById)
             .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
             .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
-
+        
+        var eventsIds = events.Select(r => r.Id).ToList();
+        
+        var filesByEvent = await dbContext.StoredFiles
+            .AsNoTracking()
+            .Where(f =>
+                f.GroupId == groupId &&
+                f.EntityType == EntityType.Event &&
+                eventsIds.Contains(f.EntityId!))
+            .GroupBy(f => f.EntityId)
+            .ToDictionaryAsync(g => g.Key, g => g.ToList(), cancellationToken);
+        
         var response = events.Select(e => new EventResponseDto
             {
                 Id = e.Id,
@@ -87,6 +98,7 @@ public class GetGroupEvents : IEndpoint
                         }
                         : null
                 },
+                StoredFileId = filesByEvent.TryGetValue(e.Id, out var files) ? files.First().Id : null,
                 Availabilities = e.Availabilities.Select(ea => new EventAvailabilityResponseDto
                 {
                     User = new UserResponseDto
