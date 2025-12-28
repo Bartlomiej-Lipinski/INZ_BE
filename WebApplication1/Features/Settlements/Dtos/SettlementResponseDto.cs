@@ -2,7 +2,7 @@
 
 namespace WebApplication1.Features.Settlements.Dtos;
 
-public class SettlementResponseDto
+public record SettlementResponseDto
 {
     public string Id { get; set; } = null!;
     public string GroupId { get; set; } = null!;
