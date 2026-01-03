@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Globalization;
 using WebApplication1.Infrastructure.Data.Context;
 using WebApplication1.Shared.Endpoints;
 using WebApplication1.Shared.Responses;
 using System.Security.Claims;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Features.Users.Dtos;
 using WebApplication1.Shared.Extensions;
@@ -46,7 +48,7 @@ public class UpdateUserProfile : IEndpoint
         user.BirthDate = request.BirthDate;
         user.Status = request.Status;
         user.Description = request.Description;
-        user.UserName = request.UserName;
+        user.UserName = RemoveDiacritics(request.UserName!).ToLowerInvariant();
 
         dbContext.Users.Update(user);
         var updated = await dbContext.SaveChangesAsync(cancellationToken);
@@ -61,5 +63,16 @@ public class UpdateUserProfile : IEndpoint
         logger.LogError("No changes were saved for user profile update. UserId: {UserId}, TraceId: {TraceId}", 
             userId, traceId);
         return Results.Json(ApiResponse<string>.Fail("No changes were saved.", traceId), statusCode: 500);
+    }
+
+    private static string RemoveDiacritics(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return text;
+
+        var normalized = text.Normalize(NormalizationForm.FormD);
+        return string.Concat(
+            normalized.Where(c => char.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+        ).Normalize(NormalizationForm.FormC);
     }
 }

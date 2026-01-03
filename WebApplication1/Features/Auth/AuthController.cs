@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Globalization;
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
@@ -119,7 +121,7 @@ public class AuthController(
             var user = new User
             {
                 Name = request.Name,
-                UserName = request.UserName,
+                UserName = RemoveDiacritics(request.UserName).ToLowerInvariant(),
                 Surname = request.Surname,
                 Email = request.Email,
                 BirthDate = request.BirthDate,
@@ -430,6 +432,17 @@ public class AuthController(
         return password.All(char.IsLetterOrDigit)
             ? "Hasło musi zawierać co najmniej jeden znak specjalny."
             : string.Empty;
+    }
+    
+    private static string RemoveDiacritics(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return text;
+
+        var normalized = text.Normalize(NormalizationForm.FormD);
+        return string.Concat(
+            normalized.Where(c => char.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+        ).Normalize(NormalizationForm.FormC);
     }
 
     public class UserRequestDto
