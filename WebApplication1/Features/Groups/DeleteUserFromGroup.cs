@@ -22,6 +22,7 @@ public class DeleteUserFromGroup : IEndpoint
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }
+    
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string userId,
@@ -62,7 +63,6 @@ public class DeleteUserFromGroup : IEndpoint
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         
         dbContext.GroupUsers.Remove(groupUser);
-        await dbContext.SaveChangesAsync(cancellationToken);
         
         var hasAnyMembers = await dbContext.GroupUsers
             .AnyAsync(gu => gu.GroupId == groupId && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
@@ -74,12 +74,13 @@ public class DeleteUserFromGroup : IEndpoint
             if (group != null)
             {
                 dbContext.Groups.Remove(group);
-                await dbContext.SaveChangesAsync(cancellationToken);
 
                 logger.LogInformation("Group {GroupId} removed because last member was deleted. TraceId: {TraceId}",
                     groupId, traceId);
             }
         }
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         
         logger.LogInformation("User {UserId} removed from group {GroupId} successfully. TraceId: {TraceId}", 
