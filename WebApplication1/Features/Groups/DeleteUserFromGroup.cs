@@ -59,8 +59,28 @@ public class DeleteUserFromGroup : IEndpoint
             return Results.NotFound();
         }
         
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        
         dbContext.GroupUsers.Remove(groupUser);
         await dbContext.SaveChangesAsync(cancellationToken);
+        
+        var hasAnyMembers = await dbContext.GroupUsers
+            .AnyAsync(gu => gu.GroupId == groupId && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
+        
+        if (!hasAnyMembers)
+        {
+            var group = await dbContext.Groups.SingleOrDefaultAsync(g => g.Id == groupId, cancellationToken);
+
+            if (group != null)
+            {
+                dbContext.Groups.Remove(group);
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                logger.LogInformation("Group {GroupId} removed because last member was deleted. TraceId: {TraceId}",
+                    groupId, traceId);
+            }
+        }
+        await transaction.CommitAsync(cancellationToken);
         
         logger.LogInformation("User {UserId} removed from group {GroupId} successfully. TraceId: {TraceId}", 
             userId, groupId, traceId);
