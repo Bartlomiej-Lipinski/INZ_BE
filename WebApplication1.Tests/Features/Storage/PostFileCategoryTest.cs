@@ -1,7 +1,9 @@
 ﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebApplication1.Features.Storage.Categories;
+using WebApplication1.Features.Storage.Dtos;
 using WebApplication1.Shared.Responses;
 
 namespace WebApplication1.Tests.Features.Storage;
@@ -22,9 +24,14 @@ public class PostFileCategoryTest : TestBase
 
         const string categoryName = "New Category";
 
+        var postFileCategoryDto = new PostFileCategoryDto
+        {
+            CategoryName = categoryName
+        };
+
         var result = await PostFileCategory.Handle(
             group.Id,
-            categoryName,
+            postFileCategoryDto,
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
@@ -32,8 +39,8 @@ public class PostFileCategoryTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
+        result.Should().BeOfType<Ok<ApiResponse<string>>>();
+        var okResult = result as Ok<ApiResponse<string>>;
         okResult!.Value!.Success.Should().BeTrue();
 
         var categoryInDb = await dbContext.FileCategories.FirstOrDefaultAsync();
@@ -55,9 +62,14 @@ public class PostFileCategoryTest : TestBase
 
         const string categoryName = "";
 
+        var postFileCategoryDto = new PostFileCategoryDto
+        {
+            CategoryName = categoryName
+        };
+
         var result = await PostFileCategory.Handle(
             group.Id,
-            categoryName,
+            postFileCategoryDto,
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(user.Id),
@@ -65,8 +77,8 @@ public class PostFileCategoryTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
-        var badRequest = result as Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>;
+        result.Should().BeOfType<BadRequest<ApiResponse<string>>>();
+        var badRequest = result as BadRequest<ApiResponse<string>>;
         badRequest!.Value!.Success.Should().BeFalse();
         badRequest.Value.Message.Should().Contain("Category name is required");
     }

@@ -22,7 +22,7 @@ public class DeleteUserFromGroup : IEndpoint
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }
-    
+
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromRoute] string userId,
@@ -34,39 +34,44 @@ public class DeleteUserFromGroup : IEndpoint
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
         var currentUserId = currentUser.GetUserId();
-        
-        logger.LogInformation("Attempt to remove user {TargetUserId} from group {GroupId} by admin {AdminId}. TraceId: {TraceId}",
+
+        logger.LogInformation(
+            "Attempt to remove user {TargetUserId} from group {GroupId} by admin {AdminId}. TraceId: {TraceId}",
             userId, groupId, currentUserId, traceId);
-        
+
         var currentGroupUser = httpContext.Items["GroupUser"] as GroupUser;
         var isAdmin = currentGroupUser?.IsAdmin ?? false;
-        if (!isAdmin)
+        var isSelfRemoval = currentUserId == userId;
+
+        if (!isAdmin && !isSelfRemoval)
         {
             logger.LogWarning("User {CurrentUserId} is not admin of group {GroupId}. TraceId: {TraceId}",
                 currentUserId, groupId, traceId);
             return Results.Forbid();
         }
-        
+
+
         var groupUser = await dbContext.GroupUsers
             .SingleOrDefaultAsync(
-                gu => gu.GroupId == groupId 
-                      && gu.UserId == userId 
+                gu => gu.GroupId == groupId
+                      && gu.UserId == userId
                       && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
-        
+
         if (groupUser == null)
         {
             logger.LogWarning("User {UserId} not found in group {GroupId}. TraceId: {TraceId}",
                 userId, groupId, traceId);
             return Results.NotFound();
         }
-        
+
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        
+
         dbContext.GroupUsers.Remove(groupUser);
-        
+
         var hasAnyMembers = await dbContext.GroupUsers
-            .AnyAsync(gu => gu.GroupId == groupId && gu.AcceptanceStatus == AcceptanceStatus.Accepted, cancellationToken);
-        
+            .AnyAsync(gu => gu.GroupId == groupId && gu.AcceptanceStatus == AcceptanceStatus.Accepted,
+                cancellationToken);
+
         if (!hasAnyMembers)
         {
             var group = await dbContext.Groups.SingleOrDefaultAsync(g => g.Id == groupId, cancellationToken);
@@ -79,11 +84,11 @@ public class DeleteUserFromGroup : IEndpoint
                     groupId, traceId);
             }
         }
-        
+
         await dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        
-        logger.LogInformation("User {UserId} removed from group {GroupId} successfully. TraceId: {TraceId}", 
+
+        logger.LogInformation("User {UserId} removed from group {GroupId} successfully. TraceId: {TraceId}",
             userId, groupId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("User removed from group successfully.", traceId));
     }
