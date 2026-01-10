@@ -59,11 +59,10 @@ public class DeleteExpense : IEndpoint
         }
         
         dbContext.Expenses.Remove(expense);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        
         await settlementCalculator.RecalculateSettlementsForExpenseChangeAsync(
             expense, dbContext, groupId, isAddition: false, logger, cancellationToken);
-        
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         logger.LogInformation("User {UserId} deleted expense {ExpenseId} from group {GroupId}. TraceId: {TraceId}",
             userId, expenseId, groupId, traceId);
         return Results.Ok(ApiResponse<string>.Ok("Expense deleted successfully.", expenseId, traceId));

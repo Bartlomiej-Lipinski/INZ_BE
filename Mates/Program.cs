@@ -195,6 +195,9 @@ if (!Directory.Exists(uploadsPath))
     Directory.CreateDirectory(uploadsPath);
 }
 
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(uploadsPath),
@@ -207,9 +210,6 @@ app.UseStaticFiles(new StaticFileOptions
         ctx.Context.Response.Body = Stream.Null;
     }
 });
-app.UseAuthentication();
-app.UseAuthorization();
 app.MapControllers();
 app.MapEndpoints();
-app.UseHttpsRedirection();
 app.Run();

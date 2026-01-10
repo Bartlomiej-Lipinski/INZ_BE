@@ -105,10 +105,10 @@ public class AuthController(
                 return BadRequest(ApiResponse<string>.Fail("All fields are required.", traceId));
             }
 
-            if (request.Password.Length < 6)
+            if (request.Password.Length < 8)
             {
                 logger.LogWarning("Invalid password length for registration. TraceId: {TraceId}", traceId);
-                return BadRequest(ApiResponse<string>.Fail("Password must be at least 6 characters long.", traceId));
+                return BadRequest(ApiResponse<string>.Fail("Password must be at least 8 characters long.", traceId));
             }
 
             var emailExists = await dbContext.Users.AnyAsync(u => u.Email == request.Email);

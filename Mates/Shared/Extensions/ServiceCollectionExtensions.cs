@@ -9,7 +9,6 @@ internal static class ServiceCollectionExtensions
         services.AddScoped<ILoginAttemptService, LoginAttemptService>();
         services.AddScoped<ICaptchaService, CaptchaService>();
         services.AddScoped<ITwoFactorService, TwoFactorService>();
-        services.AddScoped<IEmailService, PostmarkEmailService>();
         services.AddHttpClient<CaptchaService>();
 
         return services;
