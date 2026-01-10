@@ -8,7 +8,6 @@ using Mates.Shared.Responses;
 using Mates.Shared.Validators;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Mates.Features.Users.Dtos;
 using Mates.Shared.Extensions;
 
 namespace Mates.Features.Polls;

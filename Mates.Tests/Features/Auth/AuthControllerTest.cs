@@ -58,8 +58,8 @@ public class AuthControllerTest : TestBase
     public async Task Register_Should_Create_User_When_Valid()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var controller = CreateController(dbContext, out var userManagerMock, out var authServiceMock,
-            out var loginAttemptMock, out var captchaMock, out var twoFactorMock, out var emailMock, out var loggerMock);
+        var controller = CreateController(dbContext, out var userManagerMock, out _,
+            out _, out _, out _, out _, out _);
 
         userManagerMock.Setup(u => u.CreateAsync(It.IsAny<User>(), It.IsAny<string>()))
             .ReturnsAsync(IdentityResult.Success);
@@ -77,8 +77,8 @@ public class AuthControllerTest : TestBase
     public async Task Register_Should_Return_BadRequest_When_Password_Too_Short()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var controller = CreateController(dbContext, out var userManagerMock, out var authServiceMock,
-            out var loginAttemptMock, out var captchaMock, out var twoFactorMock, out var emailMock, out var loggerMock);
+        var controller = CreateController(dbContext, out _, out _,
+            out _, out _, out _, out _, out _);
 
         var result = await controller.Register(
             TestDataFactory.CreateUserRequestDto(
@@ -96,8 +96,8 @@ public class AuthControllerTest : TestBase
     public async Task Login_Should_Return_Unauthorized_When_Invalid_Password()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var controller = CreateController(dbContext, out var userManagerMock, out var authServiceMock,
-            out var loginAttemptMock, out var captchaMock, out var twoFactorMock, out var emailMock, out var loggerMock);
+        var controller = CreateController(dbContext, out var userManagerMock, out _,
+            out var loginAttemptMock, out _, out _, out _, out _);
         
         var user = new User { Id = "1", Email = "test@test.com" };
         
@@ -127,8 +127,8 @@ public class AuthControllerTest : TestBase
     public async Task Login_Should_Trigger_2FA_When_Enabled()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var controller = CreateController(dbContext, out var userManagerMock, out var authServiceMock,
-            out var loginAttemptMock, out var captchaMock, out var twoFactorMock, out var emailMock, out var loggerMock);
+        var controller = CreateController(dbContext, out var userManagerMock, out _,
+            out var loginAttemptMock, out _, out var twoFactorMock, out _, out _);
         
         var user = TestDataFactory.CreateUser("1", "test@test.com", "testUser");
         userManagerMock.Setup(u => u.FindByEmailAsync(user.Email!)).ReturnsAsync(user);

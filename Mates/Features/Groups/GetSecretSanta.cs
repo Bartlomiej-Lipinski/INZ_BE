@@ -63,26 +63,18 @@ public class GetSecretSanta : IEndpoint
             .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
             .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
 
-        var pairs = new List<SecretSantaResponseDto>();
-        for (var i = 0; i < shuffled.Count; i++)
-            pairs.Add(new SecretSantaResponseDto
-            { 
+        var pairs = shuffled.Select((t, i) => new SecretSantaResponseDto
+            {
                 Giver = new UserResponseDto
                 {
-                    Id = shuffled[i].Id,
-                    Name = shuffled[i].Name,
-                    Surname = shuffled[i].Surname,
-                    Username = shuffled[i].UserName,
-                    ProfilePicture = profilePictures.TryGetValue(shuffled[i].Id, out var photo)
-                        ? new ProfilePictureResponseDto
-                        {
-                            Url = photo.Url,
-                            FileName = photo.FileName,
-                            ContentType = photo.ContentType,
-                            Size = photo.Size
-                        }
+                    Id = t.Id,
+                    Name = t.Name,
+                    Surname = t.Surname,
+                    Username = t.UserName,
+                    ProfilePicture = profilePictures.TryGetValue(t.Id, out var photo)
+                        ? new ProfilePictureResponseDto { Url = photo.Url, FileName = photo.FileName, ContentType = photo.ContentType, Size = photo.Size }
                         : null
-                }, 
+                },
                 Receiver = new UserResponseDto
                 {
                     Id = receivers[i].Id,
@@ -90,17 +82,11 @@ public class GetSecretSanta : IEndpoint
                     Surname = receivers[i].Surname,
                     Username = receivers[i].UserName,
                     ProfilePicture = profilePictures.TryGetValue(receivers[i].Id, out var receiverPhoto)
-                        ? new ProfilePictureResponseDto
-                        {
-                            Url = receiverPhoto.Url,
-                            FileName = receiverPhoto.FileName,
-                            ContentType = receiverPhoto.ContentType,
-                            Size = receiverPhoto.Size
-                        }
+                        ? new ProfilePictureResponseDto { Url = receiverPhoto.Url, FileName = receiverPhoto.FileName, ContentType = receiverPhoto.ContentType, Size = receiverPhoto.Size }
                         : null
                 }
-            }
-        );
+            })
+            .ToList();
 
         logger.LogInformation("Secret Santa pairs assigned for GroupId: {GroupId}. TraceId: {TraceId}",
             groupId, traceId);

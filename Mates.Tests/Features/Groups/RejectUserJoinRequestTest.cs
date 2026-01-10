@@ -38,7 +38,7 @@ public class RejectUserJoinRequestTest : TestBase
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "g1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
         
-        var acceptedUser = TestDataFactory.CreateGroupUser("u1", "g1", false, AcceptanceStatus.Accepted);
+        var acceptedUser = TestDataFactory.CreateGroupUser("u1", "g1");
         dbContext.GroupUsers.Add(acceptedUser);
         
         await dbContext.SaveChangesAsync();
@@ -68,7 +68,7 @@ public class RejectUserJoinRequestTest : TestBase
         var group = TestDataFactory.CreateGroup("g1", "Test Group");
         dbContext.Groups.Add(group);
         
-        var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "g1", true, AcceptanceStatus.Accepted);
+        var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "g1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
         
         var pendingUser = TestDataFactory.CreateGroupUser("u1", "g1", false, AcceptanceStatus.Pending);

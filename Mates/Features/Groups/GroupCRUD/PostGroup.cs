@@ -70,7 +70,7 @@ public class PostGroup : IEndpoint
             {
                 Id = group.Id,
                 Name = group.Name,
-                Color = group.Color,
+                Color = group.Color
             };
 
             logger.LogInformation("Group '{GroupName}' successfully created with ID: {GroupId}. TraceId: {TraceId}",

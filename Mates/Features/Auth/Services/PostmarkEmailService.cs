@@ -58,7 +58,7 @@ internal sealed class PostmarkEmailService(IConfiguration configuration, ILogger
     {
         try
         {
-            var subject = "Your Two-Factor Authentication Code";
+            const string subject = "Your Two-Factor Authentication Code";
             var htmlContent = $@"
             <!DOCTYPE html>
             <html>

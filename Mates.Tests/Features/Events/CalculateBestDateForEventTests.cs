@@ -58,7 +58,7 @@ public class CalculateBestDateForEventTests : TestBase
         evt.RangeEnd = endDate;
         evt.Availabilities = new List<EventAvailability>
         {
-            TestDataFactory.CreateEventAvailability(evt.Id, user.Id, EventAvailabilityStatus.Going, DateTime.Now),
+            TestDataFactory.CreateEventAvailability(evt.Id, user.Id, EventAvailabilityStatus.Going, DateTime.Now)
         };
         evt.AvailabilityRanges = new List<EventAvailabilityRange>
         {

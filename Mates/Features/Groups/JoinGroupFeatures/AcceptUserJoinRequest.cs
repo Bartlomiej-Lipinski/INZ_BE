@@ -74,28 +74,33 @@ public class AcceptUserJoinRequest : IEndpoint
         dbContext.GroupUsers.Update(groupUser);
 
         var memberDisplayName = request.UserId;
-        if (groupUser.User != null)
         {
             var fullName = $"{groupUser.User.Name} {groupUser.User.Surname}".Trim();
             var userName = groupUser.User.UserName;
             var hasFullName = !string.IsNullOrWhiteSpace(fullName);
             var hasUserName = !string.IsNullOrWhiteSpace(userName);
 
-            if (hasFullName && hasUserName)
+            switch (hasFullName)
             {
-                memberDisplayName = $"{fullName} (@{userName})";
-            }
-            else if (hasFullName)
-            {
-                memberDisplayName = fullName;
-            }
-            else if (hasUserName)
-            {
-                memberDisplayName = $"@{userName}";
+                case true when hasUserName:
+                    memberDisplayName = $"{fullName} (@{userName})";
+                    break;
+                case true:
+                    memberDisplayName = fullName;
+                    break;
+                default:
+                {
+                    if (hasUserName)
+                    {
+                        memberDisplayName = $"@{userName}";
+                    }
+
+                    break;
+                }
             }
         }
 
-       
+
         var feedItem = new GroupFeedItem
         {
             Id = Guid.NewGuid().ToString(),

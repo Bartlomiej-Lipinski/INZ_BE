@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Mates.Features.Events;
-using Mates.Features.Events.Dtos;
 using Mates.Infrastructure.Service;
 using Mates.Shared.Responses;
 

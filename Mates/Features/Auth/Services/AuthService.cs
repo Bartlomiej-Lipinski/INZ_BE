@@ -26,7 +26,7 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Email, user.Email)
+            new Claim(ClaimTypes.Email, user.Email!)
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Auth:Key"]
                                                                   ?? throw new InvalidOperationException()));
@@ -34,7 +34,7 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
         var token = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddMinutes(15),
             signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-        var refresh = new RefreshToken()
+        var refresh = new RefreshToken
         {
             Id = Guid.NewGuid().ToString(),
             Token = Guid.NewGuid().ToString(),

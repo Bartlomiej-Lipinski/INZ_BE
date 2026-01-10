@@ -6,7 +6,6 @@ using Mates.Infrastructure.Data.Entities.Groups;
 using Mates.Shared.Endpoints;
 using Mates.Shared.Responses;
 using Mates.Shared.Validators;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Mates.Shared.Extensions;
@@ -24,6 +23,7 @@ public class GrantAdminPrivileges : IEndpoint
             .RequireAuthorization()
             .AddEndpointFilter<GroupMembershipFilter>();
     }
+    
     public static async Task<IResult> Handle(
         [FromRoute] string groupId,
         [FromBody] GrantAdminPrivilegesDto request,

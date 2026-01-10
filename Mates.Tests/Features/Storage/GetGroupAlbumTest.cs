@@ -13,7 +13,7 @@ public class GetGroupAlbumTest: TestBase
     public async Task Handle_Should_Return_Empty_List_When_No_Files()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupId = "g1";
+        const string groupId = "g1";
 
         var result = await GetGroupAlbum.Handle(
             groupId,
@@ -34,7 +34,7 @@ public class GetGroupAlbumTest: TestBase
     public async Task Handle_Should_Return_All_Album_Files()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupId = "g1";
+        const string groupId = "g1";
 
         var file1 = TestDataFactory.CreateStoredFile(
             "f1",

@@ -22,15 +22,14 @@ public class PostQuizTest : TestBase
         dbContext.GroupUsers.Add(groupUser);
         await dbContext.SaveChangesAsync();
 
-        var request = TestDataFactory.CreateQuizRequestDto("Sample Quiz", new List<QuizQuestionRequestDto>
-        {
-            TestDataFactory.CreateSingleChoiceQuestion("What is 2+2?", new List<(string, bool)>
-            {
+        var request = TestDataFactory.CreateQuizRequestDto("Sample Quiz", [
+            TestDataFactory.CreateSingleChoiceQuestion("What is 2+2?", [
                 ("3", false),
                 ("4", true)
-            }),
+            ]),
+
             TestDataFactory.CreateTrueFalseQuestion("The sky is blue.", true)
-        });
+        ]);
 
         var result = await PostQuiz.Handle(
             group.Id,

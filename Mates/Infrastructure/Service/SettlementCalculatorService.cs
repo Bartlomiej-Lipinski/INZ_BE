@@ -75,7 +75,7 @@ public class SettlementCalculatorService : ISettlementCalculator
                         GroupId = groupId,
                         FromUserId = debtor.UserId,
                         ToUserId = creditor.UserId,
-                        Amount = Math.Round(amount, 2),
+                        Amount = Math.Round(amount, 2)
                     });
 
                     amountToPay -= amount;
@@ -126,7 +126,7 @@ public class SettlementCalculatorService : ISettlementCalculator
 
     private class SettlementParticipant
     {
-        public string UserId { get; set; } = null!;
+        public string UserId { get; init; } = null!;
         public decimal Amount { get; set; }
     }
 }

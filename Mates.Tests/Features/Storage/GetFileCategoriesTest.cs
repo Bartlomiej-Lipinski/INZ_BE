@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Mates.Features.Storage;
 using Mates.Features.Storage.Categories;
 using Mates.Features.Storage.Dtos;
 using Mates.Shared.Responses;
@@ -13,8 +12,8 @@ public class GetFileCategoriesTest : TestBase
     public async Task GetFileCategories_Should_Return_Categories_For_Group()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupId = "g1";
-        var userId = "u1";
+        const string groupId = "g1";
+        const string userId = "u1";
 
         var file1 = TestDataFactory.CreateFileCategory("c1", groupId, "Category 1");
         var file2 = TestDataFactory.CreateFileCategory("c2", groupId, "Category 2");
@@ -41,8 +40,8 @@ public class GetFileCategoriesTest : TestBase
     public async Task GetFileCategories_Should_Return_EmptyList_When_No_Categories()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupId = "g1";
-        var userId = "u1";
+        const string groupId = "g1";
+        const string userId = "u1";
 
         var result = await GetFileCategories.Handle(
             groupId,

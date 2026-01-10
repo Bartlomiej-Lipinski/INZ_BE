@@ -45,7 +45,7 @@ public class UploadUserProfilePhotoTest : TestBase
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var file = TestDataFactory.CreateFormFile("test.jpg", new byte[] { 1, 2, 3 });
+        var file = TestDataFactory.CreateFormFile("test.jpg", [1, 2, 3]);
         const string expectedUrl = "/uploads/test.jpg";
         mockStorage
             .Setup(x => x.SaveFileAsync(It.IsAny<Stream>(), file.FileName, file.ContentType, It.IsAny<CancellationToken>()))
@@ -71,7 +71,7 @@ public class UploadUserProfilePhotoTest : TestBase
 
         var storedFile = await dbContext.StoredFiles.FirstOrDefaultAsync();
         storedFile.Should().NotBeNull();
-        storedFile!.Url.Should().Be(expectedUrl);
+        storedFile.Url.Should().Be(expectedUrl);
         storedFile.EntityType.Should().Be(Infrastructure.Data.Enums.EntityType.User);
 
         mockStorage.Verify(x => x.SaveFileAsync(It.IsAny<Stream>(), file.FileName, file.ContentType, It.IsAny<CancellationToken>()), Times.Once);

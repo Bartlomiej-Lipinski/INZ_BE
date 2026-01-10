@@ -27,8 +27,8 @@ public class GetGroups : IEndpoint
                 Id = g.Id,
                 Name = g.Name,
                 Color = g.Color
-            }).ToListAsync(dbc);;
-        
+            }).ToListAsync(dbc);
+
         if (groups.Count == 0)
             return Results.Ok(ApiResponse<List<GroupResponseDto>>
                 .Ok(groups, "No groups found."));

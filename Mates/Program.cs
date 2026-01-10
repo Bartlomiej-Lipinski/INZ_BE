@@ -201,12 +201,10 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads",
     OnPrepareResponse = ctx =>
     {
-        if (!ctx.Context.User.Identity?.IsAuthenticated ?? true)
-        {
-            ctx.Context.Response.StatusCode = 401;
-            ctx.Context.Response.ContentLength = 0;
-            ctx.Context.Response.Body = Stream.Null;
-        }
+        if (!(!ctx.Context.User.Identity?.IsAuthenticated ?? true)) return;
+        ctx.Context.Response.StatusCode = 401;
+        ctx.Context.Response.ContentLength = 0;
+        ctx.Context.Response.Body = Stream.Null;
     }
 });
 app.UseAuthentication();

@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mates.Features.Events.Availability;
-using Mates.Features.Events.Dtos;
 using Mates.Shared.Responses;
 
 namespace Mates.Tests.Features.Events.Availability;

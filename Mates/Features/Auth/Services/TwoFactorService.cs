@@ -119,7 +119,7 @@ internal sealed class TwoFactorService(AppDbContext context, ILogger<TwoFactorSe
         using var rng = RandomNumberGenerator.Create();
         uint number;
         const uint maxExclusive = 1000000U;
-        const uint maxAcceptable = uint.MaxValue - (uint.MaxValue % maxExclusive);
+        const uint maxAcceptable = uint.MaxValue - uint.MaxValue % maxExclusive;
         
         do
         {

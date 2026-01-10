@@ -1,8 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
-using Mates.Features.Storage;
 using Mates.Features.Storage.Categories;
-using Mates.Infrastructure.Data.Enums;
 using Mates.Shared.Responses;
 
 namespace Mates.Tests.Features.Storage;
@@ -13,8 +11,8 @@ public class DeleteFileCategoryTest : TestBase
     public async Task DeleteCategory_Should_Remove_Category_When_No_Files()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupId = "g1";
-        var userId = "u1";
+        const string groupId = "g1";
+        const string userId = "u1";
 
         var category = TestDataFactory.CreateFileCategory("c1", groupId, "Test Category");
         dbContext.FileCategories.Add(category);
@@ -44,8 +42,8 @@ public class DeleteFileCategoryTest : TestBase
     public async Task DeleteCategory_Should_Return_NotFound_For_Invalid_Category()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
-        var groupId = "g1";
-        var userId = "u1";
+        const string groupId = "g1";
+        const string userId = "u1";
 
         var result = await DeleteFileCategory.Handle(
             groupId,

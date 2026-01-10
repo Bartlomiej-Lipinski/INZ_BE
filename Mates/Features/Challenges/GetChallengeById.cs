@@ -123,12 +123,12 @@ public class GetChallengeById : IEndpoint
                 },
                 JoinedAt = p.JoinedAt,
                 CompletedAt = p.CompletedAt,
-                ProgressEntries = p.ProgressEntries.OrderBy(p => p.Date)
-                    .Select(p => new ChallengeProgressResponseDto 
+                ProgressEntries = p.ProgressEntries.OrderBy(cp => cp.Date)
+                    .Select(cp => new ChallengeProgressResponseDto 
                     {
-                        Date = p.Date,
-                        Description = p.Description,
-                        Value = p.Value
+                        Date = cp.Date,
+                        Description = cp.Description,
+                        Value = cp.Value
                     }).ToList()
             }).ToList()
         };

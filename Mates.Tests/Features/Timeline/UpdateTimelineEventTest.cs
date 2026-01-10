@@ -42,7 +42,7 @@ public class UpdateTimelineEventTest : TestBase
 
         var updatedEvent = dbContext.TimelineEvents.FirstOrDefault(te => te.Id == timelineEvent.Id);
         updatedEvent.Should().NotBeNull();
-        updatedEvent!.Title.Should().Be("Updated Title");
+        updatedEvent.Title.Should().Be("Updated Title");
         updatedEvent.Description.Should().Be("Updated Description");
     }
     

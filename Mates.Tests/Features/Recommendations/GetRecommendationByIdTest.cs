@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Mates.Features.Recommendations;
 using Mates.Features.Recommendations.Dtos;
-using Mates.Infrastructure.Data.Entities.Groups;
 using Mates.Infrastructure.Data.Enums;
 using Mates.Shared.Responses;
 

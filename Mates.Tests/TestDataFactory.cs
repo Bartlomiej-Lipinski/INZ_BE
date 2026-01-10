@@ -700,7 +700,7 @@ public static class TestDataFactory
         };
     }
 
-    public static GroupFeedItemRequestDto CreateGroupFeedItemRequestDto(string description, IFormFile? file)
+    public static GroupFeedItemRequestDto CreateGroupFeedItemRequestDto(string? description, IFormFile? file)
     {
         return new GroupFeedItemRequestDto
         {

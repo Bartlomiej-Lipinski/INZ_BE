@@ -5,16 +5,14 @@ public class LocalStorageService : IStorageService
     private readonly string _uploadsRoot;
     private readonly string _baseRequestPath;
     private readonly ILogger<LocalStorageService> _logger;
-    private readonly IWebHostEnvironment _env;
 
     public LocalStorageService(IConfiguration config, IWebHostEnvironment env, ILogger<LocalStorageService> logger)
     {
-        _env = env;
         _logger = logger;
         var folder = config["Storage:UploadsFolder"] ?? "uploads";
         _uploadsRoot = Path.IsPathRooted(folder) 
             ? folder 
-            : Path.Combine(_env.ContentRootPath, folder);
+            : Path.Combine(env.ContentRootPath, folder);
         _baseRequestPath = config["Storage:BaseRequestPath"] ?? "/api/storage";
         Directory.CreateDirectory(_uploadsRoot);
     }
@@ -57,14 +55,11 @@ public class LocalStorageService : IStorageService
 
         // Normalize paths for comparison
         var normalizedRoot = Path.GetFullPath(_uploadsRoot);
-        if (!fullPath.StartsWith(normalizedRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
-            !fullPath.Equals(normalizedRoot, StringComparison.OrdinalIgnoreCase))
-        {
-            _logger.LogWarning("Path traversal attempt detected: {Url} -> {FullPath}", url, fullPath);
-            return null;
-        }
+        if (fullPath.StartsWith(normalizedRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+            fullPath.Equals(normalizedRoot, StringComparison.OrdinalIgnoreCase)) return fullPath;
+        _logger.LogWarning("Path traversal attempt detected: {Url} -> {FullPath}", url, fullPath);
+        return null;
 
-        return fullPath;
     }
 
     public async Task<string> SaveFileAsync(Stream stream, string fileName, string contentType, CancellationToken ct)
@@ -72,7 +67,7 @@ public class LocalStorageService : IStorageService
         var safeName = $"{Guid.NewGuid():N}_{Path.GetFileName(fileName)}";
         var filePath = Path.Combine(_uploadsRoot, safeName);
 
-        using (var fs = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+        await using (var fs = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
         {
             await stream.CopyToAsync(fs, ct);
         }
