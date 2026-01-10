@@ -1,3 +1,24 @@
+using Mates.Features.Auth;
+using Mates.Features.Challenges.Dtos;
+using Mates.Features.Comments.Dtos;
+using Mates.Features.Events.Dtos;
+using Mates.Features.Groups.Dtos;
+using Mates.Features.Polls.Dtos;
+using Mates.Features.Quizzes.Dtos;
+using Mates.Features.Recommendations.Dtos;
+using Mates.Features.Settlements.Dtos;
+using Mates.Features.Storage.Dtos;
+using Mates.Features.Timeline.Dtos;
+using Mates.Infrastructure.Data.Entities;
+using Mates.Infrastructure.Data.Entities.Challenges;
+using Mates.Infrastructure.Data.Entities.Comments;
+using Mates.Infrastructure.Data.Entities.Events;
+using Mates.Infrastructure.Data.Entities.Groups;
+using Mates.Infrastructure.Data.Entities.Polls;
+using Mates.Infrastructure.Data.Entities.Quizzes;
+using Mates.Infrastructure.Data.Entities.Settlements;
+using Mates.Infrastructure.Data.Entities.Storage;
+using Mates.Infrastructure.Data.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace Mates.Tests;
@@ -142,7 +163,8 @@ public static class TestDataFactory
     }
 
     public static Comment CreateComment(
-        string id, string groupId, string targetId, EntityType entityType, string userId, string content, DateTime createdAt)
+        string id, string groupId, string targetId, EntityType entityType, string userId, string content,
+        DateTime createdAt)
     {
         return new Comment
         {
@@ -195,8 +217,8 @@ public static class TestDataFactory
         string userId,
         string title,
         string? description,
-        DateTime? startDate, 
-        string? location, 
+        DateTime? startDate,
+        string? location,
         DateTime createdAt)
     {
         return new Event
@@ -470,7 +492,7 @@ public static class TestDataFactory
     }
 
     public static ChallengeRequestDto CreateChallengeRequestDto(
-        string name, 
+        string name,
         string description,
         DateTime startDate,
         DateTime endDate,
@@ -551,8 +573,9 @@ public static class TestDataFactory
             Questions = questions
         };
     }
-    
-    public static QuizQuestionRequestDto CreateSingleChoiceQuestion(string content, List<(string Text, bool IsCorrect)> options)
+
+    public static QuizQuestionRequestDto CreateSingleChoiceQuestion(string content,
+        List<(string Text, bool IsCorrect)> options)
     {
         return new QuizQuestionRequestDto
         {
@@ -565,7 +588,7 @@ public static class TestDataFactory
             }).ToList()
         };
     }
-    
+
     public static QuizQuestionRequestDto CreateTrueFalseQuestion(string content, bool correctAnswer)
     {
         return new QuizQuestionRequestDto
@@ -575,7 +598,7 @@ public static class TestDataFactory
             CorrectTrueFalse = correctAnswer
         };
     }
-    
+
     public static QuizQuestion CreateSingleChoiceQuestion(
         string id,
         string quizId,
@@ -640,8 +663,9 @@ public static class TestDataFactory
             SelectedTrueFalse = selectedTrueFalse
         };
     }
-    
-    public static QuizAttempt CreateQuizAttempt(string id, string quizId, string userId, int score, DateTime completedAt)
+
+    public static QuizAttempt CreateQuizAttempt(string id, string quizId, string userId, int score,
+        DateTime completedAt)
     {
         return new QuizAttempt
         {
@@ -687,4 +711,14 @@ public static class TestDataFactory
 
     public static PollVoteRequestDto CreatePollVoteRequestDto(string optionId)
     {
-        r
+        return new PollVoteRequestDto
+        {
+            OptionId = optionId
+        };
+    }
+    
+    private static string GenerateUniqueCode()
+    {
+        return Guid.NewGuid().ToString()[..8].ToUpper();
+    }
+}

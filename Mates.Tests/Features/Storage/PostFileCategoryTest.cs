@@ -2,11 +2,11 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using WebApplication1.Features.Storage.Categories;
-using WebApplication1.Features.Storage.Dtos;
-using WebApplication1.Shared.Responses;
+using Mates.Features.Storage.Categories;
+using Mates.Features.Storage.Dtos;
+using Mates.Shared.Responses;
 
-namespace WebApplication1.Tests.Features.Storage;
+namespace Mates.Tests.Features.Storage;
 
 public class PostFileCategoryTest : TestBase
 {
