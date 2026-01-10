@@ -47,12 +47,20 @@ public class UpdatePollTest : TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
-        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PollResponseDto>>>();
+        var okResult = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<PollResponseDto>>;
         okResult!.Value!.Success.Should().BeTrue();
-        okResult.Value.Data.Should().Be("Poll updated successfully.");
-        okResult.Value.Message.Should().Be(poll.Id);
-        
+        okResult.Value.Data.Should().NotBeNull();
+        okResult.Value.Message.Should().Be("Poll updated successfully.");
+
+        var dto = okResult.Value.Data!;
+        dto.Question.Should().Be("Updated question");
+        dto.Options.Should().HaveCount(2);
+        dto.Options.Any(o => o.Text == "Updated Option 1").Should().BeTrue();
+        dto.Options.Any(o => o.Text == "New Option 3").Should().BeTrue();
+        var dtoOption1 = dto.Options.First(o => o.Text == "Updated Option 1");
+        dtoOption1.VotedUsersIds.Should().ContainSingle(v => v == voter.Id);
+
         var updatedPoll = await dbContext.Polls
             .Include(p => p.Options).ThenInclude(o => o.VotedUsers)
             .FirstOrDefaultAsync(p => p.Id == poll.Id);

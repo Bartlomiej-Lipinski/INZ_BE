@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Logging.Abstractions;
 using Mates.Features.Events;
+using Mates.Features.Events.Availability;
 using Mates.Infrastructure.Data.Entities.Events;
 using Mates.Shared.Responses;
 
@@ -27,7 +28,7 @@ public class CalculateBestDateForEventTests : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
-            NullLogger<CalculateBestDateForEvent>.Instance,
+            NullLogger<PostAvailabilityRange>.Instance,
             CancellationToken.None);
 
         result.Should().BeOfType<NotFound>();
@@ -77,11 +78,11 @@ public class CalculateBestDateForEventTests : TestBase
             dbContext,
             CreateClaimsPrincipal(user.Id),
             CreateHttpContext(),
-            NullLogger<CalculateBestDateForEvent>.Instance,
+            NullLogger<PostAvailabilityRange>.Instance,
             CancellationToken.None);
 
-        result.Should().BeOfType<Ok<ApiResponse<List<EventSuggestion>>>>();
-        var ok = result as Ok<ApiResponse<List<EventSuggestion>>>;
+        result.Should().BeOfType<Ok<ApiResponse<List<EventSuggestionDto>>>>();
+        var ok = result as Ok<ApiResponse<List<EventSuggestionDto>>>;
         ok!.Value!.Success.Should().BeTrue();
         ok.Value.Data.Should().NotBeNull();
         ok.Value.Data.Should().HaveCountGreaterThan(0);

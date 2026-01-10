@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿﻿using System.Diagnostics;
 using System.Security.Claims;
 using Mates.Features.Events.Dtos;
 using Mates.Features.Storage.Dtos;
@@ -53,24 +53,30 @@ public class GetGroupEvents : IEndpoint
             .Concat(events.SelectMany(p => p.Availabilities).Select(ea => ea.UserId))
             .Distinct()
             .ToList();
-
-        var profilePictures = await dbContext.StoredFiles
+        
+        var profileFiles = await dbContext.StoredFiles
             .AsNoTracking()
             .Where(f => userIds.Contains(f.UploadedById) && f.EntityType == EntityType.User)
+            .ToListAsync(cancellationToken);
+
+        var profilePictures = profileFiles
             .GroupBy(f => f.UploadedById)
             .Select(g => g.OrderByDescending(x => x.UploadedAt).First())
-            .ToDictionaryAsync(x => x.UploadedById, cancellationToken);
+            .ToDictionary(x => x.UploadedById);
         
         var eventsIds = events.Select(r => r.Id).ToList();
         
-        var filesByEvent = await dbContext.StoredFiles
+        var files = await dbContext.StoredFiles
             .AsNoTracking()
             .Where(f =>
                 f.GroupId == groupId &&
                 f.EntityType == EntityType.Event &&
                 eventsIds.Contains(f.EntityId!))
+            .ToListAsync(cancellationToken);
+
+        var filesByEvent = files
             .GroupBy(f => f.EntityId)
-            .ToDictionaryAsync(g => g.Key, g => g.ToList(), cancellationToken);
+            .ToDictionary(g => g.Key!, g => g.ToList());
         
         var response = events.Select(e => new EventResponseDto
             {
@@ -98,7 +104,7 @@ public class GetGroupEvents : IEndpoint
                         }
                         : null
                 },
-                StoredFileId = filesByEvent.TryGetValue(e.Id, out var files) ? files.First().Id : null,
+                StoredFileId = filesByEvent.TryGetValue(e.Id, out var eventFiles) ? eventFiles.First().Id : null,
                 Availabilities = e.Availabilities.Select(ea => new EventAvailabilityResponseDto
                 {
                     User = new UserResponseDto

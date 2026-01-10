@@ -101,7 +101,7 @@ public class PostAvailabilityRangeTest :TestBase
             CancellationToken.None
         );
 
-        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<AvailabilityRangeResponseDto>>>>();
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
         (await dbContext.EventAvailabilityRanges.CountAsync()).Should().Be(1);
     }
 }

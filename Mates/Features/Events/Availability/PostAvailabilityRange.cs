@@ -131,16 +131,13 @@ public class PostAvailabilityRange : IEndpoint
             return Results.Ok(ApiResponse<string>.Ok(null, "Availability ranges added successfully.", traceId));
         logger.LogInformation("All users submitted availability for event {EventId}. Calculating best date.", eventId);
 
-        var cbdeLogger = httpContext.RequestServices
-            .GetRequiredService<ILogger<CalculateBestDateForEvent>>();
-
         await CalculateBestDateForEvent.Handle(
             groupId,
             eventId,
             dbContext,
             currentUser,
             httpContext,
-            cbdeLogger,
+            logger,
             cancellationToken
         );
 

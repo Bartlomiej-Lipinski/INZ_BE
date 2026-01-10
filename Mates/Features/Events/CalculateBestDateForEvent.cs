@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Security.Claims;
+using Mates.Features.Events.Availability;
 using Mates.Infrastructure.Data.Context;
 using Mates.Infrastructure.Data.Entities.Events;
 using Mates.Shared.Endpoints;
@@ -29,7 +30,7 @@ public class CalculateBestDateForEvent : IEndpoint
         AppDbContext dbContext,
         ClaimsPrincipal currentUser,
         HttpContext httpContext,
-        ILogger<CalculateBestDateForEvent> logger,
+        ILogger<PostAvailabilityRange> logger,
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;

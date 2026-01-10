@@ -13,6 +13,11 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_NotFound_When_Request_Does_Not_Exist()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var group = TestDataFactory.CreateGroup("group1");
+        var adminUser = TestDataFactory.CreateUser("admin1", "Admin", "User");
+        dbContext.Groups.Add(group);
+        dbContext.Users.Add(adminUser);
+
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
         await dbContext.SaveChangesAsync();
@@ -37,6 +42,12 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_Request_Is_Not_Pending()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var group = TestDataFactory.CreateGroup("group1");
+        var adminUser = TestDataFactory.CreateUser("admin1", "Admin", "User");
+        var user = TestDataFactory.CreateUser("user1", "Test", "User");
+        dbContext.Groups.Add(group);
+        dbContext.Users.AddRange(adminUser, user);
+
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
         
@@ -64,6 +75,12 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Accept_Request_When_It_Is_Pending()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var group = TestDataFactory.CreateGroup("group1");
+        var adminUser = TestDataFactory.CreateUser("admin1", "Admin", "User");
+        var user = TestDataFactory.CreateUser("user1", "Test", "User");
+        dbContext.Groups.Add(group);
+        dbContext.Users.AddRange(adminUser, user);
+
         var adminGroupUser = TestDataFactory.CreateGroupUser("admin1", "group1", true);
         dbContext.GroupUsers.Add(adminGroupUser);
         
@@ -95,6 +112,12 @@ public class AcceptUserJoinRequestTest : TestBase
     public async Task Handle_Should_Return_BadRequest_When_User_Is_Not_Admin()
     {
         var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var group = TestDataFactory.CreateGroup("group1");
+        var nonAdmin = TestDataFactory.CreateUser("user2", "NotAdmin", "User");
+        var pending = TestDataFactory.CreateUser("user1", "Test", "User");
+        dbContext.Groups.Add(group);
+        dbContext.Users.AddRange(nonAdmin, pending);
+
         var nonAdminUser = TestDataFactory.CreateGroupUser("user2", "group1");
         dbContext.GroupUsers.Add(nonAdminUser);
 
