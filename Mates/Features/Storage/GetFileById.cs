@@ -30,6 +30,7 @@ public class GetFileById : IEndpoint
         CancellationToken cancellationToken)
     {
         var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
 
         var record = await dbContext.StoredFiles.FindAsync([id], cancellationToken);
         if (record == null)
@@ -44,14 +45,25 @@ public class GetFileById : IEndpoint
             logger.LogInformation("Physical file for {Id} not found. TraceId: {TraceId}", id, traceId);
             return Results.NotFound();
         }
-        
-        var groupUsersIds = await dbContext.GroupUsers
-            .AsNoTracking()
-            .Where(gm => gm.GroupId == record.GroupId)
-            .Select(gm => gm.UserId)
-            .ToListAsync(cancellationToken);
 
-        if (groupUsersIds.Contains(currentUser.GetUserId()) == false)
+        var hasAccess = record.UploadedById == userId; // Własny plik
+
+        if (!hasAccess)
+        {
+            var isProfilePicture = await dbContext.StoredFiles
+                .AsNoTracking()
+                .Where(f => f.Id == id)
+                .AnyAsync(f => f.UploadedBy != null, cancellationToken);
+
+            if (isProfilePicture) hasAccess = true;
+        }
+
+        if (!hasAccess && !string.IsNullOrEmpty(record.GroupId))
+            hasAccess = await dbContext.GroupUsers
+                .AsNoTracking()
+                .AnyAsync(gu => gu.GroupId == record.GroupId && gu.UserId == userId, cancellationToken);
+
+        if (!hasAccess)
         {
             logger.LogError("User attempted to access file {Id} without permission. TraceId: {TraceId}", id, traceId);
             return Results.Forbid();
