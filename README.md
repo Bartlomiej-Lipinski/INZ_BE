@@ -92,7 +92,7 @@ Debugowanie w IDE (Rider / Visual Studio)
 
 Testowanie — krótki przewodnik
 ------------------------------
-- Katalog `Mates.Tests` zawiera głównie testy integracyjne i funkcjonalne (WebApplicationFactory/TestServer). Są to priorytetowe testy, ponieważ weryfikują mapowanie EF Core, ograniczenia DB i zachowanie API.
+- Katalog `Mates.Tests` zawiera głównie testy jednostkowe. Są to priorytetowe testy, ponieważ weryfikują mapowanie EF Core, ograniczenia DB i zachowanie API.
 - Dodając nowe testy:
   - Preferuj odizolowane środowisko DB (SQLite in-memory lub kontener DB w CI).
   - Używaj `TestDataFactory` do tworzenia danych testowych.
