@@ -1,0 +1,52 @@
+﻿using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Mates.Features.Comments;
+using Mates.Features.Comments.Dtos;
+using Mates.Infrastructure.Data.Enums;
+using Mates.Shared.Responses;
+
+namespace Mates.Tests.Features.Comments;
+
+public class GetCommentsForTargetTest : TestBase
+{
+    [Fact]
+    public async Task Handle_Should_Return_Comments_For_Target()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+    
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, group.Id);
+        dbContext.Groups.Add(group);
+        dbContext.Users.Add(user);
+        dbContext.GroupUsers.Add(groupUser);
+
+        var target = TestDataFactory.CreateRecommendation(
+            "r1", group.Id, user.Id, "Title", "Content", DateTime.UtcNow);
+        dbContext.Recommendations.Add(target);
+
+        var comment1 = TestDataFactory.CreateComment(
+            "c1", group.Id, target.Id, EntityType.Recommendation, user.Id, "First comment", DateTime.UtcNow);
+        var comment2 = TestDataFactory.CreateComment(
+            "c2", group.Id, target.Id, EntityType.Recommendation, user.Id, "Second comment", DateTime.UtcNow);
+        dbContext.Comments.AddRange(comment1, comment2);
+
+        await dbContext.SaveChangesAsync();
+
+        var result = await GetCommentsForTarget.Handle(
+            group.Id,
+            target.Id,
+            dbContext,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(user.Id),
+            NullLogger<GetCommentsForTarget>.Instance,
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<CommentResponseDto>>>>();
+        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<List<CommentResponseDto>>>;
+        ok!.Value!.Data.Should().HaveCount(2);
+        ok.Value.Data.Should().ContainSingle(c => c.Content == "First comment");
+        ok.Value.Data.Should().ContainSingle(c => c.Content == "Second comment");
+    }
+}

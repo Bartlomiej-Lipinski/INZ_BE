@@ -1,0 +1,86 @@
+﻿using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using Mates.Features.Events;
+using Mates.Features.Events.Dtos;
+using Mates.Infrastructure.Service;
+using Mates.Shared.Responses;
+
+namespace Mates.Tests.Features.Events;
+
+public class PostEventTest : TestBase
+{
+    [Fact]
+    public async Task Handle_Should_Create_Event_When_Valid()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var user = TestDataFactory.CreateUser("u1", "Test","User");
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, "g1");
+        dbContext.Groups.Add(group);
+        dbContext.Users.Add(user);
+        dbContext.GroupUsers.Add(groupUser);
+        await dbContext.SaveChangesAsync();
+
+        var request = TestDataFactory.CreateEventRequestDto(
+            "New Event", 
+            DateTime.UtcNow.AddDays(1), 
+            DateTime.UtcNow.AddDays(1).AddHours(2),
+            "Event description", 
+            "Online");
+        
+        var mockStorageService = new Mock<IStorageService>();
+        var result = await PostEvent.Handle(
+            group.Id,
+            request,
+            dbContext, 
+            mockStorageService.Object,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(),
+            NullLogger<PostEvent>.Instance, 
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>>();
+
+        var ok = result as Microsoft.AspNetCore.Http.HttpResults.Ok<ApiResponse<string>>;
+        ok!.Value!.Success.Should().BeTrue();
+        ok.Value.Data!.Should().NotBeNullOrEmpty();
+        
+        var dbEvent = await dbContext.Events.FirstOrDefaultAsync();
+        dbEvent.Should().NotBeNull();
+        dbEvent.Title.Should().Be("New Event");
+        dbEvent.GroupId.Should().Be("g1");
+        dbEvent.UserId.Should().Be("u1");
+    }
+    
+    [Fact]
+    public async Task Handle_Should_Return_BadRequest_When_Title_Missing()
+    {
+        await using var dbContext = GetInMemoryDbContext(Guid.NewGuid().ToString());
+        var user = TestDataFactory.CreateUser("u1", "Test","User");  
+        var group = TestDataFactory.CreateGroup("g1", "Test Group");
+        var groupUser = TestDataFactory.CreateGroupUser(user.Id, "g1");
+        dbContext.Groups.Add(group);
+        dbContext.Users.Add(user);
+        dbContext.GroupUsers.Add(groupUser);
+        await dbContext.SaveChangesAsync();
+
+        var request = TestDataFactory.CreateEventRequestDto("", DateTime.UtcNow.AddDays(1));
+        
+        var mockStorageService = new Mock<IStorageService>();
+        var result = await PostEvent.Handle(
+            group.Id, 
+            request,
+            dbContext, 
+            mockStorageService.Object,
+            CreateClaimsPrincipal(user.Id),
+            CreateHttpContext(),
+            NullLogger<PostEvent>.Instance,
+            CancellationToken.None
+        );
+
+        result.Should().BeOfType<Microsoft.AspNetCore.Http.HttpResults.BadRequest<ApiResponse<string>>>();
+    }
+}

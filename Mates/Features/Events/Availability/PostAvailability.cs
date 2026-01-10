@@ -1,0 +1,83 @@
+﻿using System.Diagnostics;
+using System.Security.Claims;
+using Mates.Features.Events.Dtos;
+using Mates.Infrastructure.Data.Context;
+using Mates.Infrastructure.Data.Entities.Events;
+using Mates.Shared.Endpoints;
+using Mates.Shared.Responses;
+using Mates.Shared.Validators;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Mates.Shared.Extensions;
+
+namespace Mates.Features.Events.Availability;
+
+public class PostAvailability : IEndpoint
+{
+    public void RegisterEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapPost("/groups/{groupId}/events/{eventId}/availability", Handle)
+            .WithName("PostAvailability")
+            .WithDescription("Creates or updates user's availability for an event")
+            .WithTags("Availabilities")
+            .RequireAuthorization()
+            .AddEndpointFilter<GroupMembershipFilter>();
+    }
+
+    public static async Task<IResult> Handle(
+        [FromRoute] string groupId,
+        [FromRoute] string eventId,
+        [FromBody] EventAvailabilityRequestDto request,
+        AppDbContext dbContext,
+        ClaimsPrincipal currentUser,
+        HttpContext httpContext,
+        ILogger<PostAvailability> logger,
+        CancellationToken cancellationToken)
+    {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+        var userId = currentUser.GetUserId();
+        
+        logger.LogInformation("User {UserId} attempts to set availability for event {EventId} in group {GroupId} with status {Status}. TraceId: {TraceId}",
+            userId, eventId, groupId, request.Status, traceId);
+        
+        var evt = await dbContext.Events
+            .FirstOrDefaultAsync(e => e.Id == eventId && e.GroupId == groupId, cancellationToken);
+
+        if (evt == null)
+        {
+            logger.LogWarning("Event {EventId} not found in group {GroupId}. TraceId: {TraceId}", eventId, groupId, traceId);
+            return Results.NotFound(ApiResponse<string>.Fail("Event not found.", traceId));
+        }
+
+        var existing = await dbContext.EventAvailabilities
+            .FirstOrDefaultAsync(ea => ea.EventId == eventId && ea.UserId == userId, cancellationToken);
+
+        if (existing != null)
+        {
+            existing.Status = request.Status;
+            existing.CreatedAt = DateTime.UtcNow;
+            await dbContext.SaveChangesAsync(cancellationToken);
+            
+            logger.LogInformation("User {UserId} updated availability for event {EventId}. TraceId: {TraceId}",
+                userId, eventId, traceId);
+
+            return Results.Ok(ApiResponse<string>.Ok("Availability updated.", traceId));
+        }
+        
+        var availability = new EventAvailability
+        {
+            EventId = eventId, 
+            UserId = userId!, 
+            Status = request.Status, 
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.EventAvailabilities.Add(availability);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        
+        logger.LogInformation("User {UserId} added availability to event {EventId}. TraceId: {TraceId}",
+            userId, eventId, traceId);
+
+        return Results.Ok(ApiResponse<string>.Ok("Availability added.", traceId));
+    }
+}

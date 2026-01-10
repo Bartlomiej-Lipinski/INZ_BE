@@ -1,0 +1,712 @@
+﻿using Mates.Infrastructure.Data.Entities;
+using Mates.Infrastructure.Data.Entities.Challenges;
+using Mates.Infrastructure.Data.Entities.Comments;
+using Mates.Infrastructure.Data.Entities.Events;
+using Mates.Infrastructure.Data.Entities.Groups;
+using Mates.Infrastructure.Data.Entities.Polls;
+using Mates.Infrastructure.Data.Entities.Quizzes;
+using Mates.Infrastructure.Data.Entities.Settlements;
+using Mates.Infrastructure.Data.Entities.Storage;
+using Mates.Infrastructure.Data.Entities.Tokens;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace Mates.Infrastructure.Data.Context;
+
+public class AppDbContext(DbContextOptions<AppDbContext> options) : IdentityDbContext<User>(options)
+{
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<GroupUser> GroupUsers { get; set; }
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
+    public DbSet<LoginAttempt> LoginAttempts { get; set; }
+    public DbSet<TwoFactorCode> TwoFactorCodes { get; set; }
+    public DbSet<Recommendation> Recommendations { get; set; }
+    public DbSet<Comment> Comments { get; set; }
+    public DbSet<Reaction> Reactions { get; set; }
+    public DbSet<Event> Events { get; set; }
+    public DbSet<EventAvailability> EventAvailabilities { get; set; }
+    public DbSet<EventAvailabilityRange> EventAvailabilityRanges { get; set; }
+    public DbSet<EventSuggestion> EventSuggestions { get; set; }
+    public DbSet<StoredFile> StoredFiles { get; set; } = null!;
+    public DbSet<Expense> Expenses { get; set; } = null!;
+    public DbSet<ExpenseBeneficiary> ExpenseBeneficiaries { get; set; } = null!;
+    public DbSet<Settlement> Settlements { get; set; } = null!;
+    public DbSet<Poll> Polls { get; set; } = null!;
+    public DbSet<PollOption> PollOptions { get; set; } = null!;
+    public DbSet<TimelineEvent> TimelineEvents { get; set; } = null!;
+    public DbSet<Challenge> Challenges { get; set; } = null!;
+    public DbSet<ChallengeParticipant> ChallengeParticipants { get; set; } = null!;
+    public DbSet<ChallengeProgress> ChallengeProgresses { get; set; } = null!;
+    public DbSet<FileCategory> FileCategories { get; set; } = null!;
+    public DbSet<Quiz> Quizzes { get; set; } = null!;
+    public DbSet<QuizQuestion> QuizQuestions { get; set; } = null!;
+    public DbSet<QuizAnswerOption> QuizAnswerOptions { get; set; } = null!;
+    public DbSet<QuizAttempt> QuizAttempts { get; set; } = null!;
+    public DbSet<QuizAttemptAnswer> QuizAttemptAnswers { get; set; } = null!;
+    public DbSet<GroupFeedItem> GroupFeedItems { get; set; } = null!;
+
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        builder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.UserId).IsRequired();
+
+            entity.HasOne(gu => gu.User)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(gu => gu.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Group>(entity =>
+        {
+            entity.HasKey(g => g.Id);
+            entity.Property(g => g.Name).IsRequired().HasMaxLength(100);
+            entity.Property(g => g.Color).IsRequired().HasMaxLength(20);
+            entity.Property(g => g.Code).IsRequired().HasMaxLength(10);
+
+            entity.HasMany(g => g.GroupUsers)
+                .WithOne(gu => gu.Group)
+                .HasForeignKey(gu => gu.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(g => g.Recommendations)
+                .WithOne(r => r.Group)
+                .HasForeignKey(r => r.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(g => g.Events)
+                .WithOne(e => e.Group)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(g => g.Expenses)
+                .WithOne(e => e.Group)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(g => g.Settlements)
+                .WithOne(s => s.Group)
+                .HasForeignKey(s => s.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(g => g.Polls)
+                .WithOne(p => p.Group)
+                .HasForeignKey(p => p.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(g => g.TimelineEvents)
+                .WithOne(tce => tce.Group)
+                .HasForeignKey(tce => tce.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.Challenges)
+                .WithOne(c => c.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.StoredFiles)
+                .WithOne(sf => sf.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.Reactions)
+                .WithOne(sf => sf.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(g => g.FileCategories)
+                .WithOne(sf => sf.Group)
+                .HasForeignKey(sf => sf.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(g => g.Quizzes)
+                .WithOne(q => q.Group)
+                .HasForeignKey(q => q.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(g => g.Code).IsUnique();
+        });
+
+        builder.Entity<GroupUser>(entity =>
+        {
+            entity.HasKey(gu => new { gu.UserId, gu.GroupId });
+            entity.Property(gu => gu.IsAdmin).IsRequired();
+
+            entity.HasOne(gu => gu.Group)
+                .WithMany(g => g.GroupUsers)
+                .HasForeignKey(gu => gu.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(gu => gu.User)
+                .WithMany(u => u.GroupUsers)
+                .HasForeignKey(gu => gu.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.TokenHash).IsRequired().HasMaxLength(512);
+            entity.Property(p => p.UserId).IsRequired();
+            entity.Property(p => p.ExpiresAt).IsRequired();
+
+            entity.HasOne(t => t.User)
+                .WithMany(u => u.PasswordResetTokens)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(t => new { t.UserId, t.IsUsed });
+            entity.HasIndex(t => t.ExpiresAt);
+        });
+
+        builder.Entity<LoginAttempt>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.AttemptTime).IsRequired();
+
+            entity.HasIndex(e => new { e.Email, e.IpAddress, e.AttemptTime });
+            entity.HasIndex(e => e.AttemptTime);
+        });
+
+        builder.Entity<TwoFactorCode>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.UserId).IsRequired();
+            entity.Property(t => t.Code).IsRequired().HasMaxLength(6);
+            entity.Property(t => t.IpAddress).HasMaxLength(45);
+            entity.Property(t => t.UserAgent).HasMaxLength(500);
+
+            entity.HasOne(t => t.User)
+                .WithMany(u => u.TwoFactorCodes)
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(t => new { t.UserId, t.IsUsed, t.ExpiresAt });
+            entity.HasIndex(t => t.ExpiresAt);
+            entity.HasIndex(t => t.UserId);
+        });
+
+        builder.Entity<Recommendation>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.GroupId).IsRequired();
+            entity.Property(r => r.UserId).IsRequired();
+            entity.Property(r => r.EntityType).IsRequired();
+            entity.Property(r => r.Title).IsRequired().HasMaxLength(200);
+            entity.Property(r => r.Content).IsRequired().HasMaxLength(2000);
+            entity.Property(r => r.Category).HasMaxLength(100);
+
+            entity.HasOne(r => r.Group)
+                .WithMany(g => g.Recommendations)
+                .HasForeignKey(r => r.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.User)
+                .WithMany(u => u.Recommendations)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Comment>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.GroupId).IsRequired();
+            entity.Property(c => c.TargetId).IsRequired();
+            entity.Property(c => c.EntityType).IsRequired();
+            entity.Property(c => c.UserId).IsRequired();
+            entity.Property(c => c.Content).IsRequired().HasMaxLength(1000);
+
+            entity.HasOne(c => c.User)
+                .WithMany(u => u.Comments)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(c => new { TargetType = c.EntityType, c.TargetId });
+        });
+
+        builder.Entity<Reaction>(entity =>
+        {
+            entity.HasKey(r => new { r.TargetId, r.UserId });
+            entity.Property(r => r.TargetId).IsRequired();
+            entity.Property(r => r.GroupId).IsRequired();
+            entity.Property(r => r.EntityType).IsRequired();
+            entity.Property(r => r.UserId).IsRequired();
+            
+            entity.HasOne(r => r.Group)
+                .WithMany(u => u.Reactions)
+                .HasForeignKey(r => r.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(r => r.User)
+                .WithMany(u => u.Reactions)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasIndex(r => new { TargetType = r.EntityType, r.TargetId });
+        });
+
+        builder.Entity<Event>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.GroupId).IsRequired();
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.EntityType).IsRequired();
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Description).HasMaxLength(2000);
+            entity.Property(e => e.Location).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.IsAutoScheduled).IsRequired();
+
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Events)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Events)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.GroupId, e.StartDate });
+        });
+
+        builder.Entity<EventAvailability>(entity =>
+        {
+            entity.HasKey(e => new { e.EventId, e.UserId });
+            entity.Property(ea => ea.Status).IsRequired();
+
+            entity.HasOne(e => e.Event)
+                .WithMany(e => e.Availabilities)
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.EventAvailabilities)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<EventAvailabilityRange>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EventId).IsRequired();
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.AvailableFrom).IsRequired();
+            entity.Property(e => e.AvailableTo).IsRequired();
+
+            entity.HasOne(e => e.Event)
+                .WithMany(e => e.AvailabilityRanges)
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.EventAvailabilityRanges)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<EventSuggestion>(entity =>
+        {
+            entity.HasKey(es => es.Id);
+            entity.Property(es => es.EventId).IsRequired();
+            entity.Property(es => es.StartTime).IsRequired();
+            entity.Property(es => es.AvailableUserCount).IsRequired();
+
+            entity.HasOne(es => es.Event)
+                .WithMany(e => e.Suggestions)
+                .HasForeignKey(es => es.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<StoredFile>(entity =>
+        {
+            entity.HasKey(sf => sf.Id);
+            entity.Property(sf => sf.UploadedById).IsRequired();
+            entity.Property(sf => sf.EntityType).IsRequired();
+            entity.Property(sf => sf.FileName).IsRequired();
+            entity.Property(sf => sf.ContentType).IsRequired();
+            entity.Property(sf => sf.Size).IsRequired();
+            entity.Property(sf => sf.Url).IsRequired();
+            entity.Property(sf => sf.UploadedAt).IsRequired();
+            
+            entity.HasOne(sf => sf.Group)
+                .WithMany(u => u.StoredFiles)
+                .HasForeignKey(sf => sf.GroupId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(sf => sf.UploadedBy)
+                .WithMany(u => u.StoredFiles)
+                .HasForeignKey(sf => sf.UploadedById)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(sf => sf.FileCategory)
+                .WithMany()
+                .HasForeignKey(sf => sf.CategoryId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasIndex(sf => new { sf.UploadedById, sf.EntityType });
+            entity.HasIndex(sf => new { sf.EntityId, sf.EntityType });
+        });
+        
+        builder.Entity<Expense>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.GroupId).IsRequired();
+            entity.Property(e => e.PaidByUserId).IsRequired();
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Amount).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.IsEvenSplit).IsRequired();
+
+            entity.HasOne(e => e.Group)
+                .WithMany(g => g.Expenses)
+                .HasForeignKey(e => e.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.PaidByUser)
+                .WithMany(u => u.Expenses)
+                .HasForeignKey(e => e.PaidByUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(e => e.Beneficiaries)
+                .WithOne(b => b.Expense)
+                .HasForeignKey(e => e.ExpenseId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ExpenseBeneficiary>(entity =>
+        {
+            entity.HasKey(eb => new { eb.ExpenseId, eb.UserId });
+            entity.Property(eb => eb.Share).IsRequired();
+
+            entity.HasOne(eb => eb.Expense)
+                .WithMany(e => e.Beneficiaries)
+                .HasForeignKey(eb => eb.ExpenseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(eb => eb.User)
+                .WithMany(u => u.ExpenseBeneficiaries)
+                .HasForeignKey(eb => eb.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Settlement>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.GroupId).IsRequired();
+            entity.Property(s => s.FromUserId).IsRequired();
+            entity.Property(s => s.ToUserId).IsRequired();
+            entity.Property(s => s.Amount).IsRequired();
+
+            entity.HasOne(s => s.Group)
+                .WithMany(g => g.Settlements)
+                .HasForeignKey(s => s.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.FromUser)
+                .WithMany(u => u.SettlementsTo)
+                .HasForeignKey(s => s.FromUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.ToUser)
+                .WithMany(u => u.SettlementsFrom)
+                .HasForeignKey(s => s.ToUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Poll>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+            entity.Property(p => p.GroupId).IsRequired();
+            entity.Property(p => p.CreatedByUserId).IsRequired();
+            entity.Property(p => p.EntityType).IsRequired();
+            entity.Property(p => p.Question).IsRequired().HasMaxLength(500);
+            entity.Property(p => p.CreatedAt).IsRequired();
+
+            entity.HasOne(p => p.Group)
+                .WithMany(g => g.Polls)
+                .HasForeignKey(p => p.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.CreatedByUser)
+                .WithMany(u => u.Polls)
+                .HasForeignKey(p => p.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(p => p.Options)
+                .WithOne(o => o.Poll)
+                .HasForeignKey(o => o.PollId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<PollOption>(entity =>
+        {
+            entity.HasKey(po => po.Id);
+            entity.Property(po => po.PollId).IsRequired();
+            entity.Property(po => po.Text).IsRequired().HasMaxLength(300);
+
+            entity.HasOne(po => po.Poll)
+                .WithMany(p => p.Options)
+                .HasForeignKey(po => po.PollId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(po => po.VotedUsers)
+                .WithMany(u => u.VotedPollOptions)
+                .UsingEntity<Dictionary<string, object>>(
+                    "UserPollOption",
+                    j => j
+                        .HasOne<User>()
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j => j
+                        .HasOne<PollOption>()
+                        .WithMany()
+                        .HasForeignKey("PollOptionId")
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j =>
+                    {
+                        j.HasKey("UserId", "PollOptionId");
+                        j.ToTable("UserPollOptions");
+                    });
+        });
+
+        builder.Entity<TimelineEvent>(entity =>
+        {
+            entity.HasKey(te => te.Id);
+            entity.Property(te => te.GroupId).IsRequired();
+            entity.Property(te => te.Type).IsRequired();
+            entity.Property(te => te.Title).IsRequired().HasMaxLength(100);
+            entity.Property(te => te.Date).IsRequired();
+            entity.Property(te => te.Description).HasMaxLength(255);
+
+            entity.HasOne(te => te.Group)
+                .WithMany(g => g.TimelineEvents)
+                .HasForeignKey(te => te.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<Challenge>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.GroupId).IsRequired();
+            entity.Property(c => c.UserId).IsRequired();
+            entity.Property(c => c.EntityType).IsRequired();
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+            entity.Property(c => c.Description).IsRequired().HasMaxLength(255);
+            entity.Property(c => c.StartDate).IsRequired();
+            entity.Property(c => c.EndDate).IsRequired();
+            entity.Property(c => c.GoalUnit).IsRequired();
+            entity.Property(c => c.GoalValue).IsRequired();
+
+            entity.HasOne(c => c.Group)
+                .WithMany(g => g.Challenges)
+                .HasForeignKey(c => c.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(c => c.User)
+                .WithMany(u => u.Challenges)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(c => c.Participants)
+                .WithOne(p => p.Challenge)
+                .HasForeignKey(p => p.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<ChallengeParticipant>(entity =>
+        {
+            entity.HasKey(c => new { c.ChallengeId, c.UserId });
+            entity.Property(c => c.Completed).IsRequired();
+            entity.Property(c => c.TotalProgress).IsRequired();
+            
+            entity.HasOne(c => c.Challenge)
+                .WithMany(c => c.Participants)
+                .HasForeignKey(c => c.ChallengeId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(c => c.User)
+                .WithMany(u => u.ChallengeParticipants)
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(c => c.ProgressEntries)
+                .WithOne(p => p.Participant)
+                .HasForeignKey(p => new { p.ChallengeId, p.UserId })
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<ChallengeProgress>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.ChallengeId).IsRequired();
+            entity.Property(c => c.UserId).IsRequired();
+            entity.Property(c => c.Description).HasMaxLength(255);
+            entity.Property(c => c.Value).IsRequired();
+
+            entity.HasOne(c => c.Participant)
+                .WithMany(p => p.ProgressEntries)
+                .HasForeignKey(c => new { c.ChallengeId, c.UserId })
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<FileCategory>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+            entity.Property(c => c.GroupId).IsRequired();
+            entity.Property(c => c.Name).IsRequired().HasMaxLength(100);
+
+            entity.HasOne(c => c.Group)
+                .WithMany(g => g.FileCategories)
+                .HasForeignKey(c => c.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => new { c.GroupId, c.Name }).IsUnique();
+        });
+        
+        builder.Entity<Quiz>(entity =>
+        {
+            entity.HasKey(q => q.Id);
+            entity.Property(q => q.Title).IsRequired().HasMaxLength(200);
+            entity.Property(q => q.Description).HasMaxLength(2000);
+            entity.Property(q => q.GroupId).IsRequired();
+            entity.Property(q => q.CreatedAt).IsRequired();
+
+            entity.HasOne(q => q.Group)
+                .WithMany(g => g.Quizzes)
+                .HasForeignKey(q => q.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(q => q.User)
+                .WithMany(g => g.Quizzes)
+                .HasForeignKey(q => q.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasMany(q => q.Questions)
+                .WithOne(qt => qt.Quiz)
+                .HasForeignKey(qt => qt.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasMany(q => q.Attempts)
+                .WithOne(a => a.Quiz)
+                .HasForeignKey(a => a.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        builder.Entity<QuizQuestion>(entity =>
+        {
+            entity.HasKey(q => q.Id);
+            entity.Property(q => q.QuizId).IsRequired();
+            entity.Property(q => q.Type).IsRequired();
+            entity.Property(q => q.Content).IsRequired().HasMaxLength(2000);
+
+            entity.HasMany(q => q.Options)
+                .WithOne(o => o.Question)
+                .HasForeignKey(o => o.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(q => q.Quiz)
+                .WithMany(q => q.Questions)
+                .HasForeignKey(q => q.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
+    
+            entity.HasIndex(q => q.QuizId);
+        });
+        
+        builder.Entity<QuizAnswerOption>(entity =>
+        {
+            entity.HasKey(o => o.Id);
+            entity.Property(o => o.QuestionId).IsRequired();
+            entity.Property(o => o.Text).IsRequired().HasMaxLength(500);
+            entity.Property(o => o.IsCorrect).IsRequired();
+            
+            entity.HasOne(o => o.Question)
+                .WithMany(q => q.Options)
+                .HasForeignKey(o => o.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(o => o.QuestionId);
+        });
+        
+        builder.Entity<QuizAttempt>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.QuizId).IsRequired();
+            entity.Property(a => a.UserId).IsRequired();
+            entity.Property(a => a.CompletedAt).IsRequired();
+            entity.Property(a => a.Score).IsRequired();
+            
+            entity.HasOne(a => a.Quiz)
+                .WithMany(q => q.Attempts)
+                .HasForeignKey(a => a.QuizId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(a => a.User)
+                .WithMany(q => q.QuizAttempts)
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasMany(a => a.Answers)
+                .WithOne(ans => ans.QuizAttempt)
+                .HasForeignKey(ans => ans.AttemptId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(a => new { a.QuizId, a.UserId });
+        });
+
+        builder.Entity<QuizAttemptAnswer>(entity =>
+        {
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.AttemptId).IsRequired();
+            entity.Property(a => a.QuestionId).IsRequired();
+
+            entity.HasOne(a => a.QuizAttempt)
+                .WithMany(q => q.Answers)
+                .HasForeignKey(a => a.AttemptId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(a => a.QuizQuestion)
+                .WithMany()
+                .HasForeignKey(a => a.QuestionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasIndex(a => a.AttemptId);
+        });
+        
+        builder.Entity<GroupFeedItem>(entity =>
+        {
+            entity.HasKey(i => i.Id);
+            entity.Property(i => i.GroupId).IsRequired();
+            entity.Property(i => i.Type).IsRequired();
+            entity.Property(i => i.CreatedAt).IsRequired();
+            entity.Property(i => i.UserId).IsRequired();
+
+            entity.HasOne(i => i.Group)
+                .WithMany(g => g.GroupFeedItems)
+                .HasForeignKey(i => i.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(i => i.User)
+                .WithMany(u => u.GroupFeedItems)
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(i => i.StoredFile)
+                .WithMany()
+                .HasForeignKey(i => i.StoredFileId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasIndex(i => i.CreatedAt);
+            entity.HasIndex(i => new { i.GroupId, i.CreatedAt });
+        });
+    }
+}

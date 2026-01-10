@@ -1,0 +1,67 @@
+﻿using System.Diagnostics;
+using System.Security.Claims;
+using Mates.Infrastructure.Data.Context;
+using Mates.Infrastructure.Service;
+using Mates.Shared.Endpoints;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Mates.Shared.Extensions;
+
+namespace Mates.Features.Storage;
+
+public class GetFileById : IEndpoint
+{
+    public void RegisterEndpoint(IEndpointRouteBuilder app)
+    {
+        app.MapGet("/files/{id}", Handle)
+            .WithName("GetFileById")
+            .WithDescription("Download file by id")
+            .WithTags("Storage")
+            .RequireAuthorization();
+    }
+
+    public static async Task<IResult> Handle(
+        [FromRoute] string id,
+        AppDbContext dbContext,
+        IStorageService storage,
+        ClaimsPrincipal currentUser,
+        HttpContext httpContext,
+        ILogger<GetFileById> logger,
+        CancellationToken cancellationToken)
+    {
+        var traceId = Activity.Current?.Id ?? httpContext.TraceIdentifier;
+
+        var record = await dbContext.StoredFiles.FindAsync([id], cancellationToken);
+        if (record == null)
+        {
+            logger.LogInformation("File {Id} not found. TraceId: {TraceId}", id, traceId);
+            return Results.NotFound();
+        }
+
+        var stream = await storage.OpenReadAsync(record.Url, cancellationToken);
+        if (stream == null)
+        {
+            logger.LogInformation("Physical file for {Id} not found. TraceId: {TraceId}", id, traceId);
+            return Results.NotFound();
+        }
+        
+        var groupUsersIds = await dbContext.GroupUsers
+            .AsNoTracking()
+            .Where(gm => gm.GroupId == record.GroupId)
+            .Select(gm => gm.UserId)
+            .ToListAsync(cancellationToken);
+
+        if (groupUsersIds.Contains(currentUser.GetUserId()) == false)
+        {
+            logger.LogError("User attempted to access file {Id} without permission. TraceId: {TraceId}", id, traceId);
+            return Results.Forbid();
+        }
+
+        logger.LogInformation("Serving file {Id} to request. TraceId: {TraceId}", id, traceId);
+
+        var contentType = string.IsNullOrWhiteSpace(record.ContentType)
+            ? "application/octet-stream"
+            : record.ContentType + "; charset=utf-16";
+        return Results.File(stream, contentType, record.FileName, enableRangeProcessing: true);
+    }
+}
