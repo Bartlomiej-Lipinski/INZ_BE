@@ -110,7 +110,7 @@ Dalsze informacje i rozwój
 
 Kontakt / Wsparcie
 ------------------
-W razie pytań dotyczących uruchomienia projektu lub testów, najlepiej skontaktować się z autorem projektu/maintainerem lub otworzyć issue w repozytorium z opisem problemu.
+W razie pytań dotyczących uruchomienia projektu lub testów, najlepiej skontaktować się z autorami projektu lub otworzyć issue w repozytorium z opisem problemu.
 
 ---
 Plik README zaktualizowany lokalnie - zawiera instrukcje uruchomienia, testów i migracji. Jeśli chcesz, mogę także dodać przykładowy skrypt batch lub plik powershell do wygodnego uruchamiania środowiska developerowego.
