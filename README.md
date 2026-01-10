@@ -25,8 +25,7 @@ Projekt jest zorganizowany w warstwy (konwencja katalogów):
 
 Zasady projektowe i konwencje
 ----------------------------
-- Testy integracyjne/E2E uruchamiają całą aplikację (WebApplicationFactory / TestServer) i wykonują zapytania HTTP lub operacje na bazie.
-- Testy jednostkowe (jeśli dodawane) powinny izolować zależności (np. przez Moq) i nie polegać na rzeczywistej bazie danych.
+- Testy jednostkowe powinny izolować zależności (np. przez Moq) i nie polegać na rzeczywistej bazie danych.
 - Preferowane są deterministyczne, odtwarzalne dane testowe (użycie `TestDataFactory` w projekcie testowym).
 
 Uruchomienie lokalne — wymagania
