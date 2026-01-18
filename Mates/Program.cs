@@ -18,9 +18,11 @@ using Mates.Shared.Extensions;
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING")
+                       ?? throw new InvalidOperationException("DATABASE_CONNECTION_STRING is missing from environment.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Default")));
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<IStorageService, LocalStorageService>();
@@ -32,7 +34,6 @@ builder.Services.AddControllers();
 
 builder.Services.AddRateLimiter(options =>
 {
-    // Global limiter: 20 requests/min/IP
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
         RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
@@ -44,7 +45,6 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 1
             }));
 
-    // Auth limiter: 5 requests/min/user
     options.AddPolicy("AuthPolicy", context =>
     {
         if (!context.Request.Path.StartsWithSegments("/api/auth"))
@@ -63,8 +63,8 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-var frontendOrigin = builder.Configuration["Frontend:Origin"]
-                     ?? throw new InvalidOperationException("Frontend:Origin is missing in configuration.");
+var frontendOrigin = Environment.GetEnvironmentVariable("FRONTEND_ORIGIN")
+                     ?? throw new InvalidOperationException("FRONTEND_ORIGIN is missing from environment.");
 
 builder.Services.AddCors(options =>
 {
@@ -181,6 +181,13 @@ builder.Services.AddEndpoints();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 app.UseCors("AllowFrontend");
 app.UseRateLimiter();
 if (app.Environment.IsDevelopment())
