@@ -18,7 +18,7 @@ using Mates.Shared.Extensions;
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
-var connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING")
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
                        ?? throw new InvalidOperationException("DATABASE_CONNECTION_STRING is missing from environment.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
