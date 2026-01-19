@@ -404,7 +404,6 @@ public class AuthController(
             Secure = true,
             SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddMinutes(15),
-            Domain = ".vercel.app"
         });
 
         Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
@@ -413,7 +412,6 @@ public class AuthController(
             Secure = true,
             SameSite = SameSiteMode.None,
             Expires = DateTime.UtcNow.AddDays(2),
-            Domain=".vercel.app"
         });
     }
 
