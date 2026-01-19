@@ -103,9 +103,11 @@ if (builder.Environment.IsProduction())
     audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? audience;
     secret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? secret;
     
-    Console.WriteLine($"[JWT] Issuer: {issuer}");
-    Console.WriteLine($"[JWT] Audience: {audience}");
-    Console.WriteLine($"[JWT] Secret length: {secret?.Length}");
+    if (string.IsNullOrWhiteSpace(issuer))
+        throw new InvalidOperationException("JWT Issuer is missing.");
+    if (string.IsNullOrWhiteSpace(audience))
+        throw new InvalidOperationException("JWT Audience is missing.");
+    
 }
 
 if (string.IsNullOrWhiteSpace(secret))
