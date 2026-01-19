@@ -102,6 +102,10 @@ if (builder.Environment.IsProduction())
     issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? issuer;
     audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? audience;
     secret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? secret;
+    
+    Console.WriteLine($"[JWT] Issuer: {issuer}");
+    Console.WriteLine($"[JWT] Audience: {audience}");
+    Console.WriteLine($"[JWT] Secret length: {secret?.Length}");
 }
 
 if (string.IsNullOrWhiteSpace(secret))
