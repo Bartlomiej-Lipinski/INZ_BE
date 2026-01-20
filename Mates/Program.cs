@@ -131,6 +131,7 @@ builder.Services.AddAuthentication(opt =>
                 var accessToken = context.Request.Cookies["access_token"];
                 if (!string.IsNullOrEmpty(accessToken))
                     context.Token = accessToken;
+                // logger.LogInformation("Login attempt. TraceId: {TraceId}", traceId);
 
                 return Task.CompletedTask;
             }
@@ -138,9 +139,10 @@ builder.Services.AddAuthentication(opt =>
 
         opt.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = !builder.Environment.IsDevelopment(),
-            ValidateAudience = !builder.Environment.IsDevelopment(),
-            ValidateLifetime = true,
+            // ValidateIssuer = !builder.Environment.IsDevelopment(),
+            // ValidateAudience = !builder.Environment.IsDevelopment(),
+            
+            ValidateLifetime = false,
             ValidateIssuerSigningKey = true,
             ValidIssuer = issuer,
             ValidAudience = audience,
