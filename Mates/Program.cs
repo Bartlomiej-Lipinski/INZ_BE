@@ -19,7 +19,8 @@ Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
-                       ?? throw new InvalidOperationException("DATABASE_CONNECTION_STRING is missing from environment.");
+                       ?? throw new InvalidOperationException(
+                           "DATABASE_CONNECTION_STRING is missing from environment.");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
@@ -92,23 +93,29 @@ builder.Services.Configure<EmailSettings>(options =>
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
 
-var jwtSection = builder.Configuration.GetSection("JwtSettings");
-var issuer = jwtSection["Issuer"];
-var audience = jwtSection["Audience"];
-var secret = jwtSection["SecretKey"];
+// var jwtSection = builder.Configuration.GetSection("JwtSettings");
+// var issuer = jwtSection["Issuer"];
+// var audience = jwtSection["Audience"];
+// var secret = jwtSection["SecretKey"];
 
-if (builder.Environment.IsProduction())
-{
-    issuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? issuer;
-    audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? audience;
-    secret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? secret;
-    
-    if (string.IsNullOrWhiteSpace(issuer))
-        throw new InvalidOperationException("JWT Issuer is missing.");
-    if (string.IsNullOrWhiteSpace(audience))
-        throw new InvalidOperationException("JWT Audience is missing.");
-    
-}
+// var issuer = null;
+// var audience = null;
+// var secret = null;
+
+// if (builder.Environment.IsProduction())
+// {
+var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
+var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+var secret = Environment.GetEnvironmentVariable("JWT_SECRET");
+
+if (string.IsNullOrWhiteSpace(issuer))
+    throw new InvalidOperationException("JWT Issuer is missing.");
+if (string.IsNullOrWhiteSpace(audience))
+    throw new InvalidOperationException("JWT Audience is missing.");
+if(string.IsNullOrWhiteSpace(secret))
+    throw new InvalidOperationException("JWT SecretKey is missing.");
+
+// }
 
 if (string.IsNullOrWhiteSpace(secret))
     throw new InvalidOperationException("JWT SecretKey is missing.");
@@ -139,13 +146,17 @@ builder.Services.AddAuthentication(opt =>
 
         opt.TokenValidationParameters = new TokenValidationParameters
         {
-            // ValidateIssuer = !builder.Environment.IsDevelopment(),
-            // ValidateAudience = !builder.Environment.IsDevelopment(),
-            ValidateIssuer = false,
-            ValidateAudience = false,
-            
-            ValidateLifetime = false,
-            ValidateIssuerSigningKey = false,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            // ValidateIssuer = false,
+            // ValidateAudience = false,
+
+            // ValidateLifetime = false,
+            ValidateLifetime = true,
+
+            // ValidateIssuerSigningKey = false,
+            ValidateIssuerSigningKey = true,
+
             ValidIssuer = issuer,
             ValidAudience = audience,
             IssuerSigningKey = key,
