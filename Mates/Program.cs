@@ -92,18 +92,6 @@ builder.Services.Configure<EmailSettings>(options =>
 
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>();
-
-// var jwtSection = builder.Configuration.GetSection("JwtSettings");
-// var issuer = jwtSection["Issuer"];
-// var audience = jwtSection["Audience"];
-// var secret = jwtSection["SecretKey"];
-
-// var issuer = null;
-// var audience = null;
-// var secret = null;
-
-// if (builder.Environment.IsProduction())
-// {
 var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
 var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
 var secret = Environment.GetEnvironmentVariable("JWT_SECRET");
@@ -114,9 +102,6 @@ if (string.IsNullOrWhiteSpace(audience))
     throw new InvalidOperationException("JWT Audience is missing.");
 if(string.IsNullOrWhiteSpace(secret))
     throw new InvalidOperationException("JWT SecretKey is missing.");
-
-// }
-
 if (string.IsNullOrWhiteSpace(secret))
     throw new InvalidOperationException("JWT SecretKey is missing.");
 if (secret.Length < 32)
@@ -138,7 +123,6 @@ builder.Services.AddAuthentication(opt =>
                 var accessToken = context.Request.Cookies["access_token"];
                 if (!string.IsNullOrEmpty(accessToken))
                     context.Token = accessToken;
-                // logger.LogInformation("Login attempt. TraceId: {TraceId}", traceId);
 
                 return Task.CompletedTask;
             }
@@ -148,15 +132,8 @@ builder.Services.AddAuthentication(opt =>
         {
             ValidateIssuer = true,
             ValidateAudience = true,
-            // ValidateIssuer = false,
-            // ValidateAudience = false,
-
-            // ValidateLifetime = false,
             ValidateLifetime = true,
-
-            // ValidateIssuerSigningKey = false,
             ValidateIssuerSigningKey = true,
-
             ValidIssuer = issuer,
             ValidAudience = audience,
             IssuerSigningKey = key,
