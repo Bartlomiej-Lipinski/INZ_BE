@@ -28,7 +28,7 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
             new Claim(ClaimTypes.NameIdentifier, user.Id),
             new Claim(ClaimTypes.Email, user.Email!)
         };
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Auth:Key"]
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")
                                                                   ?? throw new InvalidOperationException()));
         //TODO fine tune token expiration times
         var token = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddMinutes(15),
