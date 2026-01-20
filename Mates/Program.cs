@@ -141,6 +141,8 @@ builder.Services.AddAuthentication(opt =>
         {
             // ValidateIssuer = !builder.Environment.IsDevelopment(),
             // ValidateAudience = !builder.Environment.IsDevelopment(),
+            ValidateIssuer = false,
+            ValidateAudience = false,
             
             ValidateLifetime = false,
             ValidateIssuerSigningKey = false,
