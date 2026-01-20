@@ -143,7 +143,7 @@ builder.Services.AddAuthentication(opt =>
             // ValidateAudience = !builder.Environment.IsDevelopment(),
             
             ValidateLifetime = false,
-            ValidateIssuerSigningKey = true,
+            ValidateIssuerSigningKey = false,
             ValidIssuer = issuer,
             ValidAudience = audience,
             IssuerSigningKey = key,
