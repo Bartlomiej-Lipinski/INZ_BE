@@ -30,9 +30,17 @@ internal class AuthService(IConfiguration configuration, AppDbContext context, I
         };
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_SECRET")
                                                                   ?? throw new InvalidOperationException()));
+        var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER");
+        var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE");
+        
         //TODO fine tune token expiration times
-        var token = new JwtSecurityToken(claims: claims, expires: DateTime.UtcNow.AddMinutes(15),
-            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(15),
+            signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+        );
         var jwt = new JwtSecurityTokenHandler().WriteToken(token);
         var refresh = new RefreshToken
         {
