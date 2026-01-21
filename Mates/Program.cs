@@ -194,7 +194,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+var uploadsPath = Environment.GetEnvironmentVariable("UPLOADS_PATH") 
+                  ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+
 if (!Directory.Exists(uploadsPath))
 {
     Directory.CreateDirectory(uploadsPath);
